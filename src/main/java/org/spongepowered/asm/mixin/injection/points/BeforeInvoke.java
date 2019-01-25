@@ -152,13 +152,15 @@ public class BeforeInvoke extends InjectionPoint {
     @Override
     public boolean find(String desc, InsnList insns, Collection<AbstractInsnNode> nodes) {
         this.log("{} is searching for an injection point in method with descriptor {}", this.className, desc);
-        
-        if (!this.find(desc, insns, nodes, this.target, SearchType.STRICT) && this.target.desc != null && this.allowPermissive) {
+        boolean found = this.find(desc, insns, nodes, this.target, SearchType.STRICT);
+
+        if (!found && this.target.desc != null && this.allowPermissive) {
             this.logger.warn("STRICT match for {} using \"{}\" in {} returned 0 results, attempting permissive search. "
                     + "To inhibit permissive search set mixin.env.allowPermissiveMatch=false", this.className, this.target, this.context);
-            return this.find(desc, insns, nodes, this.target, SearchType.PERMISSIVE);
+            found = this.find(desc, insns, nodes, this.target, SearchType.PERMISSIVE);
         }
-        return true;
+
+        return found;
     }
 
     protected boolean find(String desc, InsnList insns, Collection<AbstractInsnNode> nodes, MemberInfo member, SearchType searchType) {
