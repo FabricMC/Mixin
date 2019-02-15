@@ -88,7 +88,7 @@ public interface IMixinConfigPlugin {
      * @param otherTargets Target class set incorporating targets from all other
      *      configs, read-only
      */
-    public abstract void acceptTargets(Set<String> myTargets, Set<String> otherTargets);
+    public default void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {}
     
     /**
      * After mixins specified in the configuration have been processed, this
