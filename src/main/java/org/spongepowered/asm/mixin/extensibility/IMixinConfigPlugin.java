@@ -61,7 +61,7 @@ public interface IMixinConfigPlugin {
      * 
      * @return Path to the refmap resource or null to revert to the default
      */
-    public abstract String getRefMapperConfig();
+    public default String getRefMapperConfig() { return null; }
     
     /**
      * Called during mixin intialisation, allows this plugin to control whether
@@ -98,7 +98,7 @@ public interface IMixinConfigPlugin {
      * 
      * @return additional mixins to apply
      */
-    public abstract List<String> getMixins();
+    public default List<String> getMixins() { return null; }
 
     /**
      * Called immediately <b>before</b> a mixin is applied to a target class,
@@ -109,7 +109,7 @@ public interface IMixinConfigPlugin {
      * @param mixinClassName Name of the mixin class
      * @param mixinInfo Information about this mixin
      */
-    public abstract void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo);
+    public default void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {}
 
     /**
      * Called immediately <b>after</b> a mixin is applied to a target class,
@@ -120,5 +120,5 @@ public interface IMixinConfigPlugin {
      * @param mixinClassName Name of the mixin class
      * @param mixinInfo Information about this mixin
      */
-    public abstract void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo);
+    public default void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {}
 }
