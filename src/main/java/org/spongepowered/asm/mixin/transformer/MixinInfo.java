@@ -1198,7 +1198,12 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
             return 0;
         }
         if (other.priority == this.priority) {
-            return this.order - other.order;
+            int nameOrder = this.className.compareTo(other.className);
+            if (nameOrder == 0) {
+                return this.order - other.order;
+            } else {
+                return nameOrder;
+            }
         }
         return (this.priority - other.priority);
     }
