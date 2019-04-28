@@ -102,35 +102,22 @@ class MixinApplicatorInterface extends MixinApplicatorStandard {
      */
     @Override
     protected void prepareInjections(MixinTargetContext mixin) {
-        if (MixinEnvironment.getCompatibilityLevel().isAtLeast(MixinEnvironment.CompatibilityLevel.JAVA_8)) {
-            super.prepareInjections(mixin);
-            return;
-        }
-
         // disabled for interface mixins
         for (MethodNode method : this.targetClass.methods) {
             try {
                 InjectionInfo injectInfo = InjectionInfo.parse(mixin, method);
                 if (injectInfo != null) {
-                    throw new InvalidInterfaceMixinException(mixin, injectInfo + " is not supported on interface mixin method " + method.name);
+                    if (!Bytecode.hasFlag(method, Opcodes.ACC_STATIC) && !MixinEnvironment.getCompatibilityLevel().isAtLeast(MixinEnvironment.CompatibilityLevel.JAVA_8)) {
+                        throw new InvalidInterfaceMixinException(mixin, injectInfo + " is not supported on interface mixin method " + method.name);
+                    }
                 }
             } catch (InvalidInjectionException ex) {
                 String description = ex.getInjectionInfo() != null ? ex.getInjectionInfo().toString() : "Injection";
                 throw new InvalidInterfaceMixinException(mixin, description + " is not supported in interface mixin");
             }
         }
-    }
-    
-    /* (non-Javadoc)
-     * @see org.spongepowered.asm.mixin.transformer.MixinApplicator
-     *      #applyInjections(
-     *      org.spongepowered.asm.mixin.transformer.MixinTargetContext)
-     */
-    @Override
-    protected void applyInjections(MixinTargetContext mixin) {
-        if (MixinEnvironment.getCompatibilityLevel().isAtLeast(MixinEnvironment.CompatibilityLevel.JAVA_8)) {
-            super.applyInjections(mixin);
-        }
+
+        super.prepareInjections(mixin);
     }
 
     @Override
