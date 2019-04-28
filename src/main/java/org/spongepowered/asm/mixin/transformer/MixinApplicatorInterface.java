@@ -26,12 +26,18 @@ package org.spongepowered.asm.mixin.transformer;
 
 import java.util.Map.Entry;
 
+import org.spongepowered.asm.lib.Opcodes;
 import org.spongepowered.asm.lib.tree.FieldNode;
 import org.spongepowered.asm.lib.tree.MethodNode;
+import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.injection.struct.InjectionInfo;
 import org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Field;
 import org.spongepowered.asm.mixin.transformer.throwables.InvalidInterfaceMixinException;
+import org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException;
+import org.spongepowered.asm.util.Annotations;
+import org.spongepowered.asm.util.Bytecode;
 
 /**
  * Applicator for interface mixins, mainly just disables things which aren't
@@ -96,6 +102,11 @@ class MixinApplicatorInterface extends MixinApplicatorStandard {
      */
     @Override
     protected void prepareInjections(MixinTargetContext mixin) {
+        if (MixinEnvironment.getCompatibilityLevel().isAtLeast(MixinEnvironment.CompatibilityLevel.JAVA_8)) {
+            super.prepareInjections(mixin);
+            return;
+        }
+
         // disabled for interface mixins
         for (MethodNode method : this.targetClass.methods) {
             try {
@@ -117,7 +128,21 @@ class MixinApplicatorInterface extends MixinApplicatorStandard {
      */
     @Override
     protected void applyInjections(MixinTargetContext mixin) {
-        // Do nothing
+        if (MixinEnvironment.getCompatibilityLevel().isAtLeast(MixinEnvironment.CompatibilityLevel.JAVA_8)) {
+            super.applyInjections(mixin);
+        }
     }
 
+    @Override
+    protected void checkMethodVisibility(MixinTargetContext mixin, MethodNode mixinMethod) {
+        // support injecting into static interface methods
+        if (Bytecode.hasFlag(mixinMethod, Opcodes.ACC_STATIC)) {
+            InjectionInfo injectInfo = InjectionInfo.parse(mixin, mixinMethod);
+            if (injectInfo != null) {
+                return;
+            }
+        }
+
+        super.checkMethodVisibility(mixin, mixinMethod);
+    }
 }
