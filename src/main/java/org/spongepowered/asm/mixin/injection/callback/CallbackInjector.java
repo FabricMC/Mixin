@@ -517,8 +517,8 @@ public class CallbackInjector extends Injector {
      */
     private String generateBadLVTMessage(final Callback callback) {
         int position = callback.target.indexOf(callback.node);
-        List<String> expected = CallbackInjector.summariseLocals(this.methodNode.desc, callback.target.arguments.length + 1);
-        List<String> found = CallbackInjector.summariseLocals(callback.getDescriptorWithAllLocals(), callback.frameSize);
+        List<String> expected = CallbackInjector.summariseLocals(callback.getDescriptorWithAllLocals(), callback.target.arguments.length + 1);
+        List<String> found = CallbackInjector.summariseLocals(this.methodNode.desc, callback.target.arguments.length + 1);
         return String.format("LVT in %s has incompatible changes at opcode %d in callback %s.\nExpected: %s\n   Found: %s",
                 callback.target, position, this, expected, found);
     }
