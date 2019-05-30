@@ -8,7 +8,7 @@ and hooking into the runtime class-loading process via Mojang's
 
 ### Documentation
 
-The main documentation for **Mixin** can be found in the [Wiki](../../wiki).
+The main documentation for **Mixin** can be found in the [Wiki](https://github.com/spongepowered/mixin/wiki).
 
 Additional documentation for individual features and annotations can be found in
 the extensive [Javadoc](http://jenkins.liteloader.com/job/Mixin/javadoc/). For
