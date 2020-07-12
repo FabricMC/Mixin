@@ -478,6 +478,7 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
             if (priority != MixinInfo.this.getPriority()) {
                 throw new MixinReloadException(MixinInfo.this, "Cannot change mixin priority");
             }
+            // todo add verification for subclass mixins
         }
     }
     
@@ -774,7 +775,9 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
      * Mixin targets, read from the {@link Mixin} annotation on the mixin class
      */
     private final transient List<ClassInfo> targetClasses = new ArrayList<ClassInfo>();
-    
+
+    public final List<String> subclassTargetClassNames;
+
     /**
      * Names of target classes 
      */
@@ -869,12 +872,25 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
         try {
             this.priority = this.readPriority(this.pendingState.getClassNode());
             this.virtual = this.readPseudo(this.pendingState.getValidationClassNode());
+            this.subclassTargetClassNames = this.readSubclassTargets(this.pendingState.getValidationClassNode());
             this.declaredTargets = this.readDeclaredTargets(this.pendingState.getValidationClassNode(), ignorePlugin);
         } catch (InvalidMixinException ex) {
             throw ex;
         } catch (Exception ex) {
             throw new InvalidMixinException(this, ex);
         }
+    }
+
+    private List<String> readSubclassTargets(MixinClassNode node) {
+        Iterable<Object> subclasses = Annotations.getValue(Annotations.getInvisible(node, Mixin.class), "subclassTargets");
+        List<String> sub = new ArrayList<>();
+        for (Object subclass : subclasses) {
+            DeclaredTarget target = DeclaredTarget.of(subclass, this);
+            if(target != null) {
+                sub.add(target.name);
+            }
+        }
+        return sub;
     }
 
     /**

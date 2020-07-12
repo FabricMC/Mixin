@@ -56,6 +56,12 @@ public @interface Mixin {
     public String[] targets() default { };
 
     /**
+     * The classes, and classes that extend said class, indirectly or directly
+     * that should be mixined to
+     */
+    public Class<?>[] subclassTargets() default { };
+
+    /**
      * Priority for the mixin, relative to other mixins targetting the same
      * classes
      * 

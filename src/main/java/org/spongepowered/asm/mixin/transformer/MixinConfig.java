@@ -27,6 +27,7 @@ package org.spongepowered.asm.mixin.transformer;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -157,6 +158,8 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
      * Map of mixin target classes to mixin infos
      */
     private final transient Map<String, List<MixinInfo>> mixinMapping = new HashMap<String, List<MixinInfo>>();
+
+    private final transient Map<String, List<MixinInfo>> subclassMapping = new HashMap<>(); // todo populate this map
     
     /**
      * Targets for this configuration which haven't been mixed yet 
@@ -727,10 +730,13 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
             }
         }
         
-        for (MixinInfo mixin : this.pendingMixins) {
+        for (MixinInfo mixin : this.pendingMixins) { // todo populate subclassMap
             try {
                 mixin.parseTargets();
                 if (mixin.getTargetClasses().size() > 0) {
+                    for (String name : mixin.subclassTargetClassNames) {
+                        this.subclassMapping.computeIfAbsent(name, n -> new ArrayList<>()).add(mixin);
+                    }
                     for (String targetClass : mixin.getTargetClasses()) {
                         String targetClassName = targetClass.replace('/', '.');
                         this.mixinsFor(targetClassName).add(mixin);
@@ -1024,7 +1030,9 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
      * @return mixins for the specified target
      */
     public List<MixinInfo> getMixinsFor(String targetClass) {
-        return this.mixinsFor(targetClass);
+        List<MixinInfo> finalMixins = this.mixinsFor(targetClass);
+        this.walkSuper(ClassInfo.forName(targetClass), c -> finalMixins.addAll(this.subclassMapping.getOrDefault(c.getClassName(), Collections.emptyList())));
+        return finalMixins;
     }
 
     private List<MixinInfo> mixinsFor(String targetClass) {
@@ -1034,6 +1042,14 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
             this.mixinMapping.put(targetClass, mixins);
         }
         return mixins;
+    }
+
+    private void walkSuper(ClassInfo start, Consumer<ClassInfo> consumer) {
+        consumer.accept(start);
+        ClassInfo info = start.getSuperClass();
+        if(info != null) {
+            this.walkSuper(info, consumer);
+        }
     }
 
     /**
