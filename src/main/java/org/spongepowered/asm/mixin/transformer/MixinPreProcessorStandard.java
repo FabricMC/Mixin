@@ -779,7 +779,7 @@ class MixinPreProcessorStandard {
             ClassInfo.Method method = owner.findMethodInHierarchy(ref.getName(), ref.getDesc(), SearchType.ALL_CLASSES, ClassInfo.INCLUDE_PRIVATE | includeStatic);
 
             //Accessors are never renamed, despite it appearing as if they have been
-            member = method != null && !method.isAccessor() ? member : null;
+            member = method != null && !method.isAccessor() ? method : null;
         }
 
         metaTimer.end();
