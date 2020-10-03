@@ -1574,6 +1574,19 @@ public final class ClassInfo {
      * @param name Field name to search for
      * @param desc Field descriptor
      * @param searchType Search strategy to use
+     * @param flags search flags
+     * @return the field object or null if the field could not be resolved
+     */
+    public Field findFieldInHierarchy(String name, String desc, SearchType searchType, int flags) {
+        return this.findFieldInHierarchy(name, desc, searchType, Traversal.NONE, flags);
+    }
+
+    /**
+     * Finds the specified public or protected field in this class's hierarchy
+     *
+     * @param name Field name to search for
+     * @param desc Field descriptor
+     * @param searchType Search strategy to use
      * @param traversal Traversal type to allow during this lookup
      * @return the field object or null if the field could not be resolved
      */
