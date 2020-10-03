@@ -772,6 +772,7 @@ class MixinPreProcessorStandard {
         if (ref.isField()) {
             int includeStatic = ((ref.getOpcode() == Opcodes.GETSTATIC || ref.getOpcode() == Opcodes.PUTSTATIC)
                     ? ClassInfo.INCLUDE_STATIC : 0);
+            member = owner.findFieldInHierarchy(ref.getName(), ref.getDesc(), SearchType.ALL_CLASSES, ClassInfo.INCLUDE_PRIVATE | includeStatic);
         } else {
             int includeStatic = (ref.getOpcode() == Opcodes.INVOKESTATIC
                     ? ClassInfo.INCLUDE_STATIC : 0);
