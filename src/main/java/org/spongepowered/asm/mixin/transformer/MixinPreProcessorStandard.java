@@ -772,11 +772,14 @@ class MixinPreProcessorStandard {
         if (ref.isField()) {
             int includeStatic = ((ref.getOpcode() == Opcodes.GETSTATIC || ref.getOpcode() == Opcodes.PUTSTATIC)
                     ? ClassInfo.INCLUDE_STATIC : 0);
-            member = owner.findField(ref.getName(), ref.getDesc(), ClassInfo.INCLUDE_PRIVATE | includeStatic);
+            member = owner.findFieldInHierarchy(ref.getName(), ref.getDesc(), SearchType.ALL_CLASSES, ClassInfo.INCLUDE_PRIVATE | includeStatic);
         } else {
             int includeStatic = (ref.getOpcode() == Opcodes.INVOKESTATIC
                     ? ClassInfo.INCLUDE_STATIC : 0);
-            member = owner.findMethodInHierarchy(ref.getName(), ref.getDesc(), SearchType.ALL_CLASSES, ClassInfo.INCLUDE_PRIVATE | includeStatic);
+            ClassInfo.Method method = owner.findMethodInHierarchy(ref.getName(), ref.getDesc(), SearchType.ALL_CLASSES, ClassInfo.INCLUDE_PRIVATE | includeStatic);
+
+            //Accessors are never renamed, despite it appearing as if they have been
+            member = method != null && !method.isAccessor() ? method : null;
         }
 
         metaTimer.end();
