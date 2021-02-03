@@ -693,7 +693,33 @@ public final class MixinEnvironment implements ITokenProvider {
 			    return JavaVersion.current() >= 14.0;
 		    }
 
-	    };
+	    },
+
+        /**
+         * Java 16 and above
+         */
+        JAVA_15(15, Opcodes.V15, LanguageFeature.METHODS_IN_INTERFACES | LanguageFeature.PRIVATE_METHODS_IN_INTERFACES
+                | LanguageFeature.NESTING | LanguageFeature.DYNAMIC_CONSTANTS) {
+
+            @Override
+            boolean isSupported() {
+                return JavaVersion.current() >= 15.0;
+            }
+
+        },
+
+        /**
+         * Java 16 and above
+         */
+        JAVA_16(16, Opcodes.V16, LanguageFeature.METHODS_IN_INTERFACES | LanguageFeature.PRIVATE_METHODS_IN_INTERFACES
+                | LanguageFeature.NESTING | LanguageFeature.DYNAMIC_CONSTANTS) {
+
+            @Override
+            boolean isSupported() {
+                return JavaVersion.current() >= 16.0;
+            }
+
+        };
         
         /**
          * Bitmask values for language features supported
