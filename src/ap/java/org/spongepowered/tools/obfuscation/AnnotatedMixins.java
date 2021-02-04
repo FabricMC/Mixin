@@ -150,7 +150,7 @@ final class AnnotatedMixins implements IMixinAnnotationProcessor, ITokenProvider
 
         String pluginVersion = this.checkPluginVersion(this.getOption(SupportedOptions.PLUGIN_VERSION));
         String pluginVersionString = pluginVersion != null ? String.format(" (MixinGradle Version=%s)", pluginVersion) : "";
-        this.printMessage(Kind.NOTE, "SpongePowered MIXIN Annotation Processor Version=" + MixinBootstrap.VERSION + pluginVersionString);
+        this.printMessage(Kind.OTHER, "SpongePowered MIXIN Annotation Processor Version=" + MixinBootstrap.VERSION + pluginVersionString);
 
         this.targets = this.initTargetMap();
         this.obf = new ObfuscationManager(this);

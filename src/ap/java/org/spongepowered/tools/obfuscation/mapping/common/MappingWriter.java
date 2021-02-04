@@ -62,12 +62,12 @@ public abstract class MappingWriter implements IMappingWriter {
         if (fileName.matches("^.*[\\\\/:].*$")) {
             File outFile = new File(fileName);
             outFile.getParentFile().mkdirs();
-            this.messager.printMessage(Kind.NOTE, "Writing " + description + " to " + outFile.getAbsolutePath());
+            this.messager.printMessage(Kind.OTHER, "Writing " + description + " to " + outFile.getAbsolutePath());
             return new PrintWriter(outFile);
         }
         
         FileObject outResource = this.filer.createResource(StandardLocation.CLASS_OUTPUT, "", fileName);
-        this.messager.printMessage(Kind.NOTE, "Writing " + description + " to " + new File(outResource.toUri()).getAbsolutePath());
+        this.messager.printMessage(Kind.OTHER, "Writing " + description + " to " + new File(outResource.toUri()).getAbsolutePath());
         return new PrintWriter(outResource.openWriter());
     }
 

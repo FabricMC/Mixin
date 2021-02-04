@@ -150,12 +150,12 @@ public class ReferenceManager implements IReferenceManager {
         if (fileName.matches("^.*[\\\\/:].*$")) {
             File outFile = new File(fileName);
             outFile.getParentFile().mkdirs();
-            this.ap.printMessage(Kind.NOTE, "Writing " + description + " to " + outFile.getAbsolutePath());
+            this.ap.printMessage(Kind.OTHER, "Writing " + description + " to " + outFile.getAbsolutePath());
             return new PrintWriter(outFile);
         }
         
         FileObject outResource = this.ap.getProcessingEnvironment().getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", fileName);
-        this.ap.printMessage(Kind.NOTE, "Writing " + description + " to " + new File(outResource.toUri()).getAbsolutePath());
+        this.ap.printMessage(Kind.OTHER, "Writing " + description + " to " + new File(outResource.toUri()).getAbsolutePath());
         return new PrintWriter(outResource.openWriter());
     }
 

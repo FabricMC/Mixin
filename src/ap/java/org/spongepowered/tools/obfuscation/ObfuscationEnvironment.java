@@ -154,7 +154,7 @@ public abstract class ObfuscationEnvironment implements IObfuscationEnvironment 
                 File inputFile = new File(inputFileName);
                 try {
                     if (inputFile.isFile()) {
-                        this.ap.printMessage(Kind.NOTE, "Loading " + this.type + " mappings from " + inputFile.getAbsolutePath());
+                        this.ap.printMessage(Kind.OTHER, "Loading " + this.type + " mappings from " + inputFile.getAbsolutePath());
                         this.mappingProvider.read(inputFile);
                         successCount++;
                     }

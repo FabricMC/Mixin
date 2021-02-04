@@ -94,7 +94,7 @@ public final class ObfuscationServices {
                         for (ObfuscationTypeDescriptor obfType : obfTypes) {
                             try {
                                 ObfuscationType type = ObfuscationType.create(obfType, ap);
-                                ap.printMessage(Kind.NOTE, serviceName + " supports type: \"" + type + "\"");
+                                ap.printMessage(Kind.OTHER, serviceName + " supports type: \"" + type + "\"");
                                 defaultIsPresent |= type.isDefault();
                             } catch (Exception ex) {
                                 ex.printStackTrace();
