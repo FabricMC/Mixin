@@ -21,16 +21,12 @@ defaultTasks 'build'
 // Basic project information
 group = 'net.fabricmc'
 archivesBaseName = 'sponge-mixin'
-version = buildVersion
+version = buildVersion + "+mixin." + upstreamMixinVersion
 
-ext.buildNumber = '0'
 
 def ENV = System.getenv()
-if (ENV.BUILD_NUMBER) {
-    version = version + "+build." + "${ENV.BUILD_NUMBER}"
-    ext.buildNumber = "${ENV.BUILD_NUMBER}"
-} else {
-    version = version + "+local"
+if (!ENV.BUILD_NUMBER) {
+    version = version + "-local"
 }
 
 // Extended project information
@@ -39,17 +35,15 @@ ext.inceptionYear = '2014'
 ext.packaging = 'jar'
 
 // Define variables
-ext.ciSystem = project.hasProperty("ciSystem") ? ciSystem : 'unknown'
-ext.commit = project.hasProperty("commit") ? commit : 'unknown'
-ext.asmVersion = project.hasProperty("asmVersion") ? asmVersion : '6.2'
+ext.asmVersion = project.hasProperty("asmVersion") ? asmVersion : '9.0'
 ext.legacyForgeAsmVersion = project.hasProperty("legacyForgeAsmVersion") ? asmVersion : '5.0.3'
 
 // True to do jar signing task
 ext.doSignJar = project.hasProperty("keyStorePath")
 
 // Minimum version of Java required
-sourceCompatibility = '1.6'
-targetCompatibility = '1.6'
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
 
 // Project repositories
 repositories {
@@ -99,11 +93,6 @@ sourceSets {
     launchwrapper {
         compileClasspath += main.output
     }
-    modlauncher {
-        compileClasspath += main.output
-        sourceCompatibility = '1.8'
-        targetCompatibility = '1.8'
-    }
 }
 
 // Project dependencies
@@ -149,16 +138,6 @@ dependencies {
         exclude module: 'lwjgl'
     }
 
-    modlauncherCompile configurations.compile
-    modlauncherImplementation configurations.implementation
-    modlauncherCompile 'net.sf.jopt-simple:jopt-simple:5.0.4'
-    modlauncherCompile "org.ow2.asm:asm-tree:$modlauncherAsmVersion"
-    modlauncherCompile "org.ow2.asm:asm-commons:$modlauncherAsmVersion"
-    modlauncherCompile "org.ow2.asm:asm-util:$modlauncherAsmVersion"
-    modlauncherCompile ("cpw.mods:modlauncher:$modlauncherVersion") {
-        exclude module: 'log4j-core'
-    }
-
     // agent
     agentCompile configurations.compile
     agentImplementation configurations.implementation
@@ -179,7 +158,6 @@ javadoc {
 eclipse.classpath.plusConfigurations += [
     configurations.fernflowerCompile,
     configurations.launchwrapperCompile,
-    configurations.modlauncherCompile,
     configurations.bridgeCompile
 ]
 
@@ -187,7 +165,6 @@ eclipse.classpath.plusConfigurations += [
 idea.module.scopes.COMPILE.plus += [
     configurations.fernflowerCompile,
     configurations.launchwrapperCompile,
-    configurations.modlauncherCompile,
     configurations.bridgeCompile
 ]
 
@@ -202,6 +179,9 @@ tasks.withType(JavaCompile) {
     options.compilerArgs += ['-Xlint:all', '-Xlint:-path', '-proc:none']
     options.deprecation = true
     options.encoding = 'utf8'
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.release = 8
+    }
 }
 
 if (JavaVersion.current().isJava8Compatible()) {
@@ -225,7 +205,7 @@ task stagingJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
         "Built-By": System.properties['user.name'],
         "Created-By": System.properties['java.vm.version'] + " (" + System.properties['java.vm.vendor'] + ")",
         "Implementation-Title": name,
-        "Implementation-Version": version + "+" + ciSystem + "-b" + buildNumber + ".git-" + commit,
+        "Implementation-Version": version,
         "Implementation-Vendor": url,
         // for hotswap agent
         "Premain-Class": "org.spongepowered.tools.agent.MixinAgent",
@@ -260,7 +240,7 @@ task thinJar(type: Jar) {
         "Built-By": System.properties['user.name'],
         "Created-By": System.properties['java.vm.version'] + " (" + System.properties['java.vm.vendor'] + ")",
         "Implementation-Title": name,
-        "Implementation-Version": version + "+" + ciSystem + "-b" + buildNumber + ".git-" + commit,
+        "Implementation-Version": version,
         "Implementation-Vendor": url,
     )
 }
@@ -412,13 +392,29 @@ publishing {
 
     repositories {
         maven {
-            url "http://mavenupload.modmuss50.me/"
-            if (project.hasProperty('mavenPass')) {
-                credentials {
-                    username 'buildslave'
-                    password project.getProperty('mavenPass')
+            if (ENV.MAVEN_URL) {
+                maven {
+                    url ENV.MAVEN_URL
+                    credentials {
+                        username ENV.MAVEN_USERNAME
+                        password ENV.MAVEN_PASSWORD
+                    }
                 }
             }
         }
     }
 }
+
+// A task to ensure that the version being released has not already been released.
+task checkVersion {
+    doFirst {
+        def xml = new URL("https://maven.fabricmc.net/net/fabricmc/sponge-mixin/maven-metadata.xml").text
+        def metadata = new XmlSlurper().parseText(xml)
+        def versions = metadata.versioning.versions.version*.text();
+        if (versions.contains(version)) {
+            throw new RuntimeException("${version} has already been released!")
+        }
+    }
+}
+
+publish.mustRunAfter checkVersion
