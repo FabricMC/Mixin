@@ -93,6 +93,9 @@ sourceSets {
     launchwrapper {
         compileClasspath += main.output
     }
+    modlauncher {
+        compileClasspath += main.output
+    }
 }
 
 // Project dependencies
@@ -138,6 +141,17 @@ dependencies {
         exclude module: 'lwjgl'
     }
 
+    modlauncherCompile configurations.compile
+    modlauncherImplementation configurations.implementation
+    modlauncherCompile 'net.sf.jopt-simple:jopt-simple:5.0.4'
+    modlauncherCompile "org.ow2.asm:asm-tree:$modlauncherAsmVersion"
+    modlauncherCompile "org.ow2.asm:asm-commons:$modlauncherAsmVersion"
+    modlauncherCompile "org.ow2.asm:asm-util:$modlauncherAsmVersion"
+    modlauncherCompile ("cpw.mods:modlauncher:$modlauncherVersion") {
+        exclude module: 'log4j-core'
+    }
+    modlauncherCompile 'cpw.mods:grossjava9hacks:1.3.+'
+
     // agent
     agentCompile configurations.compile
     agentImplementation configurations.implementation
@@ -158,6 +172,7 @@ javadoc {
 eclipse.classpath.plusConfigurations += [
     configurations.fernflowerCompile,
     configurations.launchwrapperCompile,
+    configurations.modlauncherCompile,
     configurations.bridgeCompile
 ]
 
@@ -165,6 +180,7 @@ eclipse.classpath.plusConfigurations += [
 idea.module.scopes.COMPILE.plus += [
     configurations.fernflowerCompile,
     configurations.launchwrapperCompile,
+    configurations.modlauncherCompile,
     configurations.bridgeCompile
 ]
 
