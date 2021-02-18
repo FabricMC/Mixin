@@ -72,9 +72,21 @@ public final class Mixins {
      * @param configFiles config resources to add
      */
     public static void addConfigurations(String... configFiles) {
+        addConfigurations(null, configFiles);
+    }
+
+    /**
+     * Add multiple configurations
+     * 
+     * @param modId id of the provider mod or null
+     * @param configFiles config resources to add
+     * @deprecated only available on fabric's fork of mixin
+     */
+    @Deprecated
+    public static void addConfigurations(String modId, String... configFiles) {
         MixinEnvironment fallback = MixinEnvironment.getDefaultEnvironment();
         for (String configFile : configFiles) {
-            Mixins.createConfiguration(configFile, fallback);
+            Mixins.createConfiguration(configFile, modId, fallback);
         }
     }
     
@@ -84,20 +96,20 @@ public final class Mixins {
      * @param configFile path to configuration resource
      */
     public static void addConfiguration(String configFile) {
-        Mixins.createConfiguration(configFile, MixinEnvironment.getDefaultEnvironment());
+        Mixins.createConfiguration(configFile, null, MixinEnvironment.getDefaultEnvironment());
     }
     
     @Deprecated
     static void addConfiguration(String configFile, MixinEnvironment fallback) {
-        Mixins.createConfiguration(configFile, fallback);
+        Mixins.createConfiguration(configFile, null, fallback);
     }
 
     @SuppressWarnings("deprecation")
-    private static void createConfiguration(String configFile, MixinEnvironment fallback) {
+    private static void createConfiguration(String configFile, String modId, MixinEnvironment fallback) {
         Config config = null;
         
         try {
-            config = Config.create(configFile, fallback);
+            config = Config.create(configFile, modId, fallback);
         } catch (Exception ex) {
             Mixins.logger.error("Error encountered reading mixin config " + configFile + ": " + ex.getClass().getName() + " " + ex.getMessage(), ex);
         }

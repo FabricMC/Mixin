@@ -133,7 +133,7 @@ public class MixinProcessor {
         }
 
         public String getErrorMessage(IMixinInfo mixin, IMixinConfig config, Phase phase) {
-            return String.format("Mixin [%s] from phase [%s] in config [%s] FAILED during %s", mixin, phase, config, this.name());
+            return String.format("Mixin [%s] from phase [%s] in config [%s] provided by [%s] FAILED during %s", mixin, phase, config, config.getModId(), this.name());
         }
         
     }
@@ -517,7 +517,7 @@ public class MixinProcessor {
                 this.handleMixinPrepareError(config, ex, environment);
             } catch (Exception ex) {
                 String message = ex.getMessage();
-                MixinProcessor.logger.error("Error encountered whilst initialising mixin config '" + config.getName() + "': " + message, ex);
+                MixinProcessor.logger.error("Error encountered whilst initialising mixin config '" + config.getName() + "', provided by '" + config.getModId() + "': " + message, ex);
             }
         }
         
@@ -544,7 +544,7 @@ public class MixinProcessor {
                 this.handleMixinPrepareError(config, ex, environment);
             } catch (Exception ex) {
                 String message = ex.getMessage();
-                MixinProcessor.logger.error("Error encountered during mixin config postInit step'" + config.getName() + "': " + message, ex);
+                MixinProcessor.logger.error("Error encountered during mixin config postInit step'" + config.getName() + "', provided by '" + config.getModId() + "': " + message, ex);
             }
         }
         
@@ -617,6 +617,7 @@ public class MixinProcessor {
                 .kv("Action", errorPhase.name())
                 .kv("Mixin", mixin.getClassName())
                 .kv("Config", config.getName())
+                .kv("ModId", String.valueOf(config.getModId()))
                 .kv("Phase", phase)
                 .hr('-')
                 .add("    %s", ex.getClass().getName())

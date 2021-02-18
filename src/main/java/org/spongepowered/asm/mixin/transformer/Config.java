@@ -139,13 +139,28 @@ public class Config {
      */
     @Deprecated
     public static Config create(String configFile, MixinEnvironment outer) {
+        return Config.create(configFile, null, outer);
+    }
+
+    /**
+     * Factory method, create a config from the specified config file and fail
+     * over to the specified environment if no selector is present in the config
+     * 
+     * @param configFile config resource
+     * @param modId id of the provider mod or null
+     * @param outer failover environment
+     * @return new config or null if invalid config version
+     * @deprecated only available on fabric's fork of mixin
+     */
+    @Deprecated
+    public static Config create(String configFile, String modId, MixinEnvironment outer) {
         Config config = Config.allConfigs.get(configFile);
         if (config != null) {
             return config;
         }
         
         try {
-            config = MixinConfig.create(configFile, outer);
+            config = MixinConfig.create(configFile, modId, outer);
             if (config != null) {
                 Config.allConfigs.put(config.getName(), config);
             }

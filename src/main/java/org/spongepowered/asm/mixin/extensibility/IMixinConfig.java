@@ -89,4 +89,13 @@ public interface IMixinConfig {
      */
     public abstract Set<String> getTargets();
 
+    /**
+     * Get the id of the provider mod, if available
+     *
+     * @return the id of the provider mod or null if it wasn't provided
+     * @deprecated only available on fabric's fork of mixin
+     */
+    @Deprecated
+    public abstract String getModId();
+
 }

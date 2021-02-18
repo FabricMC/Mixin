@@ -308,6 +308,11 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
      * Name of the file this config was initialised from
      */
     private transient String name;
+
+    /**
+     * Id of the mod this config was provided by
+     */
+    private transient String modId;
     
     /**
      * Name of the {@link IMixinConfigPlugin} to hook onto this MixinConfig 
@@ -367,9 +372,10 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
      *      returned, or false if initialisation failed and the config should
      *      be discarded
      */
-    private boolean onLoad(IMixinService service, String name, MixinEnvironment fallbackEnvironment) {
+    private boolean onLoad(IMixinService service, String name, String modId, MixinEnvironment fallbackEnvironment) {
         this.service = service;
         this.name = name;
+        this.modId = modId;
         
         // If parent is specified, don't perform postinit until parent is assigned
         if (!Strings.isNullOrEmpty(this.parentName)) {
@@ -968,7 +974,15 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
     public Set<String> getTargets() {
         return Collections.<String>unmodifiableSet(this.mixinMapping.keySet());
     }
-    
+
+    /* (non-Javadoc)
+     * @see org.spongepowered.asm.mixin.transformer.IMixinConfig#getModId()
+     */
+    @Override
+    public String getModId() {
+        return modId;
+    }
+
     /**
      * Get targets for this configuration
      */
@@ -1083,6 +1097,19 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
      * @return new Config
      */
     static Config create(String configFile, MixinEnvironment outer) {
+        return create(configFile, null, outer);
+    }
+
+    /**
+     * Factory method, creates a new mixin configuration bundle from the
+     * specified configFile, which must be accessible on the classpath
+     *
+     * @param configFile configuration file to load
+     * @param modId the nullable id of the mod that provided the configuration file
+     * @param outer fallback environment
+     * @return new Config
+     */
+    static Config create(String configFile, String modId, MixinEnvironment outer) {
         try {
             IMixinService service = MixinService.getService();
             InputStream resource = service.getResourceAsStream(configFile);
@@ -1090,7 +1117,7 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
                 throw new IllegalArgumentException(String.format("The specified resource '%s' was invalid or could not be read", configFile));
             }
             MixinConfig config = new Gson().fromJson(new InputStreamReader(resource), MixinConfig.class);
-            if (config.onLoad(service, configFile, outer)) {
+            if (config.onLoad(service, configFile, modId, outer)) {
                 return config.getHandle();
             }
             return null;
