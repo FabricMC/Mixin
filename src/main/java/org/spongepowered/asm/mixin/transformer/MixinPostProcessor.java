@@ -213,7 +213,7 @@ class MixinPostProcessor implements MixinConfig.IListener {
         Type[] args = Type.getArgumentTypes(methodNode.desc);
         Type returnType = Type.getReturnType(methodNode.desc);
         Bytecode.loadArgs(args, methodNode.instructions, 0);
-        methodNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, targetClass.getName(), method.getName(), methodNode.desc, false));
+        methodNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, targetClass.getName(), method.getName(), methodNode.desc, targetClass.isInterface()));
         methodNode.instructions.add(new InsnNode(returnType.getOpcode(Opcodes.IRETURN)));
         methodNode.maxStack = Bytecode.getFirstNonArgLocalIndex(args, false);
         methodNode.maxLocals = 0;

@@ -27,6 +27,8 @@ package org.spongepowered.asm.mixin.transformer;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.FieldNode;
+import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel.LanguageFeature;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Method;
 import org.spongepowered.asm.mixin.transformer.MixinInfo.MixinClassNode;
 import org.spongepowered.asm.mixin.transformer.MixinInfo.MixinMethodNode;
@@ -58,8 +60,11 @@ class MixinPreProcessorInterface extends MixinPreProcessorStandard {
     protected void prepareMethod(MixinMethodNode mixinMethod, Method method) {
         // Userland interfaces should not have non-public methods except for lambda bodies
         if (!Bytecode.hasFlag(mixinMethod, Opcodes.ACC_PUBLIC) && !Bytecode.hasFlag(mixinMethod, Opcodes.ACC_SYNTHETIC)) {
-            throw new InvalidInterfaceMixinException(this.mixin, "Interface mixin contains a non-public method! Found " + method + " in "
-                    + this.mixin);
+            //On versions that support it private methods are also allowed
+            if (!Bytecode.hasFlag(mixinMethod, Opcodes.ACC_PRIVATE) || !MixinEnvironment.getCompatibilityLevel().supports(LanguageFeature.PRIVATE_METHODS_IN_INTERFACES)) {
+                throw new InvalidInterfaceMixinException(this.mixin, "Interface mixin contains a non-public method! Found " + method + " in "
+                        + this.mixin);
+            }
         }
         
         super.prepareMethod(mixinMethod, method);

@@ -31,6 +31,7 @@ import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 import org.spongepowered.asm.mixin.MixinEnvironment.Option;
+import org.spongepowered.asm.mixin.gen.throwables.InvalidAccessorException;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Method;
 import org.spongepowered.asm.mixin.transformer.MixinTargetContext;
@@ -52,6 +53,12 @@ public class AccessorGeneratorFieldSetter extends AccessorGeneratorField {
     
     @Override
     public void validate() {
+        if (Bytecode.hasFlag(this.info.getClassNode(), Opcodes.ACC_INTERFACE)) {
+            //This will result in a ClassFormatError when the class is verified
+            throw new InvalidAccessorException(info, String.format("%s tried to change interface field %s::%s",
+                    this.info, this.info.getClassNode().name, this.targetField.name));
+        }
+
         super.validate();
         
         Method method = this.info.getClassInfo().findMethod(this.info.getMethod());

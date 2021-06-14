@@ -152,10 +152,6 @@ class AnnotatedMixinElementHandlerInjector extends AnnotatedMixinElementHandler 
     }
 
     public void registerInjector(AnnotatedElementInjector elem) {
-        if (this.mixin.isInterface()) {
-            this.ap.printMessage(Kind.ERROR, "Injector in interface is unsupported", elem.getElement());
-        }
-        
         for (String reference : elem.getAnnotation().<String>getList("method")) {
             ITargetSelector targetSelector = TargetSelector.parse(reference);
             
@@ -260,10 +256,6 @@ class AnnotatedMixinElementHandlerInjector extends AnnotatedMixinElementHandler 
      * and process the references
      */
     public void registerInjectionPoint(AnnotatedElementInjectionPoint elem, String format) {
-        if (this.mixin.isInterface()) {
-            this.ap.printMessage(Kind.ERROR, "Injector in interface is unsupported", elem.getElement());
-        }
-        
         if (!elem.shouldRemap()) {
             return;
         }
