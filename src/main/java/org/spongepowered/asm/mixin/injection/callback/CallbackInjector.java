@@ -213,15 +213,17 @@ public class CallbackInjector extends Injector {
                 this.invoke.add(this.localTypes.length - this.frameSize);
             }
 
+            //If the handler doesn't captureArgs, the CallbackInfo(Returnable) will be the first LVT slot, otherwise it will be at the target's frameSize
+            int callbackInfoSlot = handlerArgs.length == 1 ? Bytecode.isStatic(handler) ? 0 : 1 : frameSize;
             boolean seenCallbackInfoUse = false;
             for (AbstractInsnNode insn : handler.instructions) {
                 //Look for anywhere the CallbackInfo(Returnable) is loaded in the handler, it's unused if it is never loaded in
-                if (insn.getType() == AbstractInsnNode.VAR_INSN && insn.getOpcode() == Opcodes.ALOAD && ((VarInsnNode) insn).var == frameSize) {
+                if (insn.getType() == AbstractInsnNode.VAR_INSN && insn.getOpcode() == Opcodes.ALOAD && ((VarInsnNode) insn).var == callbackInfoSlot) {
                     seenCallbackInfoUse = true;
                     break;
                 }
             }
-            //System.out.printf("%s does%s use it's CallbackInfo%s%n", info, seenCallbackInfoUse ? "" : "n't", Type.VOID_TYPE.equals(target.returnType) ? "" : "Returnable");
+            Injector.logger.debug("{} does{} use it's CallbackInfo{}", info, seenCallbackInfoUse ? "" : "n't", Type.VOID_TYPE == target.returnType ? "" : "Returnable");
             usesCallbackInfo = seenCallbackInfoUse;
         }
 
