@@ -58,7 +58,7 @@ public abstract class AccessorGenerator {
             if (!this.targetIsStatic) {
                 throw new InvalidAccessorException(this.info, String.format("%s is invalid. Accessor method is static but the target is not.", this.info));
             } else {
-                LogManager.getLogger("mixin").info("{} could be static as its target is", this.info);
+                LogManager.getLogger("mixin").info("{} should be static as its target is", this.info);
             }
         }
     }
@@ -72,7 +72,7 @@ public abstract class AccessorGenerator {
      */
     protected final MethodNode createMethod(int maxLocals, int maxStack) {
         MethodNode method = this.info.getMethod();
-        MethodNode accessor = new MethodNode(ASM.API_VERSION, (method.access & ~Opcodes.ACC_ABSTRACT) | Opcodes.ACC_SYNTHETIC | (this.targetIsStatic ? Opcodes.ACC_STATIC : 0), method.name,
+        MethodNode accessor = new MethodNode(ASM.API_VERSION, (method.access & ~Opcodes.ACC_ABSTRACT) | Opcodes.ACC_SYNTHETIC, method.name,
                 method.desc, null, null);
         accessor.visibleAnnotations = new ArrayList<AnnotationNode>();
         accessor.visibleAnnotations.add(this.info.getAnnotation());
