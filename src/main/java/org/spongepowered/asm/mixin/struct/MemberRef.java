@@ -27,6 +27,7 @@ package org.spongepowered.asm.mixin.struct;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
+import org.spongepowered.asm.mixin.transformer.ClassInfo;
 import org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerError;
 import org.spongepowered.asm.util.Bytecode;
 
@@ -241,7 +242,7 @@ public abstract class MemberRef {
             if (tag == 0) {
                 throw new MixinTransformerError("Invalid opcode " + Bytecode.getOpcodeName(opcode) + " for method handle " + this.handle + ".");
             }
-            boolean itf = tag == Opcodes.H_INVOKEINTERFACE;
+            boolean itf = this.handle.isInterface();
             this.handle = new org.objectweb.asm.Handle(tag, this.handle.getOwner(), this.handle.getName(), this.handle.getDesc(), itf);
         }
 
@@ -252,7 +253,8 @@ public abstract class MemberRef {
 
         @Override
         public void setOwner(String owner) {
-            boolean itf = this.handle.getTag() == Opcodes.H_INVOKEINTERFACE;
+            boolean itf = this.handle.isInterface();
+            assert ClassInfo.forName(owner).isInterface() == itf;
             this.handle = new org.objectweb.asm.Handle(this.handle.getTag(), owner, this.handle.getName(), this.handle.getDesc(), itf);
         }
 
@@ -263,7 +265,7 @@ public abstract class MemberRef {
 
         @Override
         public void setName(String name) {
-            boolean itf = this.handle.getTag() == Opcodes.H_INVOKEINTERFACE;
+            boolean itf = this.handle.isInterface();
             this.handle = new org.objectweb.asm.Handle(this.handle.getTag(), this.handle.getOwner(), name, this.handle.getDesc(), itf);
         }
 
@@ -274,7 +276,7 @@ public abstract class MemberRef {
 
         @Override
         public void setDesc(String desc) {
-            boolean itf = this.handle.getTag() == Opcodes.H_INVOKEINTERFACE;
+            boolean itf = this.handle.isInterface();
             this.handle = new org.objectweb.asm.Handle(this.handle.getTag(), this.handle.getOwner(), this.handle.getName(), desc, itf);
         }
     }
