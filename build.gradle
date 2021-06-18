@@ -107,10 +107,15 @@ sourceSets {
 dependencies {
     def guava = 'com.google.guava:guava:21.0' // from mc1.12 onwards
     def log4j2 = 'org.apache.logging.log4j:log4j-core:2.0-beta9'
+    def gson = 'com.google.code.gson:gson:2.2.4'
 
     implementation guava
     implementation log4j2
-    implementation 'com.google.code.gson:gson:2.2.4'
+    implementation gson
+
+    stagingJar guava
+    stagingJar gson
+
     if (Float.parseFloat(asmVersion) < 6) {
         implementation "org.ow2.asm:asm-debug-all:$asmVersion"
     }
@@ -222,6 +227,7 @@ task stagingJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
     )
     
     mergeServiceFiles()
+    relocate 'com.google', 'org.spongepowered.include.com.google'
 }
 
 // Clear artifacts because jar will be there by default and we want to use staging jar instead
@@ -254,14 +260,14 @@ shadowJar  {
     from sourceSets.ap.output
     exclude 'META-INF/*.DSA'
     exclude 'META-INF/*.RSA'
-    classifier = 'processor'
+    archiveClassifier = 'processor'
 }
 build.dependsOn(shadowJar)
 
 // Run this task instead of build to generate a timestamped shadow jar (for dev)
 task timestamp(type: Jar, dependsOn: build) {
     if (gradle.startParameter.taskNames.contains(name)) {
-        shadowJar.classifier = new Date().format('yyyyMMddHHmmss')
+        shadowJar.archiveClassifier = new Date().format('yyyyMMddHHmmss')
     }
 }
 
