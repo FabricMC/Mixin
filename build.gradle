@@ -3,12 +3,13 @@ plugins {
     id 'maven-publish'
     id 'eclipse'
     id 'idea'
+    id 'checkstyle'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
-
+    id "com.github.hierynomus.license" version "0.16.1"
 }
 
 // Default tasks
-defaultTasks 'build'
+defaultTasks 'licenseFormat', 'check', 'build'
 
 // Basic project information
 group = 'net.fabricmc'
@@ -160,8 +161,24 @@ dependencies {
 }
 
 javadoc {
-    classpath += sourceSets.legacy.output // why?
+    exclude '**/throwables'
+    classpath += sourceSets.legacy.output
+    source sourceSets.ap.allJava
     options.encoding = 'UTF-8'
+    exclude {
+        it.relativePath.file && it.relativePath.pathString =~ 'tools' && !(it.name =~ /SuppressedBy|package-info/) }
+    options {
+        docTitle 'Welcome to the Mixin Javadoc'
+        overview 'docs/javadoc/overview.html'
+        stylesheetFile file('docs/javadoc/mixin.css')
+        addBooleanOption '-allow-script-in-comments', true
+    }
+    doLast {
+        copy {
+            from 'docs/javadoc/resources'
+            into outputDirectory
+        }
+    }
 }
 
 // Eclipse
@@ -184,6 +201,34 @@ idea.module.scopes.COMPILE.plus += [
 processResources {
     // Include in final JAR
    from 'LICENSE.txt'
+}
+
+// License header formatting
+license {
+    ext {
+        name = "Mixin"
+        organization = "SpongePowered"
+        url = "https://www.spongepowered.org"
+    }
+    include '**/*.java'
+    header file("HEADER.txt")
+    sourceSets = project.sourceSets
+    ignoreFailures false
+    strictCheck true
+    mapping {
+        java = 'SLASHSTAR_STYLE'
+    }
+}
+
+checkstyle {
+    configProperties = [
+        "name"        : project.name,
+        "organization": project.organization,
+        "url"         : project.url,
+        "year"        : project.inceptionYear
+    ]
+    configFile = file("checkstyle.xml")
+    toolVersion = '8.43'
 }
 
 // Source compiler configuration

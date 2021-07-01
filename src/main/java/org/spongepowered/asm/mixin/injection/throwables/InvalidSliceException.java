@@ -40,7 +40,7 @@ public class InvalidSliceException extends InvalidInjectionException {
     }
 
     public InvalidSliceException(ISliceContext owner, String message) {
-        super(owner.getContext(), message);
+        super(owner.getMixin(), message);
     }
 
     public InvalidSliceException(IMixinContext context, Throwable cause) {
@@ -48,7 +48,7 @@ public class InvalidSliceException extends InvalidInjectionException {
     }
 
     public InvalidSliceException(ISliceContext owner, Throwable cause) {
-        super(owner.getContext(), cause);
+        super(owner.getMixin(), cause);
     }
 
     public InvalidSliceException(IMixinContext context, String message, Throwable cause) {
@@ -56,7 +56,7 @@ public class InvalidSliceException extends InvalidInjectionException {
     }
 
     public InvalidSliceException(ISliceContext owner, String message, Throwable cause) {
-        super(owner.getContext(), message, cause);
+        super(owner.getMixin(), message, cause);
     }
 
 }

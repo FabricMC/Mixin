@@ -52,7 +52,7 @@ import com.google.common.base.Strings;
  * {@link org.spongepowered.asm.mixin.injection.At At}:</p>
  * 
  * <dl>
- *   <dt><em>named argument</em> class (or specify using <tt>target</tt></dt>
+ *   <dt><i>named argument:</i> class (or specify using <tt>target</tt></dt>
  *   <dd>The value of the NEW node to look for, the fully-qualified class name
  *   </dd>
  *   <dt>ordinal</dt>
@@ -70,16 +70,16 @@ import com.google.common.base.Strings;
  * 
  * <p>Examples:</p>
  * <blockquote><pre>
- *   // Find all NEW opcodes for <tt>String</tt>
+ *   <del>// Find all NEW opcodes for <tt>String</tt></del>
  *   &#064;At(value = "NEW", args = "class=java/lang/String")</pre>
  * </blockquote> 
  * <blockquote><pre>
- *   // Find all NEW opcodes for <tt>String</tt>
+ *   <del>// Find all NEW opcodes for <tt>String</tt></del>
  *   &#064;At(value = "NEW", target = "java/lang/String"</pre>
  * </blockquote> 
  * <blockquote><pre>
- *   // Find all NEW opcodes for <tt>String</tt> which are constructed using the
- *   // ctor which takes an array of <tt>char</tt>
+ *   <del>// Find all NEW opcodes for <tt>String</tt> which are constructed
+ *   // using the ctor which takes an array of <tt>char</tt></del>
  *   &#064;At(value = "NEW", target = "([C)Ljava/lang/String;"</pre>
  * </blockquote> 
  * 
@@ -113,7 +113,7 @@ public class BeforeNew extends InjectionPoint {
         String target = Strings.emptyToNull(data.get("class", data.get("target", "")).replace('.', '/'));
         ITargetSelector member = TargetSelector.parseAndValidate(target, data.getContext());
         if (!(member instanceof ITargetSelectorConstructor)) {
-            throw new InvalidInjectionPointException(data.getContext(), "Failed parsing @At(\"NEW\") target descriptor \"%s\" on %s",
+            throw new InvalidInjectionPointException(data.getMixin(), "Failed parsing @At(\"NEW\") target descriptor \"%s\" on %s",
                     target, data.getDescription());
         }
         ITargetSelectorConstructor targetSelector = (ITargetSelectorConstructor)member;

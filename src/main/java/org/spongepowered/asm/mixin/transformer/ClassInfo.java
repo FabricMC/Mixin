@@ -49,7 +49,6 @@ import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel.LanguageFeature;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -58,6 +57,7 @@ import org.spongepowered.asm.mixin.transformer.MixinInfo.MixinClassNode;
 import org.spongepowered.asm.service.MixinService;
 import org.spongepowered.asm.util.Annotations;
 import org.spongepowered.asm.util.ClassSignature;
+import org.spongepowered.asm.util.LanguageFeatures;
 import org.spongepowered.asm.util.Locals;
 import org.spongepowered.asm.util.perf.Profiler;
 import org.spongepowered.asm.util.perf.Profiler.Section;
@@ -112,9 +112,9 @@ public final class ClassInfo {
     }
     
     /**
-     * When using {@link ClassInfo#forType}, determines whether an array type
-     * should be returned as declared (eg. as <tt>Object</tt>) or whether the
-     * element type should be returned instead.
+     * When using {@link ClassInfo#forType ClassInfo.forType}, determines
+     * whether an array type should be returned as declared (eg. as <tt>Object
+     * </tt>) or whether the element type should be returned instead.
      */
     public static enum TypeLookup {
         
@@ -248,10 +248,11 @@ public final class ClassInfo {
          */
         @Override
         public String toString() {
-            return String.format("FrameData[index=%d, type=%s, locals=%d]", this.index, FrameData.FRAMETYPES[this.type + 1], this.locals);
+            return String.format("FrameData[index=%d, type=%s, locals=%d size=%d]", this.index, FrameData.FRAMETYPES[this.type + 1], this.locals,
+                    this.size);
         }
     }
-
+    
     /**
      * Information about a member in this class
      */
@@ -974,7 +975,7 @@ public final class ClassInfo {
         return this.name;
     }
     
-    public MethodMapper getMethodMapper() {
+    MethodMapper getMethodMapper() {
         return this.methodMapper;
     }
 
@@ -1146,12 +1147,53 @@ public final class ClassInfo {
     /**
      * Test whether this class has the specified superclass in its hierarchy
      *
+     * @param superClass Superclass to search for in the hierarchy
+     * @return true if the specified class appears in the class's hierarchy
+     *      anywhere
+     */
+    public boolean hasSuperClass(Class<?> superClass) {
+        return this.hasSuperClass(superClass, Traversal.NONE, superClass.isInterface());
+    }
+
+    /**
+     * Test whether this class has the specified superclass in its hierarchy
+     *
+     * @param superClass Superclass to search for in the hierarchy
+     * @param traversal Traversal type to allow during this lookup
+     * @return true if the specified class appears in the class's hierarchy
+     *      anywhere
+     */
+    public boolean hasSuperClass(Class<?> superClass, Traversal traversal) {
+        return this.hasSuperClass(superClass, traversal, superClass.isInterface());
+    }
+    
+    /**
+     * Test whether this class has the specified superclass in its hierarchy
+     *
+     * @param superClass Superclass to search for in the hierarchy
+     * @param traversal Traversal type to allow during this lookup
+     * @param includeInterfaces True to include interfaces in the lookup
+     * @return true if the specified class appears in the class's hierarchy
+     *      anywhere
+     */
+    public boolean hasSuperClass(Class<?> superClass, Traversal traversal, boolean includeInterfaces) {
+        String internalName = org.objectweb.asm.Type.getInternalName(superClass);
+        if (ClassInfo.JAVA_LANG_OBJECT.equals(internalName)) {
+            return true;
+        }
+        
+        return this.findSuperClass(internalName, traversal) != null;
+    }
+
+    /**
+     * Test whether this class has the specified superclass in its hierarchy
+     *
      * @param superClass Name of the superclass to search for in the hierarchy
      * @return true if the specified class appears in the class's hierarchy
      *      anywhere
      */
     public boolean hasSuperClass(String superClass) {
-        return this.hasSuperClass(superClass, Traversal.NONE);
+        return this.hasSuperClass(superClass, Traversal.NONE, false);
     }
 
     /**
@@ -1163,10 +1205,23 @@ public final class ClassInfo {
      *      anywhere
      */
     public boolean hasSuperClass(String superClass, Traversal traversal) {
+        return this.hasSuperClass(superClass, traversal, false);
+    }
+    
+    /**
+     * Test whether this class has the specified superclass in its hierarchy
+     *
+     * @param superClass Name of the superclass to search for in the hierarchy
+     * @param traversal Traversal type to allow during this lookup
+     * @param includeInterfaces True to include interfaces in the lookup
+     * @return true if the specified class appears in the class's hierarchy
+     *      anywhere
+     */
+    public boolean hasSuperClass(String superClass, Traversal traversal, boolean includeInterfaces) {
         if (ClassInfo.JAVA_LANG_OBJECT.equals(superClass)) {
             return true;
         }
-
+        
         return this.findSuperClass(superClass, traversal) != null;
     }
 
@@ -1649,7 +1704,7 @@ public final class ClassInfo {
             }
         }
         
-        if (type == Type.METHOD && (this.isInterface || MixinEnvironment.getCompatibilityLevel().supports(LanguageFeature.METHODS_IN_INTERFACES))) {
+        if (type == Type.METHOD && (this.isInterface || MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.METHODS_IN_INTERFACES))) {
             for (String implemented : this.interfaces) {
                 ClassInfo iface = ClassInfo.forName(implemented);
                 if (iface == null) {

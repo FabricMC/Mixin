@@ -24,6 +24,7 @@
  */
 package org.spongepowered.tools.obfuscation;
 
+import java.lang.annotation.Annotation;
 import java.util.List;
 
 import javax.annotation.processing.Messager;
@@ -33,13 +34,17 @@ import javax.lang.model.element.VariableElement;
 import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
 
+import org.spongepowered.asm.mixin.injection.selectors.ISelectorContext;
 import org.spongepowered.asm.mixin.injection.selectors.ITargetSelector;
 import org.spongepowered.asm.mixin.injection.selectors.ITargetSelectorByName;
+import org.spongepowered.asm.mixin.refmap.IMixinContext;
 import org.spongepowered.asm.obfuscation.mapping.IMapping;
 import org.spongepowered.asm.obfuscation.mapping.common.MappingField;
 import org.spongepowered.asm.obfuscation.mapping.common.MappingMethod;
 import org.spongepowered.asm.util.ConstraintParser;
 import org.spongepowered.asm.util.ConstraintParser.Constraint;
+import org.spongepowered.asm.util.asm.IAnnotatedElement;
+import org.spongepowered.asm.util.asm.IAnnotationHandle;
 import org.spongepowered.asm.util.throwables.ConstraintViolationException;
 import org.spongepowered.asm.util.throwables.InvalidConstraintException;
 import org.spongepowered.tools.obfuscation.interfaces.IMessagerSuppressible;
@@ -64,7 +69,7 @@ abstract class AnnotatedMixinElementHandler {
      * 
      * @param <E> type of inner element
      */
-    abstract static class AnnotatedElement<E extends Element> {
+    abstract static class AnnotatedElement<E extends Element> implements IAnnotatedElement {
         
         protected final E element;
         
@@ -102,8 +107,72 @@ abstract class AnnotatedMixinElementHandler {
             messager.printMessage(kind, msg, this.element, this.annotation.asMirror(), suppressedBy);
         }
         
+        @Override
+        public IAnnotationHandle getAnnotation(Class<? extends Annotation> annotationClass) {
+            return AnnotationHandle.of(this.element, annotationClass);
+        }
+        
     }
     
+    abstract static class AnnotatedElementExecutable extends AnnotatedElement<ExecutableElement> implements ISelectorContext {
+        
+        private final IMixinContext context;
+        
+        private final String selectorCoordinate;
+
+        public AnnotatedElementExecutable(ExecutableElement element, AnnotationHandle annotation, IMixinContext context, String selectorCoordinate) {
+            super(element, annotation);
+            this.context = context;
+            this.selectorCoordinate = selectorCoordinate;
+        }
+        
+        @Override
+        public ISelectorContext getParent() {
+            return null;
+        }
+        
+        @Override
+        public IMixinContext getMixin() {
+            return this.context;
+        }
+
+        @Override
+        public Object getMethod() {
+            return new IAnnotatedElement() {
+                @Override
+                public IAnnotationHandle getAnnotation(Class<? extends Annotation> annotationClass) {
+                    return AnnotationHandle.of(AnnotatedElementExecutable.this.getElement(), annotationClass);
+                }
+                
+                @Override
+                public String toString() {
+                    return AnnotatedElementExecutable.this.getElement().getSimpleName().toString();
+                }
+            };
+        }
+        
+        @Override
+        public IAnnotationHandle getSelectorAnnotation() {
+            return this.getAnnotation();
+        }
+        
+        @Override
+        public String getSelectorCoordinate(boolean leaf) {
+            return leaf ? this.selectorCoordinate : TypeUtils.getName(this.element);
+        }
+
+        @Override
+        public String remap(String reference) {
+            return reference;
+        }
+        
+        @Override
+        public String toString() {
+            return TypeUtils.getName(this.element);
+        }
+        
+    }
+
     /**
      * A name of an element which may have aliases
      */
@@ -486,12 +555,12 @@ abstract class AnnotatedMixinElementHandler {
      * Checks whether the referenced method exists in all targets and raises
      * warnings where appropriate
      */
-    protected final void validateReferencedTarget(ExecutableElement method, AnnotationHandle inject, ITargetSelector reference, String type) {
-        if (!(reference instanceof ITargetSelectorByName)) {
+    protected final void validateReferencedTarget(AnnotatedElementExecutable elem, String reference, ITargetSelector targetSelector, String subject) {
+        if (!(targetSelector instanceof ITargetSelectorByName)) {
             return;
         }
         
-        ITargetSelectorByName nameRef = (ITargetSelectorByName)reference;
+        ITargetSelectorByName nameRef = (ITargetSelectorByName)targetSelector;
         String signature = nameRef.toDescriptor();
         
         for (TypeHandle target : this.mixin.getTargets()) {
@@ -501,8 +570,8 @@ abstract class AnnotatedMixinElementHandler {
             
             MethodHandle targetMethod = target.findMethod(nameRef.getName(), signature);
             if (targetMethod == null) {
-                this.ap.printMessage(Kind.WARNING, "Cannot find target method for " + type + " in " + target, method, inject.asMirror(),
-                        SuppressedBy.TARGET);
+                this.ap.printMessage(Kind.WARNING, "Cannot find target method \"" + nameRef.getName() + nameRef.getDesc() + "\" for " + subject
+                        + " in " + target, elem.getElement(), elem.getAnnotation().asMirror(), SuppressedBy.TARGET);
             }
         }            
     }

@@ -40,9 +40,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.InjectionPoint;
 import org.spongepowered.asm.mixin.injection.InjectionPoint.Selector;
 import org.spongepowered.asm.mixin.injection.Slice;
+import org.spongepowered.asm.mixin.injection.struct.InjectionPointAnnotationContext;
 import org.spongepowered.asm.mixin.injection.throwables.InjectionError;
 import org.spongepowered.asm.mixin.injection.throwables.InvalidSliceException;
-import org.spongepowered.asm.util.Bytecode;
 import org.spongepowered.asm.util.Annotations;
 
 import com.google.common.base.Strings;
@@ -57,7 +57,7 @@ public final class MethodSlice {
      * identified by <tt>start</tt> and <tt>end</tt> to be accessed. In essence
      * this class provides a <em>view</em> of the underlying InsnList.
      */
-    static final class InsnListSlice extends ReadOnlyInsnList { 
+    static final class InsnListSlice extends InsnListReadOnly { 
     
         /**
          * ListIterator for the slice view, wraps an iterator returned by the
@@ -359,7 +359,7 @@ public final class MethodSlice {
      * @param method method to slice
      * @return read only slice
      */
-    public ReadOnlyInsnList getSlice(MethodNode method) {
+    public InsnListReadOnly getSlice(MethodNode method) {
         int max = method.instructions.size() - 1;
         int start = this.find(method, this.from, 0, 0, this.name + "(from)");
         int end = this.find(method, this.to, max, start, this.name + "(to)");
@@ -373,7 +373,7 @@ public final class MethodSlice {
         }
         
         if (start == 0 && end == max) {
-            return new ReadOnlyInsnList(method.instructions);
+            return new InsnListReadOnly(method.instructions);
         }
         
         return new InsnListSlice(method.instructions, start, end);
@@ -398,7 +398,7 @@ public final class MethodSlice {
         }
         
         Deque<AbstractInsnNode> nodes = new LinkedList<AbstractInsnNode>();
-        ReadOnlyInsnList insns = new ReadOnlyInsnList(method.instructions);
+        InsnListReadOnly insns = new InsnListReadOnly(method.instructions);
         boolean result = injectionPoint.find(method.desc, insns, nodes);
         Selector select = injectionPoint.getSelector();
         if (nodes.size() != 1 && select == Selector.ONE) {
@@ -406,7 +406,7 @@ public final class MethodSlice {
         }
         
         if (!result) {
-            if (this.owner.getContext().getOption(Option.DEBUG_VERBOSE)) {
+            if (this.owner.getMixin().getOption(Option.DEBUG_VERBOSE)) {
                 MethodSlice.logger.warn("{} did not match any instructions", this.describe(description));
             }
             return failValue;
@@ -432,9 +432,9 @@ public final class MethodSlice {
     }
 
     private static String describeSlice(String description, ISliceContext owner) {
-        String annotation = Bytecode.getSimpleName(owner.getAnnotation());
+        String annotation = Annotations.getSimpleName(owner.getAnnotationNode());
         MethodNode method = owner.getMethod();
-        return String.format("%s->%s(%s)::%s%s", owner.getContext(), annotation, description, method.name, method.desc);
+        return String.format("%s->%s(%s)::%s%s", owner.getMixin(), annotation, description, method.name, method.desc);
     }
 
     private static String getSliceName(String id) {
@@ -469,12 +469,17 @@ public final class MethodSlice {
      */
     public static MethodSlice parse(ISliceContext info, AnnotationNode node) {
         String id = Annotations.<String>getValue(node, "id");
+        String coord = "slice";
+        if (!Strings.isNullOrEmpty(id)) {
+            coord += "." + id;
+        }
+        InjectionPointAnnotationContext sliceContext = new InjectionPointAnnotationContext(info, node, coord);
         
         AnnotationNode from = Annotations.<AnnotationNode>getValue(node, "from");
         AnnotationNode to = Annotations.<AnnotationNode>getValue(node, "to");
         
-        InjectionPoint fromPoint = from != null ? InjectionPoint.parse(info, from) : null;
-        InjectionPoint toPoint = to != null ? InjectionPoint.parse(info, to) : null;
+        InjectionPoint fromPoint = from != null ? InjectionPoint.parse(new InjectionPointAnnotationContext(sliceContext, from, "from"), from) : null;
+        InjectionPoint toPoint = to != null ? InjectionPoint.parse(new InjectionPointAnnotationContext(sliceContext, to, "to"), to) : null;
         
         return new MethodSlice(info, id, fromPoint, toPoint);
     }

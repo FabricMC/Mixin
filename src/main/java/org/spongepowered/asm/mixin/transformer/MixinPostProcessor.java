@@ -38,7 +38,6 @@ import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.spongepowered.asm.mixin.MixinEnvironment;
-import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel.LanguageFeature;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Method;
@@ -48,6 +47,8 @@ import org.spongepowered.asm.mixin.transformer.meta.MixinProxy;
 import org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerError;
 import org.spongepowered.asm.util.Annotations;
 import org.spongepowered.asm.util.Bytecode;
+import org.spongepowered.asm.util.Bytecode.Visibility;
+import org.spongepowered.asm.util.LanguageFeatures;
 
 /**
  * Performs post-processing tasks required for certain classes which pass
@@ -162,13 +163,18 @@ class MixinPostProcessor implements MixinConfig.IListener {
     }
 
     private boolean processAccessor(ClassNode classNode, MixinInfo mixin) {
-        if (!MixinEnvironment.getCompatibilityLevel().supports(LanguageFeature.METHODS_IN_INTERFACES)) {
+        if (!MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.METHODS_IN_INTERFACES)) {
             return false;
         }
         
         boolean transformed = false;
         MixinClassNode mixinClassNode = mixin.getClassNode(0);
         ClassInfo targetClass = mixin.getTargets().get(0);
+        
+        if (!Bytecode.hasFlag(mixinClassNode, Opcodes.ACC_PUBLIC)) {
+            Bytecode.setVisibility(mixinClassNode, Visibility.PUBLIC);
+            transformed = true;
+        }
         
         for (MixinMethodNode methodNode : mixinClassNode.mixinMethods) {
             if (!Bytecode.hasFlag(methodNode, Opcodes.ACC_STATIC)) {
@@ -213,7 +219,7 @@ class MixinPostProcessor implements MixinConfig.IListener {
         Type[] args = Type.getArgumentTypes(methodNode.desc);
         Type returnType = Type.getReturnType(methodNode.desc);
         Bytecode.loadArgs(args, methodNode.instructions, 0);
-        methodNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, targetClass.getName(), method.getName(), methodNode.desc, false));
+        methodNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, targetClass.getName(), method.getName(), methodNode.desc, targetClass.isInterface()));
         methodNode.instructions.add(new InsnNode(returnType.getOpcode(Opcodes.IRETURN)));
         methodNode.maxStack = Bytecode.getFirstNonArgLocalIndex(args, false);
         methodNode.maxLocals = 0;

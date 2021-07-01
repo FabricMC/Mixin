@@ -28,6 +28,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -35,6 +36,10 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
+
+import org.objectweb.asm.Type;
+import org.spongepowered.asm.util.asm.IAnnotationHandle;
 
 import com.google.common.collect.ImmutableList;
 
@@ -42,7 +47,7 @@ import com.google.common.collect.ImmutableList;
  * A wrapper for {@link AnnotationMirror} which provides a more convenient way
  * to access annotation values.
  */
-public final class AnnotationHandle {
+public final class AnnotationHandle implements IAnnotationHandle {
     
     public static final AnnotationHandle MISSING = new AnnotationHandle(null);
     
@@ -75,8 +80,20 @@ public final class AnnotationHandle {
      * 
      * @return true if the annotation exists
      */
+    @Override
     public boolean exists() {
         return this.annotation != null;
+    }
+    
+    /* (non-Javadoc)
+     * @see org.spongepowered.asm.util.asm.IAnnotationHandle#getDesc()
+     */
+    @Override
+    public String getDesc() {
+        if (this.annotation == null) {
+            return "java/lang/Annotation";
+        }
+        return TypeUtils.getInternalName(this.annotation.getAnnotationType());
     }
     
     @Override
@@ -96,6 +113,7 @@ public final class AnnotationHandle {
      * @return value or default if not set
      * @param <T> duck type
      */
+    @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public <T> T getValue(String key, T defaultValue) {
         if (this.annotation == null) {
@@ -120,6 +138,7 @@ public final class AnnotationHandle {
      * @param <T> duck type
      * @return value or null if not present or not set
      */
+    @Override
     public <T> T getValue() {
         return this.getValue("value", null);
     }
@@ -132,6 +151,7 @@ public final class AnnotationHandle {
      * @param <T> duck type
      * @return value or null if not present or not set
      */
+    @Override
     public <T> T getValue(String key) {
         return this.getValue(key, null);
     }
@@ -154,7 +174,8 @@ public final class AnnotationHandle {
      * @param key key to search for in the value map
      * @return value or <tt>null</tt> if not set
      */
-    public AnnotationHandle getAnnotation(String key) {
+    @Override
+    public IAnnotationHandle getAnnotation(String key) {
         Object value = this.getValue(key);
         if (value instanceof AnnotationMirror) {
             return AnnotationHandle.of((AnnotationMirror)value);
@@ -187,6 +208,7 @@ public final class AnnotationHandle {
      * @param <T> list element duck type
      * @return list of values
      */
+    @Override
     public <T> List<T> getList(String key) {
         List<AnnotationValue> list = this.<List<AnnotationValue>>getValue(key, Collections.<AnnotationValue>emptyList());
         return AnnotationHandle.<T>unwrapAnnotationValueList(list);
@@ -198,15 +220,16 @@ public final class AnnotationHandle {
      * @param key key to fetch
      * @return list of annotations
      */
-    public List<AnnotationHandle> getAnnotationList(String key) {
+    @Override
+    public List<IAnnotationHandle> getAnnotationList(String key) {
         Object val = this.getValue(key, null);
         if (val == null) {
-            return Collections.<AnnotationHandle>emptyList();
+            return Collections.<IAnnotationHandle>emptyList();
         }
         
         // Fix for JDT, single values are just returned as a bare AnnotationMirror
         if (val instanceof AnnotationMirror) {
-            return ImmutableList.<AnnotationHandle>of(AnnotationHandle.of((AnnotationMirror)val)); 
+            return ImmutableList.<IAnnotationHandle>of(AnnotationHandle.of((AnnotationMirror)val)); 
         }
         
         @SuppressWarnings("unchecked") List<AnnotationValue> list = (List<AnnotationValue>)val;
@@ -214,7 +237,25 @@ public final class AnnotationHandle {
         for (AnnotationValue value : list) {
             annotations.add(new AnnotationHandle((AnnotationMirror)value.getValue()));
         }
-        return Collections.<AnnotationHandle>unmodifiableList(annotations);
+        return Collections.<IAnnotationHandle>unmodifiableList(annotations);
+    }
+    
+    @Override
+    public Type getTypeValue(String key) {
+        TypeMirror typeMirror = this.<TypeMirror>getValue(key);
+        return typeMirror == null ? Type.VOID_TYPE : Type.getType(TypeUtils.getInternalName(typeMirror));
+    }
+    
+    @Override
+    public List<Type> getTypeList(String key) {
+        List<Type> list = this.<Type>getList(key);
+        for (ListIterator<Type> iter = list.listIterator(); iter.hasNext();) {
+            Object next = iter.next();
+            if (next instanceof TypeMirror) {
+                iter.set(Type.getType(TypeUtils.getInternalName((TypeMirror)next)));
+            }
+        }
+        return list;
     }
 
     protected AnnotationValue getAnnotationValue(String key) {

@@ -58,14 +58,17 @@ import com.google.common.primitives.Ints;
  * method. For method redirects, the handler method signature must match the
  * hooked method precisely <b>but</b> prepended with an arg of the owning
  * object's type to accept the object instance the method was going to be
- * invoked upon. For example when hooking the following call:</p>
+ * invoked upon. For more details see the javadoc for the {@link Redirect
+ * &#64;Redirect} annotation.</p>
+ * 
+ * <p>For example when hooking the following call:</p>
  * 
  * <blockquote><pre>
  *   int abc = 0;
  *   int def = 1;
  *   Foo someObject = new Foo();
  *   
- *   // Hooking this method
+ *   <del>// Hooking this method</del>
  *   boolean xyz = someObject.bar(abc, def);</pre>
  * </blockquote>
  * 
@@ -79,8 +82,8 @@ import com.google.common.primitives.Ints;
  * methods it is sufficient that the signature simply match the hooked method.
  * </p> 
  * 
- * <p>For field redirections, see the details in {@link Redirect} for the
- * required signature of the handler method.</p>
+ * <p>For field redirections, see the details in {@link Redirect &#64;Redirect}
+ * for the required signature of the handler method.</p>
  * 
  * <p>For constructor redirections, the signature of the handler method should
  * match the constructor itself, return type should be of the type of object
@@ -234,7 +237,7 @@ public class RedirectInjector extends InvokeInjector {
     protected RedirectInjector(InjectionInfo info, String annotationType) {
         super(info, annotationType);
         
-        int priority = info.getContext().getPriority();
+        int priority = info.getMixin().getPriority();
         boolean isFinal = Annotations.getVisible(this.methodNode, Final.class) != null;
         this.meta = new Meta(priority, isFinal, this.info.toString(), this.methodNode.desc);
     }
@@ -463,7 +466,7 @@ public class RedirectInjector extends InvokeInjector {
         Type elementType = field.type.getElementType();
         int valueArgIndex = field.getTotalDimensions();
         if (this.checkCoerce(valueArgIndex, elementType, String.format("%s array setter method %s from %s",
-                this.annotationType, this, this.info.getContext()), true)) {
+                this.annotationType, this, this.info.getMixin()), true)) {
             elementType = this.methodArgs[valueArgIndex];
         }
         
@@ -774,7 +777,7 @@ public class RedirectInjector extends InvokeInjector {
         LabelNode nullCheckSucceeded = new LabelNode();
         insns.add(new InsnNode(Opcodes.DUP));
         insns.add(new JumpInsnNode(Opcodes.IFNONNULL, nullCheckSucceeded));
-        this.throwException(insns, RedirectInjector.NPE, String.format("%s %s %s returned null for %s",
+        this.throwException(insns, extraStack, RedirectInjector.NPE, String.format("%s %s %s returned null for %s",
                 this.annotationType, type, this, value));
         insns.add(nullCheckSucceeded);
         extraStack.add();

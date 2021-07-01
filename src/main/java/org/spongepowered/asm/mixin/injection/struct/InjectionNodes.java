@@ -206,7 +206,7 @@ public class InjectionNodes extends ArrayList<InjectionNodes.InjectionNode> {
          */
         @Override
         public String toString() {
-            return String.format("InjectionNode[%s]", Bytecode.describeNode(this.currentTarget).replaceAll("\\s+", " "));
+            return String.format("InjectionNode[%s]", Bytecode.describeNode(this.currentTarget, false));
         }
         
     }

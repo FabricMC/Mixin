@@ -71,41 +71,41 @@ import com.google.common.primitives.Longs;
  *   <dt>ordinal</dt>
  *   <dd>The ordinal position of the constant opcode to match. The default value
  *   is <b>-1</b> which supresses ordinal matching</dd>
- *   <dt><em>named argument</em> nullValue</dt>
+ *   <dt><i>named argument:</i> nullValue</dt>
  *   <dd>To match <tt>null</tt> literals in the method body, set this to
  *   <tt>true</tt></dd>
- *   <dt><em>named argument</em> intValue</dt>
+ *   <dt><i>named argument:</i> intValue</dt>
  *   <dd>To match <tt>int</tt> literals in the method body. See also the
  *   <em>expandZeroConditions</em> argument below for concerns when matching
  *   conditional zeroes.</dd>
- *   <dt><em>named argument</em> floatValue</dt>
+ *   <dt><i>named argument:</i> floatValue</dt>
  *   <dd>To match <tt>float</tt> literals in the method body.</dd>
- *   <dt><em>named argument</em> longValue</dt>
+ *   <dt><i>named argument:</i> longValue</dt>
  *   <dd>To match <tt>long</tt> literals in the method body.</dd>
- *   <dt><em>named argument</em> doubleValue</dt>
+ *   <dt><i>named argument:</i> doubleValue</dt>
  *   <dd>To match <tt>double</tt> literals in the method body.</dd>
- *   <dt><em>named argument</em> stringValue</dt>
+ *   <dt><i>named argument:</i> stringValue</dt>
  *   <dd>To match {@link String} literals in the method body.</dd>
- *   <dt><em>named argument</em> classValue</dt>
+ *   <dt><i>named argument:</i> classValue</dt>
  *   <dd>To match {@link Class} literals in the method body.</dd>
- *   <dt><em>named argument</em> log</dt>
+ *   <dt><i>named argument:</i> log</dt>
  *   <dd>Enable debug logging when searching for matching opcodes.</dd>
- *   <dt><em>named argument</em> expandZeroConditions</dt>
+ *   <dt><i>named argument:</i> expandZeroConditions</dt>
  *   <dd>See the {@link Constant#expandZeroConditions} option, this argument
  *   should be a list of {@link Condition} names</dd>
  * </dl>
  * 
  * <p>Examples:</p>
  * <blockquote><pre>
- *   // Find all integer constans with value 4
+ *   <del>// Find all integer constans with value 4</del>
  *   &#064;At(value = "CONSTANT", args = "intValue=4")</pre>
  * </blockquote> 
  * <blockquote><pre>
- *   // Find the String literal "foo"
+ *   <del>// Find the String literal "foo"</del>
  *   &#064;At(value = "CONSTANT", args = "stringValue=foo"</pre>
  * </blockquote> 
  * <blockquote><pre>
- *   // Find all integer constants with value 0 and expand conditionals
+ *   <del>// Find integer constants with value 0 and expand conditionals</del>
  *   &#064;At(
  *     value = "CONSTANT",
  *     args = {
@@ -182,9 +182,9 @@ public class BeforeConstant extends InjectionPoint {
         String strClassValue = data.get("classValue", null);
         this.typeValue = strClassValue != null ? Type.getObjectType(strClassValue.replace('.', '/')) : null;
         
-        this.matchByType = this.validateDiscriminator(data.getContext(), "V", empty, "in @At(\"CONSTANT\") args");
+        this.matchByType = this.validateDiscriminator(data.getMixin(), "V", empty, "in @At(\"CONSTANT\") args");
         if ("V".equals(this.matchByType)) {
-            throw new InvalidInjectionException(data.getContext(), "No constant discriminator could be parsed in @At(\"CONSTANT\") args");
+            throw new InvalidInjectionException(data.getMixin(), "No constant discriminator could be parsed in @At(\"CONSTANT\") args");
         }
         
         List<Condition> conditions = new ArrayList<Condition>();
@@ -236,7 +236,7 @@ public class BeforeConstant extends InjectionPoint {
             if (matchesInsn) {
                 this.log("    BeforeConstant found a matching constant{} at ordinal {}", this.matchByType != null ? " TYPE" : " value", ordinal);
                 if (this.ordinal == -1 || this.ordinal == ordinal) {
-                    this.log("      BeforeConstant found {}", Bytecode.describeNode(insn).trim());
+                    this.log("      BeforeConstant found {}", Bytecode.describeNode(insn, false));
                     nodes.add(insn);
                     found = true;
                 }
@@ -280,7 +280,7 @@ public class BeforeConstant extends InjectionPoint {
         }
         
         Object value = Bytecode.getConstant(insn);
-        if (value == null) {
+        if (value == Type.VOID_TYPE) {
             this.log("  BeforeConstant found NULL constant: nullValue = {}", this.nullValue);
             return this.nullValue || Constants.OBJECT_DESC.equals(this.matchByType);
         } else if (value instanceof Integer) {

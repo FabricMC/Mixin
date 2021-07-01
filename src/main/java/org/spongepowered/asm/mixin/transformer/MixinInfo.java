@@ -51,7 +51,6 @@ import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel;
-import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel.LanguageFeature;
 import org.spongepowered.asm.mixin.MixinEnvironment.Option;
 import org.spongepowered.asm.mixin.MixinEnvironment.Phase;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -70,6 +69,7 @@ import org.spongepowered.asm.service.IClassTracker;
 import org.spongepowered.asm.service.IMixinService;
 import org.spongepowered.asm.util.Annotations;
 import org.spongepowered.asm.util.Bytecode;
+import org.spongepowered.asm.util.LanguageFeatures;
 import org.spongepowered.asm.util.asm.ASM;
 import org.spongepowered.asm.util.asm.MethodNodeEx;
 import org.spongepowered.asm.util.CompareUtil;
@@ -318,6 +318,7 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
          */
         void validate(SubType type, List<ClassInfo> targetClasses) {
             MixinClassNode classNode = this.getValidationClassNode();
+            
             MixinPreProcessorStandard preProcessor = type.createPreProcessor(classNode).prepare();
             for (ClassInfo target : targetClasses) {
                 preProcessor.conform(target);
@@ -330,7 +331,7 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
 
             // Pre-flight checks
             this.validateInner();
-            this.validateClassVersion();
+            this.validateClassFeatures();
             this.validateRemappables(targetClasses);
 
             // Read information from the mixin
@@ -351,17 +352,19 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
             }
         }
 
-        private void validateClassVersion() {
-            if (this.validationClassNode.version > MixinEnvironment.getCompatibilityLevel().classVersion()) {
-                String helpText = ".";
-                for (CompatibilityLevel level : CompatibilityLevel.values()) {
-                    if (level.classVersion() >= this.validationClassNode.version) {
-                        helpText = String.format(". Mixin requires compatibility level %s or above.", level.name()); 
-                    }
-                }
-                
-                throw new InvalidMixinException(MixinInfo.this, "Unsupported mixin class version " + this.validationClassNode.version + helpText);
+        private void validateClassFeatures() {
+            CompatibilityLevel compatibilityLevel = MixinEnvironment.getCompatibilityLevel();
+            int requiredLanguageFeatures = LanguageFeatures.scan(this.validationClassNode);
+            if (requiredLanguageFeatures == 0 || compatibilityLevel.supports(requiredLanguageFeatures)) {
+                return;
             }
+
+            int missingFeatures = requiredLanguageFeatures & ~compatibilityLevel.getLanguageFeatures();
+            CompatibilityLevel minRequiredLevel = CompatibilityLevel.requiredFor(requiredLanguageFeatures);
+            
+            throw new InvalidMixinException(MixinInfo.this, String.format(
+                    "Unsupported mixin, %s requires the following unsupported language features: %s, these features require compatibility level %s",
+                    MixinInfo.this, LanguageFeatures.format(missingFeatures), minRequiredLevel != null ? minRequiredLevel.toString() : "UNKNOWN"));
         }
 
         private void validateRemappables(List<ClassInfo> targetClasses) {
@@ -428,7 +431,7 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
                         || inner.name.startsWith(this.validationClassNode.name + "$")) {
                     if (innerClass.isProbablyStatic() && innerClass.isSynthetic()) {
                         this.syntheticInnerClasses.add(inner.name);
-                    } else {
+                    } else if (!innerClass.isMixin()) {
                         this.innerClasses.add(inner.name);
                     }
                 }
@@ -611,7 +614,7 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
             
             @Override
             void validate(State state, List<ClassInfo> targetClasses) {
-                if (!MixinEnvironment.getCompatibilityLevel().supports(LanguageFeature.METHODS_IN_INTERFACES)) {
+                if (!MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.METHODS_IN_INTERFACES)) {
                     throw new InvalidMixinException(this.mixin, "Interface mixin not supported in current enviromnment");
                 }
                 
@@ -655,7 +658,7 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
             @Override
             void validateTarget(String targetName, ClassInfo targetInfo) {
                 boolean targetIsInterface = targetInfo.isInterface();
-                if (targetIsInterface && !MixinEnvironment.getCompatibilityLevel().supports(LanguageFeature.METHODS_IN_INTERFACES)) {
+                if (targetIsInterface && !MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.METHODS_IN_INTERFACES)) {
                     throw new InvalidMixinException(this.mixin, "Accessor mixin targetting an interface is not supported in current enviromnment");
                 }
             }
@@ -1010,23 +1013,23 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
             if (this.isVirtual()) {
                 this.logger.debug("Skipping virtual target {} for {}", target.name, this);
             } else {
-                this.handleTargetError(String.format("@Mixin target %s was not found %s", target.name, this));
+                this.handleTargetError(String.format("@Mixin target %s was not found %s", target.name, this), false);
             }
             return null;
         }
         this.type.validateTarget(target.name, targetInfo);
         if (target.isPrivate && targetInfo.isPublic() && !this.isVirtual()) {
-            this.handleTargetError(String.format("@Mixin target %s is public in %s and should be specified in value", target.name, this));
+            this.handleTargetError(String.format("@Mixin target %s is public in %s and should be specified in value", target.name, this), true);
         }
         return targetInfo;
     }
 
-    private void handleTargetError(String message) {
+    private void handleTargetError(String message, boolean verboseOnly) {
         if (this.strict) {
             this.logger.error(message);
             throw new InvalidMixinException(this, message);
         }
-        this.logger.warn(message);
+        this.logger.log(verboseOnly && !this.parent.isVerboseLogging() ? Level.DEBUG : Level.WARN, message);
     }
 
     /**

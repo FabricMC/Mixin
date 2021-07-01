@@ -58,6 +58,17 @@ import org.spongepowered.asm.util.throwables.LVTGeneratorError;
 public final class Locals {
 
     /**
+     * A local variable entry added by mixin itself, eg. by an injector
+     */
+    public static class SyntheticLocalVariableNode extends LocalVariableNode {
+
+        public SyntheticLocalVariableNode(String name, String descriptor, String signature, LabelNode start, LabelNode end, int index) {
+            super(name, descriptor, signature, start, end, index);
+        }
+    
+    }
+
+    /**
      * Frame type names just for the purposes of debug printing
      */
     private static final String[] FRAME_TYPES = { "TOP", "INTEGER", "FLOAT", "DOUBLE", "LONG", "NULL", "UNINITIALIZED_THIS" };
@@ -135,9 +146,13 @@ public final class Locals {
      */
     public static LocalVariableNode[] getLocalsAt(ClassNode classNode, MethodNode method, AbstractInsnNode node) {
         for (int i = 0; i < 3 && (node instanceof LabelNode || node instanceof LineNumberNode); i++) {
-            node = Locals.nextNode(method.instructions, node);
+            AbstractInsnNode nextNode = Locals.nextNode(method.instructions, node);
+            if (nextNode instanceof FrameNode) { // Do not ffwd over frames
+                break;
+            }
+            node = nextNode;
         }
-            
+        
         ClassInfo classInfo = ClassInfo.forName(classNode.name);
         if (classInfo == null) {
             throw new LVTGeneratorError("Could not load class metadata for " + classNode.name + " generating LVT for " + method.name);
@@ -166,12 +181,20 @@ public final class Locals {
         int frameSize = local;
         int frameIndex = -1;
         int lastFrameSize = local;
+        int knownFrameSize = local;
         VarInsnNode storeInsn = null;
 
         for (Iterator<AbstractInsnNode> iter = method.instructions.iterator(); iter.hasNext();) {
             AbstractInsnNode insn = iter.next();
             if (storeInsn != null) {
-                frame[storeInsn.var] = Locals.getLocalVariableAt(classNode, method, insn, storeInsn.var);
+                LocalVariableNode storedLocal = Locals.getLocalVariableAt(classNode, method, insn, storeInsn.var);
+                frame[storeInsn.var] = storedLocal;
+                knownFrameSize = Math.max(knownFrameSize, storeInsn.var + 1);
+                if (storedLocal != null && storeInsn.var < method.maxLocals - 1 && storedLocal.desc != null
+                        && Type.getType(storedLocal.desc).getSize() == 2) {
+                    frame[storeInsn.var + 1] = null; // TOP
+                    knownFrameSize = Math.max(knownFrameSize, storeInsn.var + 2);
+                }
                 storeInsn = null;
             }
             
@@ -182,12 +205,12 @@ public final class Locals {
                     break handleFrame;
                 }
                 
+                int frameNodeSize = Locals.computeFrameSize(frameNode);
                 FrameData frameData = frameIndex < frames.size() ? frames.get(frameIndex) : null;
 
                 if (frameData != null) {
                     if (frameData.type == Opcodes.F_FULL) {
-                        frameSize = Math.min(frameSize, frameData.locals);
-                        lastFrameSize = frameSize;
+                        knownFrameSize = lastFrameSize = frameSize = Math.min(frameNodeSize, frameData.size);
                     } else {
                         frameSize = Locals.getAdjustedFrameSize(frameSize, frameData);
                     }
@@ -195,17 +218,25 @@ public final class Locals {
                     frameSize = Locals.getAdjustedFrameSize(frameSize, frameNode);
                 }
                 
-                if (frameNode.type == Opcodes.F_CHOP) {
+                // Sanity check
+                if (frameSize < 0) {
+                    throw new IllegalStateException(String.format("Locals entered an invalid state evaluating %s::%s%s at instruction %d (%s). "
+                            + "Initial frame size is %d, calculated a frame size of %d with %s", classNode.name, method.name, method.desc,
+                            method.instructions.indexOf(insn), Bytecode.describeNode(insn, false), initialFrameSize, frameSize, frameData));
+                }
+                
+                if ((frameData == null && (frameNode.type == Opcodes.F_CHOP || frameNode.type == Opcodes.F_NEW))
+                        || (frameData != null && frameData.type == Opcodes.F_CHOP)) {
                     for (int framePos = frameSize; framePos < frame.length; framePos++) {
                         frame[framePos] = null; 
                     }
-                    lastFrameSize = frameSize;
+                    knownFrameSize = lastFrameSize = frameSize;
                     break handleFrame;
                 }
 
                 int framePos = frameNode.type == Opcodes.F_APPEND ? lastFrameSize : 0;
                 lastFrameSize = frameSize;
-
+                
                 // localPos tracks the location in the frame node's locals list, which doesn't leave space for TOP entries
                 for (int localPos = 0; framePos < frame.length; framePos++, localPos++) {
                     // Get the local at the current position in the FrameNode's locals list
@@ -223,7 +254,7 @@ public final class Locals {
                             frame[framePos] = null;
                         } else if (is32bitValue || is64bitValue) {
                             frame[framePos] = Locals.getLocalVariableAt(classNode, method, insn, framePos);
-                            
+
                             if (is64bitValue) {
                                 framePos++;
                                 frame[framePos] = null; // TOP
@@ -234,7 +265,11 @@ public final class Locals {
                         }
                     } else if (localType == null) {
                         if (framePos >= initialFrameSize && framePos >= frameSize && frameSize > 0) {
-                            frame[framePos] = null;
+                            if (framePos < knownFrameSize) {
+                                frame[framePos] = Locals.getLocalVariableAt(classNode, method, insn, framePos);
+                            } else {
+                                frame[framePos] = null;
+                            }
                         }
                     } else if (localType instanceof LabelNode) {
                         // Uninitialised
@@ -248,6 +283,8 @@ public final class Locals {
                 boolean isLoad = insn.getOpcode() >= Opcodes.ILOAD && insn.getOpcode() <= Opcodes.SALOAD;
                 if (isLoad) {
                     frame[varNode.var] = Locals.getLocalVariableAt(classNode, method, insn, varNode.var);
+                    int varSize = frame[varNode.var].desc != null ? Type.getType(frame[varNode.var].desc).getSize() : 1;
+                    knownFrameSize = Math.max(knownFrameSize, varNode.var + varSize);
                 } else {
                     // Update the LVT for the opcode AFTER this one, since we always want to know
                     // the frame state BEFORE the *current* instruction to match the contract of
@@ -261,9 +298,9 @@ public final class Locals {
             }
         }
         
-        // Null out any "unknown" locals
+        // Null out any "unknown" or mixin-provided locals
         for (int l = 0; l < frame.length; l++) {
-            if (frame[l] != null && frame[l].desc == null) {
+            if (frame[l] != null && frame[l].desc == null || frame[l] instanceof SyntheticLocalVariableNode) {
                 frame[l] = null;
             }
         }
@@ -435,7 +472,7 @@ public final class Locals {
                         labels[i] = label = new LabelNode();
                     }
                 }
-
+                
                 if (local == null && locals[j] != null) {
                     localVariables.add(localNodes[j]);
                     localNodes[j].end = label;
@@ -447,7 +484,13 @@ public final class Locals {
                         localNodes[j] = null;
                     }
 
-                    String desc = (local.getType() != null) ? local.getType().getDescriptor() : lastKnownType[j];
+                    String desc = lastKnownType[j];
+                    Type localType = local.getType();
+                    if (localType != null) {
+                        desc = localType.getSort() >= Type.ARRAY && "null".equals(localType.getInternalName())
+                                ? Constants.OBJECT_DESC : localType.getDescriptor();
+                    }
+                    
                     localNodes[j] = new LocalVariableNode("var" + j, desc, null, label, null, j);
                     if (desc != null) {
                         lastKnownType[j] = desc;
@@ -497,7 +540,7 @@ public final class Locals {
         }
         return insn;
     }
-
+    
     /**
      * Compute a new frame size based on the supplied frame type and the size of
      * locals contained in the frame (this may differ from the number of actual

@@ -39,16 +39,17 @@ import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.spongepowered.asm.mixin.MixinEnvironment.Option;
 import org.spongepowered.asm.mixin.gen.throwables.InvalidAccessorException;
+import org.spongepowered.asm.mixin.injection.selectors.ElementNode;
+import org.spongepowered.asm.mixin.injection.selectors.ISelectorContext;
 import org.spongepowered.asm.mixin.injection.selectors.ITargetSelector;
 import org.spongepowered.asm.mixin.injection.selectors.TargetSelector;
+import org.spongepowered.asm.mixin.injection.selectors.ITargetSelector.Configure;
 import org.spongepowered.asm.mixin.injection.selectors.TargetSelector.Result;
 import org.spongepowered.asm.mixin.injection.struct.MemberInfo;
-import org.spongepowered.asm.mixin.refmap.IMixinContext;
 import org.spongepowered.asm.mixin.struct.SpecialMethodInfo;
 import org.spongepowered.asm.mixin.transformer.MixinTargetContext;
 import org.spongepowered.asm.util.Annotations;
 import org.spongepowered.asm.util.Bytecode;
-import org.spongepowered.asm.util.asm.ElementNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -302,6 +303,7 @@ public class AccessorInfo extends SpecialMethodInfo {
         this.type = this.initType();
         this.targetFieldType = this.initTargetFieldType();
         this.target = this.initTarget();
+        this.annotation.visit("target", this.target.toString());
     }
 
     protected AccessorType initType() {
@@ -331,9 +333,7 @@ public class AccessorInfo extends SpecialMethodInfo {
     }
 
     protected ITargetSelector initTarget() {
-        MemberInfo target = new MemberInfo(this.getTargetName(this.specifiedName), null, this.targetFieldType.getDescriptor());
-        this.annotation.visit("target", target.toString());
-        return target;
+        return new MemberInfo(this.getTargetName(this.specifiedName), null, this.targetFieldType.getDescriptor());
     }
 
     protected String getTargetName(String name) {
@@ -345,7 +345,7 @@ public class AccessorInfo extends SpecialMethodInfo {
             }
             return inflectedTarget;
         }
-        return TargetSelector.parseName(name, this.mixin);
+        return TargetSelector.parseName(name, this);
     }
 
     /**
@@ -355,7 +355,7 @@ public class AccessorInfo extends SpecialMethodInfo {
      * <tt>foo</tt> for example.  
      */
     protected String inflectTarget() {
-        return AccessorInfo.inflectTarget(this.method.name, this.type, this.toString(), this.mixin,
+        return AccessorInfo.inflectTarget(this.method.name, this.type, this.toString(), this,
                 this.mixin.getEnvironment().getOption(Option.DEBUG_VERBOSE));
     }
 
@@ -376,7 +376,7 @@ public class AccessorInfo extends SpecialMethodInfo {
      * @return inflected target member name or <tt>null</tt> if name cannot be
      *      inflected 
      */
-    public static String inflectTarget(String name, AccessorType type, String description, IMixinContext context, boolean verbose) {
+    public static String inflectTarget(String name, AccessorType type, String description, ISelectorContext context, boolean verbose) {
         return AccessorInfo.inflectTarget(AccessorName.of(name), type, description, context, verbose);
     }
     
@@ -397,7 +397,7 @@ public class AccessorInfo extends SpecialMethodInfo {
      * @return inflected target member name or <tt>null</tt> if name cannot be
      *      inflected 
      */
-    public static String inflectTarget(AccessorName name, AccessorType type, String description, IMixinContext context, boolean verbose) {
+    public static String inflectTarget(AccessorName name, AccessorType type, String description, ISelectorContext context, boolean verbose) {
         if (name != null) {
             if (!type.isExpectedPrefix(name.prefix) && verbose) {
                 LogManager.getLogger("mixin").warn("Unexpected prefix for {}, found [{}] expecting {}", description, name.prefix,
@@ -462,7 +462,7 @@ public class AccessorInfo extends SpecialMethodInfo {
     @Override
     public String toString() {
         String typeString = this.type != null ? this.type.toString() : "UNPARSED_ACCESSOR";
-        return String.format("%s->@%s[%s]::%s%s", this.mixin, Bytecode.getSimpleName(this.annotation), typeString,
+        return String.format("%s->@%s[%s]::%s%s", this.mixin, Annotations.getSimpleName(this.annotation), typeString,
                 this.methodName, this.method.desc);
     }
 
@@ -510,7 +510,7 @@ public class AccessorInfo extends SpecialMethodInfo {
      * @return best match
      */
     protected <TNode> TNode findTarget(List<ElementNode<TNode>> nodes) {
-        Result<TNode> result = TargetSelector.<TNode>run(this.target.configure("orphan"), nodes);
+        Result<TNode> result = TargetSelector.<TNode>run(this.target.configure(Configure.ORPHAN), nodes);
 
         try {
             return result.getSingleResult(true);

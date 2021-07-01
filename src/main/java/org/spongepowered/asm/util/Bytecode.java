@@ -26,7 +26,6 @@ package org.spongepowered.asm.util;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -102,6 +101,17 @@ public final class Bytecode {
          */
         public boolean isAtLeast(Visibility other) {
             return other == null || other.ordinal() <= this.ordinal();
+        }
+        
+        /**
+         * Get whether this visibility level represents a level which less than
+         * the supplied level
+         * 
+         * @param other level to compare to
+         * @return true if greater or equal
+         */
+        public boolean isLessThan(Visibility other) {
+            return other != null && this.ordinal() < other.ordinal();
         }
         
     }
@@ -414,15 +424,27 @@ public final class Bytecode {
      * @return human-readable description of node
      */
     public static String describeNode(AbstractInsnNode node) {
+        return Bytecode.describeNode(node, true);
+    }
+        
+    /**
+     * Gets a description of the supplied node for debugging purposes
+     * 
+     * @param node node to describe
+     * @param listFormat format the returned string so that returned nodes line
+     *      up (node names aligned to 14 chars)
+     * @return human-readable description of node
+     */
+    public static String describeNode(AbstractInsnNode node, boolean listFormat) {
         if (node == null) {
-            return String.format("   %-14s ", "null");
+            return listFormat ? String.format("   %-14s ", "null") : "null";
         }
         
         if (node instanceof LabelNode) {
             return String.format("[%s]", ((LabelNode)node).getLabel());
         }
         
-        String out = String.format("   %-14s ", node.getClass().getSimpleName().replace("Node", ""));
+        String out = String.format(listFormat ? "   %-14s " : "%s ", node.getClass().getSimpleName().replace("Node", ""));
         if (node instanceof JumpInsnNode) {
             out += String.format("[%s] [%s]", Bytecode.getOpcodeName(node), ((JumpInsnNode)node).label.getLabel());
         } else if (node instanceof VarInsnNode) {
@@ -446,6 +468,8 @@ public final class Bytecode {
             out += (((IntInsnNode)node).operand);
         } else if (node instanceof FrameNode) {
             out += String.format("[%s] ", Bytecode.getOpcodeName(((FrameNode)node).type, "H_INVOKEINTERFACE", -1));
+        } else if (node instanceof TypeInsnNode) {
+            out += String.format("[%s] %s", Bytecode.getOpcodeName(node), ((TypeInsnNode)node).desc);
         } else {
             out += String.format("[%s] ", Bytecode.getOpcodeName(node));
         }
@@ -646,6 +670,72 @@ public final class Bytecode {
         }
     }
     
+//    /**
+//     * Generate required APPEND frame nodes for the listed types and append them
+//     * to the supplied instruction list
+//     * 
+//     * @param insns Insnlist to append to
+//     * @param types frame types to append
+//     */
+//    public static void extendFrame(InsnList insns, Type[] types) {
+//        int offset = 0;
+//        Object[] locals = new Object[3];
+//        
+//        for (int index = 0; index < types.length; index++) {
+//            
+//            Type type = types[index];
+//            int size = type.getSize();
+//            if (offset + size <= 3) {
+//                if (type.getSort() < Type.ARRAY) {
+//                    locals[offset] = type.getSort();
+//                } else {
+//                    locals[offset] = type.getInternalName();
+//                }
+//                if (size > 1) {
+//                    locals[offset + 1] = null;
+//                }
+//                offset += size;
+//            } else {
+//                insns.add(new FrameNode(Opcodes.F_APPEND, offset, locals, 0, null));
+//                offset = 0;
+//            }
+//        }
+//        
+//        if (offset > 0) {
+//            insns.add(new FrameNode(Opcodes.F_APPEND, offset, locals, 0, null));
+//        }
+//    }
+//    
+//    /**
+//     * Generate required CHOP frame nodes for the listed types and append them
+//     * to the supplied insn list
+//     * 
+//     * @param insns Insnlist to append generated nodes to
+//     * @param types types to chop
+//     */
+//    public static void chopFrame(InsnList insns, Type[] types) {
+//        int size = Bytecode.getArgsSize(types);
+//        while (size > 0) {
+//            int chop = Math.min(size, 3);
+//            insns.add(new FrameNode(Opcodes.F_CHOP, chop, null, 0, null));
+//            size -= chop;
+//        }
+//    }
+
+    /**
+     * Get an array of Types from an array of classes.
+     * 
+     * @param classes Array of classes to convert
+     * @return Array of types
+     */
+    public static Type[] getTypes(Class<?>... classes) {
+        Type[] types = new Type[classes.length];
+        for (int index = 0; index < classes.length; index++) {
+            types[index] = Type.getType(classes[index]);
+        }
+        return types;
+    }
+    
     /**
      * Clones all of the labels in the source instruction list and returns the
      * clones in a map of old label -&gt; new label. This is used to facilitate
@@ -753,17 +843,6 @@ public final class Bytecode {
     }
 
     /**
-     * Returns the simple name of an annotation, mainly used for printing
-     * annotation names in error messages/user-facing strings
-     * 
-     * @param annotationType annotation
-     * @return annotation's simple name
-     */
-    public static String getSimpleName(Class<? extends Annotation> annotationType) {
-        return annotationType.getSimpleName();
-    }
-
-    /**
      * Returns the simple name of a type representing a class
      * 
      * @param type type
@@ -771,17 +850,6 @@ public final class Bytecode {
      */
     public static String getSimpleName(Type type) {
         return type.getSort() < Type.ARRAY ? type.getDescriptor() : Bytecode.getSimpleName(type.getClassName());
-    }
-    
-    /**
-     * Returns the simple name of an annotation, mainly used for printing
-     * annotation names in error messages/user-facing strings
-     * 
-     * @param annotation annotation node
-     * @return annotation's simple name
-     */
-    public static String getSimpleName(AnnotationNode annotation) {
-        return Bytecode.getSimpleName(annotation.desc);
     }
 
     /**
@@ -1009,6 +1077,17 @@ public final class Bytecode {
     }
     
     /**
+     * Set the visibility of the specified class, leaving other access flags
+     * unchanged
+     * 
+     * @param classNode class to change
+     * @param visibility new visibility
+     */
+    public static void setVisibility(ClassNode classNode, Visibility visibility) {
+        classNode.access = Bytecode.setVisibility(classNode.access, visibility.access);
+    }
+    
+    /**
      * Set the visibility of the specified member, leaving other access flags
      * unchanged
      * 
@@ -1028,6 +1107,17 @@ public final class Bytecode {
      */
     public static void setVisibility(FieldNode field, Visibility visibility) {
         field.access = Bytecode.setVisibility(field.access, visibility.access);
+    }
+    
+    /**
+     * Set the visibility of the specified class, leaving other access flags
+     * unchanged
+     * 
+     * @param classNode class to change
+     * @param access new visibility
+     */
+    public static void setVisibility(ClassNode classNode, int access) {
+        classNode.access = Bytecode.setVisibility(classNode.access, access);
     }
     
     /**
@@ -1222,9 +1312,12 @@ public final class Bytecode {
         }
         
         // TODO Java 10
-//        dest.nestHostClassExperimental = source.nestHostClassExperimental;
-//        Bytecode.<String>clear(dest.nestMembersExperimental);
-//        dest.nestMembersExperimental = Bytecode.<String>merge(source.nestMembersExperimental, dest.nestMembersExperimental);
+//        if (MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.NESTING)) {
+//            ClassNodeAdapter.setNestHostClass(dest, ClassNodeAdapter.getNestHostClass(source));
+//            Bytecode.<String>clear(ClassNodeAdapter.getNestMembers(dest));
+//            ClassNodeAdapter.setNestMembers(dest, Bytecode.<String>merge(ClassNodeAdapter.getNestMembers(source),
+//                    ClassNodeAdapter.getNestMembers(dest)));
+//        }
         
         Bytecode.merge(source, dest);
         
