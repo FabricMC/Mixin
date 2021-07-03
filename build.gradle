@@ -303,7 +303,9 @@ task stagingProguardJar(type: proguard.gradle.ProGuardTask, dependsOn: stagingJa
         }
     }
 
-    libraryjars JavaVersion.current().java9Compatible ? "${System.getProperty('java.home')}/jmods" : "${System.getProperty('java.home')}lib/rt.jar"
+    outputs.upToDateWhen { false }
+
+    libraryjars JavaVersion.current().java9Compatible ? "${System.getProperty('java.home')}/jmods" : "${System.getProperty('java.home')}/lib/rt.jar"
 
     injars stagingJar.archiveFile
     outjars proguardFile
@@ -314,6 +316,7 @@ task stagingProguardJar(type: proguard.gradle.ProGuardTask, dependsOn: stagingJa
 task remapLog4jUsage(type: JavaExec, dependsOn: stagingProguardJar) {
     classpath = configurations.tinyRemapper
     mainClass = "net.fabricmc.tinyremapper.Main"
+    outputs.upToDateWhen { false }
 
     args = [
         proguardFile.absolutePath,
