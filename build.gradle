@@ -80,6 +80,12 @@ configurations {
     agentImplementation {
         extendsFrom implementation
     }
+    proguard {
+        extendsFrom fernflowerImplementation
+        extendsFrom launchwrapperImplementation
+        extendsFrom modlauncherImplementation
+        extendsFrom compileClasspath
+    }
 }
 
 // Include annotation processor sourceSet
@@ -286,7 +292,7 @@ task stagingJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 task stagingProguardJar(type: proguard.gradle.ProGuardTask, dependsOn: stagingJar) {
     doFirst {
-        configurations.compileClasspath.resolve().forEach {
+        configurations.proguard.resolve().forEach {
             libraryjars it
         }
     }
