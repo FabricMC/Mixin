@@ -1,0 +1,4 @@
+tiny	2	0	log4j	loader
+c	org/apache/logging/log4j/LogManager	net/fabricmc/loader/impl/util/log/log4j/LogManager
+c	org/apache/logging/log4j/Logger	net/fabricmc/loader/impl/util/log/log4j/Logger
+c	org/apache/logging/log4j/Level	net/fabricmc/loader/impl/util/log/log4j/Level

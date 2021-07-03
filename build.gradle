@@ -86,6 +86,7 @@ configurations {
         extendsFrom modlauncherImplementation
         extendsFrom compileClasspath
     }
+    tinyRemapper
 }
 
 // Include annotation processor sourceSet
@@ -172,6 +173,8 @@ dependencies {
     bridgeImplementation "org.ow2.asm:asm-commons:$legacyForgeAsmVersion"
     
     legacyImplementation "org.ow2.asm:asm-tree:$asmVersion"
+
+    tinyRemapper "net.fabricmc:tiny-remapper:0.4.2"
 }
 
 javadoc {
@@ -290,6 +293,9 @@ task stagingJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
     archiveClassifier = "staging"
 }
 
+File proguardFile = file("build/libs/sponge-mixin-${version}-fat.jar")
+File remappedFile = file("build/libs/sponge-mixin-${version}.jar")
+
 task stagingProguardJar(type: proguard.gradle.ProGuardTask, dependsOn: stagingJar) {
     doFirst {
         configurations.proguard.resolve().forEach {
@@ -300,10 +306,25 @@ task stagingProguardJar(type: proguard.gradle.ProGuardTask, dependsOn: stagingJa
     libraryjars JavaVersion.current().java9Compatible ? "${System.getProperty('java.home')}/jmods" : "${System.getProperty('java.home')}lib/rt.jar"
 
     injars stagingJar.archiveFile
-    outjars file("build/libs/sponge-mixin-${version}.jar")
+    outjars proguardFile
     configuration file("proguard.conf")
 }
-build.dependsOn stagingProguardJar
+
+// Remap log4j usage to use fabric-loaders bridge
+task remapLog4jUsage(type: JavaExec, dependsOn: stagingProguardJar) {
+    classpath = configurations.tinyRemapper
+    mainClass = "net.fabricmc.tinyremapper.Main"
+
+    args = [
+        proguardFile.absolutePath,
+        remappedFile.absolutePath,
+        file("log4j.mappings").absolutePath,
+        "log4j",
+        "loader"
+    ]
+}
+
+build.dependsOn remapLog4jUsage
 
 // Clear artifacts because jar will be there by default and we want to use staging jar instead
 configurations.archives.artifacts.clear()
@@ -387,8 +408,14 @@ publishing {
 
             artifact sourceJar
             artifact javadocJar
-            artifact(file("build/libs/sponge-mixin-${version}.jar")) {
+
+            artifact(proguardFile) {
                 builtBy stagingProguardJar
+                classifier = "fat"
+            }
+
+            artifact(remappedFile) {
+                builtBy remapLog4jUsage
                 classifier = null
             }
 
