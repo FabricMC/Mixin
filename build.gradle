@@ -293,7 +293,7 @@ task stagingJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
     archiveClassifier = "staging"
 }
 
-File proguardFile = file("build/libs/sponge-mixin-${version}-fat.jar")
+File proguardFile = file("build/libs/sponge-mixin-${version}-universal.jar")
 File remappedFile = file("build/libs/sponge-mixin-${version}.jar")
 
 task stagingProguardJar(type: proguard.gradle.ProGuardTask, dependsOn: stagingJar) {
@@ -411,7 +411,7 @@ publishing {
 
             artifact(proguardFile) {
                 builtBy stagingProguardJar
-                classifier = "fat"
+                classifier = "universal"
             }
 
             artifact(remappedFile) {
