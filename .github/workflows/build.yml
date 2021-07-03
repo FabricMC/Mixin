@@ -3,6 +3,7 @@ on: [push, pull_request]
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         java: [8-jdk, 11-jdk, 16-jdk]
     runs-on: ubuntu-20.04
