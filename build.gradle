@@ -1,3 +1,12 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.guardsquare:proguard-gradle:7.1.0'
+    }
+}
+
 plugins {
     id 'java'
     id 'maven-publish'
@@ -5,7 +14,7 @@ plugins {
     id 'idea'
     id 'checkstyle'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
-    id "com.github.hierynomus.license" version "0.16.1"
+    id 'com.github.hierynomus.license' version '0.16.1'
 }
 
 // Default tasks
@@ -71,7 +80,6 @@ configurations {
     agentImplementation {
         extendsFrom implementation
     }
-
 }
 
 // Include annotation processor sourceSet
@@ -273,7 +281,23 @@ task stagingJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
     
     mergeServiceFiles()
     relocate 'com.google', 'org.spongepowered.include.com.google'
+    archiveClassifier = "staging"
 }
+
+task stagingProguardJar(type: proguard.gradle.ProGuardTask, dependsOn: stagingJar) {
+    doFirst {
+        configurations.compileClasspath.resolve().forEach {
+            libraryjars it
+        }
+    }
+
+    libraryjars JavaVersion.current().java9Compatible ? "${System.getProperty('java.home')}/jmods" : "${System.getProperty('java.home')}lib/rt.jar"
+
+    injars stagingJar.archiveFile
+    outjars file("build/libs/sponge-mixin-${version}.jar")
+    configuration file("proguard.conf")
+}
+build.dependsOn stagingProguardJar
 
 // Clear artifacts because jar will be there by default and we want to use staging jar instead
 configurations.archives.artifacts.clear()
@@ -355,15 +379,18 @@ publishing {
             artifactId project.archivesBaseName
             version project.version
 
-            artifact stagingJar
             artifact sourceJar
             artifact javadocJar
+            artifact(file("build/libs/sponge-mixin-${version}.jar")) {
+                builtBy stagingProguardJar
+                classifier = null
+            }
 
             // https://issues.gradle.org/browse/GRADLE-2966
             pom.withXml {
                 def dependenciesNode = asNode().appendNode('dependencies')
 
-                configurations.runtime.allDependencies.each {
+                configurations.runtimeClasspath.allDependencies.each {
                     if (it.group != null && it.name != null && !excludePomDeps.contains(it.name)) {
                         def dependencyNode = dependenciesNode.appendNode('dependency')
                         dependencyNode.appendNode('groupId', it.group)
@@ -394,7 +421,7 @@ publishing {
             pom.withXml {
                 def dependenciesNode = asNode().appendNode('dependencies')
 
-                configurations.runtime.allDependencies.each {
+                configurations.runtimeClasspath.allDependencies.each {
                     if (it.group != null && it.name != null && !excludePomDeps.contains(it.name)) {
                         def dependencyNode = dependenciesNode.appendNode('dependency')
                         dependencyNode.appendNode('groupId', it.group)
