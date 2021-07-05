@@ -3,8 +3,9 @@ on: [push, pull_request]
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
-        java: [8-jdk, 11-jdk, 15-jdk]
+        java: [8-jdk, 11-jdk, 16-jdk]
     runs-on: ubuntu-20.04
     container:
       image: openjdk:${{ matrix.java }}
@@ -12,4 +13,4 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: gradle/wrapper-validation-action@v1
-      - run: ./gradlew build --stacktrace
+      - run: ./gradlew build publishToMavenLocal --stacktrace
