@@ -68,10 +68,8 @@ class MixinPreProcessorInterface extends MixinPreProcessorStandard {
                             "Interface mixin contains a synthetic private method but compatibility level %s is required! Found %s in %s",
                             requiredLevel, method, this.mixin));
                 }
-            }
-
-            //On versions that support it private methods are also allowed
-            if (!Bytecode.hasFlag(mixinMethod, Opcodes.ACC_PRIVATE) || !MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.PRIVATE_METHODS_IN_INTERFACES)) {
+            } else if (!Bytecode.hasFlag(mixinMethod, Opcodes.ACC_PRIVATE) || !MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.PRIVATE_METHODS_IN_INTERFACES)) {
+                //On versions that support it private methods are also allowed
                 throw new InvalidInterfaceMixinException(this.mixin, "Interface mixin contains a non-public method! Found " + method + " in "
                         + this.mixin);
             }
