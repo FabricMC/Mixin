@@ -460,18 +460,18 @@ public abstract class InjectionInfo extends SpecialMethodInfo implements ISliceC
         String extraInfo = this.getDynamicInfo() + this.getMessages();
         if ((this.mixin.getOption(Option.DEBUG_INJECTORS) && this.injectedCallbackCount < this.expectedCallbackCount)) {
             throw new InvalidInjectionException(this,
-                    String.format("Injection validation failed: %s %s%s in %s expected %d invocation(s) but %d succeeded. Scanned %d target(s). %s%s",
-                            description, this.methodName, this.method.desc, this.mixin, this.expectedCallbackCount, this.injectedCallbackCount,
+                    String.format("Injection validation failed: %s %s%s in %s from mod %s expected %d invocation(s) but %d succeeded. Scanned %d target(s). %s%s",
+                            description, this.methodName, this.method.desc, this.mixin, org.spongepowered.asm.mixin.FabricUtil.getModId(this), this.expectedCallbackCount, this.injectedCallbackCount,
                             this.targetCount, refMapStatus, extraInfo));
         } else if (this.injectedCallbackCount < this.requiredCallbackCount) {
             throw new InjectionError(
-                    String.format("Critical injection failure: %s %s%s in %s failed injection check, (%d/%d) succeeded. Scanned %d target(s). %s%s",
-                            description, this.methodName, this.method.desc, this.mixin, this.injectedCallbackCount, this.requiredCallbackCount,
+                    String.format("Critical injection failure: %s %s%s in %s from mod %s failed injection check, (%d/%d) succeeded. Scanned %d target(s). %s%s",
+                            description, this.methodName, this.method.desc, this.mixin, org.spongepowered.asm.mixin.FabricUtil.getModId(this), this.injectedCallbackCount, this.requiredCallbackCount,
                             this.targetCount, refMapStatus, extraInfo));
         } else if (this.injectedCallbackCount > this.maxCallbackCount) {
             throw new InjectionError(
-                    String.format("Critical injection failure: %s %s%s in %s failed injection check, %d succeeded of %d allowed.%s",
-                    description, this.methodName, this.method.desc, this.mixin, this.injectedCallbackCount, this.maxCallbackCount, extraInfo));
+                    String.format("Critical injection failure: %s %s%s in %s from mod %s failed injection check, %d succeeded of %d allowed.%s",
+                    description, this.methodName, this.method.desc, this.mixin, org.spongepowered.asm.mixin.FabricUtil.getModId(this), this.injectedCallbackCount, this.maxCallbackCount, extraInfo));
         }
     }
     
@@ -753,7 +753,7 @@ public abstract class InjectionInfo extends SpecialMethodInfo implements ISliceC
     }
 
     static String describeInjector(IMixinContext mixin, AnnotationNode annotation, MethodNode method) {
-        return String.format("%s->@%s::%s%s", mixin.toString(), Annotations.getSimpleName(annotation), MethodNodeEx.getName(method), method.desc);
+        return String.format("%s->@%s::%s%s from mod %s", mixin.toString(), Annotations.getSimpleName(annotation), MethodNodeEx.getName(method), method.desc, org.spongepowered.asm.mixin.FabricUtil.getModId(mixin.getMixin().getConfig()));
     }
 
     /**
