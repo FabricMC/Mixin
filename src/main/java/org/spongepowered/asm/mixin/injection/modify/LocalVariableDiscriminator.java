@@ -35,7 +35,9 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.LocalVariableNode;
+import org.spongepowered.asm.mixin.FabricData;
 import org.spongepowered.asm.mixin.injection.modify.LocalVariableDiscriminator.Context.Local;
+import org.spongepowered.asm.mixin.injection.struct.InjectionInfo;
 import org.spongepowered.asm.mixin.injection.struct.Target;
 import org.spongepowered.asm.util.Bytecode;
 import org.spongepowered.asm.util.Annotations;
@@ -121,19 +123,19 @@ public class LocalVariableDiscriminator {
          */
         private final boolean isStatic;
 
-        public Context(Type returnType, boolean argsOnly, Target target, AbstractInsnNode node) {
+        public Context(Type returnType, boolean argsOnly, Target target, AbstractInsnNode node, InjectionInfo info) {
             this.isStatic = Bytecode.isStatic(target.method);
             this.returnType = returnType;
             this.target = target;
             this.node = node;
             this.baseArgIndex = this.isStatic ? 0 : 1;
-            this.locals = this.initLocals(target, argsOnly, node);
+            this.locals = this.initLocals(target, argsOnly, node, info);
             this.initOrdinals();
         }
 
-        private Local[] initLocals(Target target, boolean argsOnly, AbstractInsnNode node) {
+        private Local[] initLocals(Target target, boolean argsOnly, AbstractInsnNode node, InjectionInfo info) {
             if (!argsOnly) {
-                LocalVariableNode[] locals = Locals.getLocalsAt(target.classNode, target.method, node);
+                LocalVariableNode[] locals = Locals.getLocalsAt(target.classNode, target.method, node, FabricData.get(info).compatibility);
                 if (locals != null) {
                     Local[] lvt = new Local[locals.length];
                     for (int l = 0; l < locals.length; l++) {

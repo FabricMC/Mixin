@@ -33,54 +33,63 @@ import org.spongepowered.asm.mixin.injection.selectors.ISelectorContext;
 import org.spongepowered.asm.mixin.transformer.Config;
 
 public final class FabricData {
-	public static final String KEY_MOD_ID = "modId";
+    public static final String KEY_MOD_ID = "modId";
+    public static final String KEY_COMPATIBILITY = "compat";
 
-	private static final FabricData DEFAULT = new FabricData(false, 
-			"(unknown)");
+    // fabric mixin version compatibility boundaries, (major * 1000 + minor) * 1000 + patch
+    public static final int COMPATIBILITY_0_9_2 = 9_002;
+    public static final int COMPATIBILITY_0_9_4 = 9_004; // incompatible local variable handling
+    public static final int COMPATIBILITY_LATEST = COMPATIBILITY_0_9_4;
 
-	private static final Field FIELD_FABRICDATA;
+    private static final FabricData DEFAULT = new FabricData(false, 
+            "(unknown)", COMPATIBILITY_LATEST);
 
-	static {
-		try {
-			FIELD_FABRICDATA = Class.forName("org.spongepowered.asm.mixin.transformer.MixinConfig").getDeclaredField("fabricData");
-			FIELD_FABRICDATA.setAccessible(true);
-		} catch (ReflectiveOperationException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    private static final Field FIELD_FABRICDATA;
 
-	static void attach(Config config, Map<String, Object> dataMap) {
-		FabricData data = new FabricData(true,
-				(String) dataMap.getOrDefault(KEY_MOD_ID, DEFAULT.modId));
+    static {
+        try {
+            FIELD_FABRICDATA = Class.forName("org.spongepowered.asm.mixin.transformer.MixinConfig").getDeclaredField("fabricData");
+            FIELD_FABRICDATA.setAccessible(true);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-		try {
-			FIELD_FABRICDATA.set(config.getConfig(), data);
-		} catch (ReflectiveOperationException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    static void attach(Config config, Map<String, Object> dataMap) {
+        FabricData data = new FabricData(true,
+                (String) dataMap.getOrDefault(KEY_MOD_ID, DEFAULT.modId),
+                (int) dataMap.getOrDefault(KEY_COMPATIBILITY, COMPATIBILITY_LATEST));
 
-	public static FabricData get(IMixinConfig config) {
-		try {
-			FabricData ret = (FabricData) FIELD_FABRICDATA.get(config);
+        try {
+            FIELD_FABRICDATA.set(config.getConfig(), data);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-			return ret != null ? ret : DEFAULT;
-		} catch (ReflectiveOperationException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	public static FabricData get(ISelectorContext context) {
-		return get(context.getMixin().getMixin().getConfig());
-	}
+    public static FabricData get(IMixinConfig config) {
+        try {
+            FabricData ret = (FabricData) FIELD_FABRICDATA.get(config);
 
-	public final boolean available;
+            return ret != null ? ret : DEFAULT;
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public static FabricData get(ISelectorContext context) {
+        return get(context.getMixin().getMixin().getConfig());
+    }
 
-	public final String modId;
+    public final boolean available;
 
-	private FabricData(boolean available, 
-			String modId) {
-		this.available = available;
-		this.modId = modId;
-	}
+    public final String modId;
+    public final int compatibility;
+
+    private FabricData(boolean available, 
+            String modId, int compatibility) {
+        this.available = available;
+        this.modId = modId;
+        this.compatibility = compatibility;
+    }
 }

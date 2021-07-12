@@ -67,8 +67,8 @@ public class ModifyVariableInjector extends Injector {
          */
         final InsnList insns = new InsnList();
 
-        public Context(Type returnType, boolean argsOnly, Target target, AbstractInsnNode node) {
-            super(returnType, argsOnly, target, node);
+        public Context(Type returnType, boolean argsOnly, Target target, AbstractInsnNode node, InjectionInfo info) {
+            super(returnType, argsOnly, target, node, info);
         }
         
     }
@@ -144,7 +144,7 @@ public class ModifyVariableInjector extends Injector {
     
     @Override
     protected void preInject(Target target, InjectionNode node) {
-        Context context = new Context(this.returnType, this.discriminator.isArgsOnly(), target, node.getCurrentTarget());
+        Context context = new Context(this.returnType, this.discriminator.isArgsOnly(), target, node.getCurrentTarget(), info);
         node.<Context>decorate(ModifyVariableInjector.LOCALS_CONTEXT_KEY, context);
     }
     
