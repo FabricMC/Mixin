@@ -104,6 +104,21 @@ public final class Mixins {
         
         Mixins.registerConfiguration(config);
     }
+    
+    // Fabric: add configuration with additional data attached to MixinConfig >>
+    public static void addConfigurationFabric(String configFile, java.util.Map<String, Object> dataMap) {
+    	try {
+    		@SuppressWarnings("deprecation")
+			Config config = Config.create(configFile, MixinEnvironment.getDefaultEnvironment());
+    		FabricData.attach(config, dataMap);
+    		registerConfiguration(config);
+        } catch (Exception ex) {
+            Mixins.logger.error("Error encountered reading mixin config {} from mod {}: {}",
+            		configFile, dataMap.getOrDefault(FabricData.KEY_MOD_ID, "(unknown)"), ex,
+            		ex);
+        }
+    }
+    // << Fabric
 
     private static void registerConfiguration(Config config) {
         if (config == null || Mixins.registeredConfigs.contains(config.getName())) {

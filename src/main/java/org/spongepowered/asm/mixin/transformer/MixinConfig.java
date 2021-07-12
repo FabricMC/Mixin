@@ -384,6 +384,9 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
      */
     private transient int warnedClassVersion = 0;
 
+    // Fabric: attached data
+    transient org.spongepowered.asm.mixin.FabricData fabricData;
+
     /**
      * Spawn via GSON, no public ctor for you 
      */
