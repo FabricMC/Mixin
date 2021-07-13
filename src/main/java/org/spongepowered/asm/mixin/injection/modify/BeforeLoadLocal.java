@@ -131,8 +131,8 @@ public class BeforeLoadLocal extends LocalVariableInjectionPoint {
             this.varNode = node;
         }
         
-        void check(Target target, Collection<AbstractInsnNode> nodes, AbstractInsnNode insn) {
-            Context context = new Context(BeforeLoadLocal.this.returnType, BeforeLoadLocal.this.discriminator.isArgsOnly(), target, insn);
+        void check(Target target, Collection<AbstractInsnNode> nodes, AbstractInsnNode insn, InjectionInfo info) {
+            Context context = new Context(BeforeLoadLocal.this.returnType, BeforeLoadLocal.this.discriminator.isArgsOnly(), target, insn, info);
             int local = SearchState.INVALID_IMPLICIT;
             
             try {
@@ -207,13 +207,13 @@ public class BeforeLoadLocal extends LocalVariableInjectionPoint {
         while (iter.hasNext()) {
             AbstractInsnNode insn = iter.next();
             if (state.isPendingCheck()) {
-                state.check(target, nodes, insn);
+                state.check(target, nodes, insn, info);
             } else  if (insn instanceof VarInsnNode && insn.getOpcode() == this.opcode && (this.ordinal == -1 || !state.success())) {
                 state.register((VarInsnNode)insn);
                 if (this.opcodeAfter) {
                     state.setPendingCheck();
                 } else {
-                    state.check(target, nodes, insn);
+                    state.check(target, nodes, insn, info);
                 }
             }
         }

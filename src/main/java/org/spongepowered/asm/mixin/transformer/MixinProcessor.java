@@ -32,6 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.spongepowered.asm.mixin.FabricData;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.MixinEnvironment.Option;
@@ -135,7 +136,7 @@ class MixinProcessor {
         }
 
         public String getErrorMessage(IMixinInfo mixin, IMixinConfig config, Phase phase) {
-            return String.format("Mixin [%s] from phase [%s] in config [%s] FAILED during %s", mixin, phase, config, this.name());
+            return String.format("Mixin [%s] from phase [%s] in config [%s] from mod [%s] FAILED during %s", mixin, phase, config, FabricData.get(config).modId, this.name());
         }
         
     }
@@ -521,7 +522,7 @@ class MixinProcessor {
                 this.handleMixinPrepareError(config, ex, environment);
             } catch (Exception ex) {
                 String message = ex.getMessage();
-                MixinProcessor.logger.error("Error encountered whilst initialising mixin config '" + config.getName() + "': " + message, ex);
+                MixinProcessor.logger.error("Error encountered whilst initialising mixin config '" + config.getName() + "' from mod '"+FabricData.get(config).modId+"': " + message, ex);
             }
         }
         
@@ -548,7 +549,7 @@ class MixinProcessor {
                 this.handleMixinPrepareError(config, ex, environment);
             } catch (Exception ex) {
                 String message = ex.getMessage();
-                MixinProcessor.logger.error("Error encountered during mixin config postInit step'" + config.getName() + "': " + message, ex);
+                MixinProcessor.logger.error("Error encountered during mixin config postInit step '" + config.getName() + "' from mod '"+FabricData.get(config).modId+ "': " + message, ex);
             }
         }
         
@@ -621,6 +622,7 @@ class MixinProcessor {
                 .kv("Action", errorPhase.name())
                 .kv("Mixin", mixin.getClassName())
                 .kv("Config", config.getName())
+                .kv("ModId", FabricData.get(config).modId)
                 .kv("Phase", phase)
                 .hr('-')
                 .add("    %s", ex.getClass().getName())
