@@ -33,6 +33,7 @@ import org.spongepowered.asm.mixin.extensibility.IRemapper;
 import org.spongepowered.asm.mixin.injection.struct.MemberInfo;
 import org.spongepowered.asm.mixin.transformer.ClassInfo;
 import org.spongepowered.asm.util.ObfuscationUtil;
+import org.spongepowered.asm.util.Quantifier;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -152,7 +153,7 @@ public final class RemappingReferenceMapper implements IClassReferenceMapper, IR
             // but pass the requested class in the MemberInfo
             MemberInfo info = MemberInfo.parse(remapped, null);
             if (info.getName() == null && info.getDesc() == null) {
-                return info.getOwner() != null ? new MemberInfo(remapper.map(info.getOwner()), null).toString() : info.toString();
+                return info.getOwner() != null ? new MemberInfo(remapper.map(info.getOwner()), Quantifier.DEFAULT).toString() : info.toString();
             } else if (info.isField()) {
                 remapped = new MemberInfo(
                         remapper.mapFieldName(info.getOwner(), info.getName(), info.getDesc()),
