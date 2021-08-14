@@ -30,7 +30,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.function.Consumer;
 
 import org.objectweb.asm.ClassReader;
@@ -52,7 +51,7 @@ import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 /**
  * Mixin launch plugin 
  */
-public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodeProvider {
+public class MixinLaunchPluginLegacy implements ILaunchPluginService, IClassBytecodeProvider {
     
     /**
      * Name used for ModLauncher mixin service components
@@ -80,7 +79,7 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
      */
     @Override
     public String name() {
-        return MixinLaunchPlugin.NAME;
+        return MixinLaunchPluginLegacy.NAME;
     }
     
     @Override
@@ -99,7 +98,7 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
      */
     @Override
     public EnumSet<Phase> handlesClass(Type classType, boolean isEmpty, final String reason) {
-        if (MixinLaunchPlugin.NAME.equals(reason)) {
+        if (MixinLaunchPluginLegacy.NAME.equals(reason)) {
             return Phases.NONE;
         }
         
@@ -128,8 +127,8 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
         boolean processed = false;
         
         synchronized (this.processors) {
-            for (IClassProcessor postProcessor : this.processors) {
-                processed |= postProcessor.processClass(phase, classNode, classType, reason);
+            for (IClassProcessor processor : this.processors) {
+                processed |= processor.processClass(phase, classNode, classType, reason);
             }
         }
         
@@ -177,8 +176,9 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
         this.service.getPrimaryContainer().addResource(name, resource);
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
-    public void addResources(List<Entry<String, Path>> resources) {
+    public void addResources(List resources) {
         this.service.getPrimaryContainer().addResources(resources);
     }
 
@@ -190,8 +190,12 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
         return null;
     }
     
-    @Override
+    // ModLauncher 4-8
     public void initializeLaunch(ITransformerLoader transformerLoader, Path[] specialPaths) {
+        this.initializeLaunch(transformerLoader);
+    }
+
+    protected void initializeLaunch(ITransformerLoader transformerLoader) {
         this.transformerLoader = transformerLoader;
         MixinBootstrap.doInit(CommandLineOptions.of(this.commandLineMixins));
         MixinBootstrap.inject();
@@ -209,12 +213,15 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
             throw new IllegalArgumentException("ModLauncher service does not currently support retrieval of untransformed bytecode");
         }
         
+        String canonicalName = name.replace('/', '.');
+        String internalName = name.replace('.', '/');
+        
         byte[] classBytes;
         
         try {
-            classBytes = this.transformerLoader.buildTransformedClassNodeFor(name);
+            classBytes = this.transformerLoader.buildTransformedClassNodeFor(canonicalName);
         } catch (ClassNotFoundException ex) {
-            URL url = Thread.currentThread().getContextClassLoader().getResource(name.replace('.', '/') + ".class");
+            URL url = Thread.currentThread().getContextClassLoader().getResource(internalName + ".class");
             if (url == null) {
                 throw ex;
             }
@@ -225,14 +232,28 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
             }
         }
         
-        if (classBytes == null) {
-            throw new ClassNotFoundException(name.replace('/', '.'));
+        if (classBytes != null && classBytes.length != 0) {
+            ClassNode classNode = new ClassNode();
+            ClassReader classReader = new MixinClassReader(classBytes, canonicalName);
+            classReader.accept(classNode, ClassReader.EXPAND_FRAMES);
+            return classNode;
         }
-
-        ClassNode classNode = new ClassNode();
-        ClassReader classReader = new MixinClassReader(classBytes, name);
-        classReader.accept(classNode, ClassReader.EXPAND_FRAMES);
-        return classNode;
+        
+        Type classType = Type.getObjectType(internalName);
+        synchronized (this.processors) {
+            for (IClassProcessor processor : this.processors) {
+                if (!processor.generatesClass(classType)) {
+                    continue;
+                }
+                
+                ClassNode classNode = new ClassNode();
+                if (processor.generateClass(classType, classNode)) {
+                    return classNode;
+                }
+            }
+        }
+        
+        throw new ClassNotFoundException(canonicalName);
     }
 
 }

@@ -109,7 +109,7 @@ class MixinApplicatorInterface extends MixinApplicatorStandard {
                     }
                 }
             } catch (InvalidInjectionException ex) {
-                String description = ex.getInjectionInfo() != null ? ex.getInjectionInfo().toString() : "Injection";
+                String description = ex.getContext() != null ? ex.getContext().toString() : "Injection";
                 throw new InvalidInterfaceMixinException(mixin, description + " is not supported in interface mixin");
             }
         }

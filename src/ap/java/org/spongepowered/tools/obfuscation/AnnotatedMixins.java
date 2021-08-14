@@ -561,7 +561,9 @@ final class AnnotatedMixins implements IMixinAnnotationProcessor, ITokenProvider
      */
     @Override
     public void printMessage(Kind kind, CharSequence msg) {
-        if (kind == Kind.OTHER) return;
+        if (kind == Kind.OTHER) {
+            return;
+        }
 
         if (!this.beVewyVewyQuiet || kind != Kind.NOTE) {
             this.processingEnv.getMessager().printMessage(kind, msg);

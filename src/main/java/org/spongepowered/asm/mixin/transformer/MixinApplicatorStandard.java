@@ -41,6 +41,7 @@ import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.MixinEnvironment.Option;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.extensibility.IActivityContext.IActivity;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -50,7 +51,6 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.throwables.MixinError;
-import org.spongepowered.asm.mixin.transformer.ActivityStack.Activity;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Field;
 import org.spongepowered.asm.mixin.transformer.ext.extensions.ExtensionClassExporter;
 import org.spongepowered.asm.mixin.transformer.meta.MixinMerged;
@@ -64,7 +64,6 @@ import org.spongepowered.asm.util.Bytecode;
 import org.spongepowered.asm.util.Bytecode.DelegateInitialiser;
 import org.spongepowered.asm.util.Constants;
 import org.spongepowered.asm.util.ConstraintParser;
-import org.spongepowered.asm.util.LanguageFeatures;
 import org.spongepowered.asm.util.ConstraintParser.Constraint;
 import org.spongepowered.asm.util.perf.Profiler;
 import org.spongepowered.asm.util.perf.Profiler.Section;
@@ -95,6 +94,7 @@ class MixinApplicatorStandard {
      * Passes the mixin applicator applies to each mixin
      */
     enum ApplicatorPass {
+
         /**
          * Main pass, mix in methods, fields, interfaces etc
          */
@@ -109,12 +109,14 @@ class MixinApplicatorStandard {
          * Apply injectors from previous pass 
          */
         INJECT
+
     }
     
     /**
      * Strategy for injecting initialiser insns
      */
     enum InitialiserInjectionMode {
+
         /**
          * Default mode, attempts to place initialisers after all other
          * competing initialisers in the target ctor
@@ -126,12 +128,14 @@ class MixinApplicatorStandard {
          * invocation 
          */
         SAFE
+
     }
     
     /**
      * Internal struct for representing a range
      */
     class Range {
+
         /**
          * Start of the range
          */
@@ -196,6 +200,7 @@ class MixinApplicatorStandard {
         public String toString() {
             return String.format("Range[%d-%d,%d,valid=%s)", this.start, this.end, this.marker, this.isValid());
         }
+
     }
     
     /**
@@ -302,8 +307,8 @@ class MixinApplicatorStandard {
         
         this.activities.clear();
         try {
-            Activity activity = this.activities.begin("PreApply Phase");
-            Activity preApplyActivity = this.activities.begin("Mixin");
+            IActivity activity = this.activities.begin("PreApply Phase");
+            IActivity preApplyActivity = this.activities.begin("Mixin");
             for (MixinTargetContext context : mixinContexts) {
                 preApplyActivity.next(context.toString());
                 (current = context).preApply(this.targetName, this.targetClass);
@@ -313,7 +318,7 @@ class MixinApplicatorStandard {
             for (ApplicatorPass pass : ApplicatorPass.values()) {
                 activity.next("%s Applicator Phase", pass);
                 Section timer = this.profiler.begin("pass", pass.name().toLowerCase(Locale.ROOT));
-                Activity applyActivity = this.activities.begin("Mixin");
+                IActivity applyActivity = this.activities.begin("Mixin");
                 for (Iterator<MixinTargetContext> iter = mixinContexts.iterator(); iter.hasNext();) {
                     current = iter.next();
                     applyActivity.next(current.toString());
@@ -332,7 +337,7 @@ class MixinApplicatorStandard {
             }
             
             activity.next("PostApply Phase");
-            Activity postApplyActivity = this.activities.begin("Mixin");
+            IActivity postApplyActivity = this.activities.begin("Mixin");
             for (Iterator<MixinTargetContext> iter = mixinContexts.iterator(); iter.hasNext();) {
                 current = iter.next();
                 postApplyActivity.next(current.toString());
@@ -365,7 +370,7 @@ class MixinApplicatorStandard {
      * @param mixin Mixin to apply
      */
     protected final void applyMixin(MixinTargetContext mixin, ApplicatorPass pass) {
-        Activity activity = this.activities.begin("Apply");
+        IActivity activity = this.activities.begin("Apply");
         switch (pass) {
             case MAIN:
                 activity.next("Apply Signature");
@@ -382,8 +387,6 @@ class MixinApplicatorStandard {
                 this.applyMethods(mixin);
                 activity.next("Apply Initialisers");
                 this.applyInitialisers(mixin);
-                activity.next("Apply Nesting");
-                this.applyNesting(mixin);
                 break;
                 
             case PREINJECT:
@@ -505,7 +508,7 @@ class MixinApplicatorStandard {
      * @param mixin mixin target context
      */
     protected void applyMethods(MixinTargetContext mixin) {
-        Activity activity = this.activities.begin("?");
+        IActivity activity = this.activities.begin("?");
         for (MethodNode shadow : mixin.getShadowMethods()) {
             activity.next("@Shadow %s:%s", shadow.desc, shadow.name);
             this.applyShadowMethod(mixin, shadow);
@@ -535,7 +538,7 @@ class MixinApplicatorStandard {
             this.mergeMethod(mixin, mixinMethod);
         } else if (Constants.CLINIT.equals(mixinMethod.name)) {
             // Class initialiser insns get appended
-            Activity activity = this.activities.begin("Merge CLINIT insns");
+            IActivity activity = this.activities.begin("Merge CLINIT insns");
             this.appendInsns(mixin, mixinMethod);
             activity.end();
         }
@@ -1029,30 +1032,6 @@ class MixinApplicatorStandard {
 
     private static String fieldKey(FieldInsnNode fieldNode) {
         return String.format("%s:%s", fieldNode.desc, fieldNode.name);
-    }
-    
-    /**
-     * Apply nesting attributes from the mixin to the target.
-     * 
-     * <p><strong>NOT YET SUPPORTED!</strong></p>
-     */
-    protected void applyNesting(MixinTargetContext mixin) {
-       
-        String nestHostClass = mixin.getNestHostClass();
-        List<String> nestMembers = mixin.getNestMembers();
-        if ((nestHostClass == null && nestMembers == null) || (nestMembers != null && nestMembers.size() == 0)) {
-            return;
-        }
-        
-        if (!MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.NESTING)) {
-            // Shouldn't get here because we should error out during the initial scan, but you never know
-            throw new InvalidMixinException(mixin,
-                    String.format("%s contains nesting information but the current compatibility level does not support class nesting attributes",
-                    mixin));
-        }
-        
-        // TODO Nesting not done yet, just log an error for now that we're not applying these attributes
-        this.logger.error("NESTING not supported in this version of Mixin. {} nesting attributes will not be applied to the target", mixin);
     }
 
     /**

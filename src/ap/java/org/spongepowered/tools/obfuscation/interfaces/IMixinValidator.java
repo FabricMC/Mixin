@@ -57,4 +57,5 @@ public interface IMixinValidator {
      * @return False to halt processing of further validators
      */
     public abstract boolean validate(ValidationPass pass, TypeElement mixin, AnnotationHandle annotation, Collection<TypeHandle> targets);
+
 }

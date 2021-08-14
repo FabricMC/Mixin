@@ -603,7 +603,7 @@ public final class MixinEnvironment implements ITokenProvider {
 
             @Override
             boolean isSupported() {
-                return JavaVersion.current() >= 1.7;
+                return JavaVersion.current() >= JavaVersion.JAVA_7;
             }
             
         },
@@ -615,7 +615,7 @@ public final class MixinEnvironment implements ITokenProvider {
 
             @Override
             boolean isSupported() {
-                return JavaVersion.current() >= 1.8;
+                return JavaVersion.current() >= JavaVersion.JAVA_8;
             }
             
         },
@@ -628,7 +628,7 @@ public final class MixinEnvironment implements ITokenProvider {
             
             @Override
             boolean isSupported() {
-                return JavaVersion.current() >= 9.0;
+                return JavaVersion.current() >= JavaVersion.JAVA_8 && ASM.isAtLeastVersion(6);
             }
             
         },
@@ -641,7 +641,7 @@ public final class MixinEnvironment implements ITokenProvider {
             
             @Override
             boolean isSupported() {
-                return JavaVersion.current() >= 10.0;
+                return JavaVersion.current() >= JavaVersion.JAVA_10 && ASM.isAtLeastVersion(6, 1);
             }
             
         },
@@ -654,7 +654,7 @@ public final class MixinEnvironment implements ITokenProvider {
             
             @Override
             boolean isSupported() {
-                return JavaVersion.current() >= 11.0;
+                return JavaVersion.current() >= JavaVersion.JAVA_11 && ASM.isAtLeastVersion(7);
             }
             
         },
@@ -735,6 +735,19 @@ public final class MixinEnvironment implements ITokenProvider {
                 return JavaVersion.current() >= 17.0;
             }
 
+        },
+
+        /**
+         * Java 18 and above
+         */
+        JAVA_18(17, Opcodes.V18, LanguageFeatures.METHODS_IN_INTERFACES | LanguageFeatures.PRIVATE_SYNTHETIC_METHODS_IN_INTERFACES
+                | LanguageFeatures.PRIVATE_METHODS_IN_INTERFACES | LanguageFeatures.NESTING | LanguageFeatures.DYNAMIC_CONSTANTS) {
+
+            @Override
+            boolean isSupported() {
+                return JavaVersion.current() >= 18.0;
+            }
+
         };
         
         /**
@@ -762,7 +775,7 @@ public final class MixinEnvironment implements ITokenProvider {
          * PR #500 which demonstrates that the nature of compatibility levels
          * in mixin are not understood that well.</p>
          */
-        public static CompatibilityLevel MAX_SUPPORTED = CompatibilityLevel.JAVA_11;
+        public static CompatibilityLevel MAX_SUPPORTED = CompatibilityLevel.JAVA_13;
         
         private final int ver;
         
@@ -1114,7 +1127,7 @@ public final class MixinEnvironment implements ITokenProvider {
             printer.kv("Internal Version", version);
             printer.kv("Java Version", "%s (supports compatibility %s)", JavaVersion.current(), CompatibilityLevel.getSupportedVersions());
             printer.kv("Default Compatibility Level", MixinEnvironment.getCompatibilityLevel());
-            printer.kv("Detected ASM API Version", ASM.getApiVersionString());
+            printer.kv("Detected ASM Version", ASM.getVersionString());
             printer.kv("Detected ASM Supports Java", ASM.getClassVersionString()).hr();
             printer.kv("Service Name", serviceName);
             printer.kv("Mixin Service Class", this.service.getClass().getName());
@@ -1525,7 +1538,11 @@ public final class MixinEnvironment implements ITokenProvider {
         return MixinEnvironment.compatibility;
     }
     
-    private static CompatibilityLevel getMinCompatibilityLevel() {
+    /**
+     * Get the minimum (default) compatibility level supported by the current
+     * service
+     */
+    public static CompatibilityLevel getMinCompatibilityLevel() {
         CompatibilityLevel minLevel = MixinService.getService().getMinCompatibilityLevel();
         return minLevel == null ? CompatibilityLevel.DEFAULT : minLevel;
     }
@@ -1547,7 +1564,10 @@ public final class MixinEnvironment implements ITokenProvider {
         CompatibilityLevel currentLevel = MixinEnvironment.getCompatibilityLevel();
         if (level != currentLevel && level.isAtLeast(currentLevel)) {
             if (!level.isSupported()) {
-                throw new IllegalArgumentException("The requested compatibility level " + level + " could not be set. Level is not supported");
+                throw new IllegalArgumentException(String.format(
+                    "The requested compatibility level %s could not be set. Level is not supported by the active JRE or ASM version (Java %s, %s)",
+                    level, JavaVersion.current(), ASM.getVersionString()
+                ));
             }
 
             IMixinService service = MixinService.getService();

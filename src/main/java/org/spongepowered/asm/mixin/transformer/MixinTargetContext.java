@@ -49,6 +49,7 @@ import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel;
 import org.spongepowered.asm.mixin.MixinEnvironment.Option;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.SoftOverride;
+import org.spongepowered.asm.mixin.extensibility.IActivityContext.IActivity;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import org.spongepowered.asm.mixin.gen.AccessorInfo;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -62,7 +63,6 @@ import org.spongepowered.asm.mixin.refmap.IReferenceMapper;
 import org.spongepowered.asm.mixin.struct.MemberRef;
 import org.spongepowered.asm.mixin.struct.SourceMap.File;
 import org.spongepowered.asm.mixin.throwables.ClassMetadataNotFoundException;
-import org.spongepowered.asm.mixin.transformer.ActivityStack.Activity;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Field;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Method;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.SearchType;
@@ -82,7 +82,6 @@ import org.spongepowered.asm.util.asm.ASM;
 import org.spongepowered.asm.util.asm.ClassNodeAdapter;
 
 import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 
 /**
  * This object keeps track of data for applying a mixin to a specific target
@@ -132,7 +131,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
     /**
      * 
      */
-    private final BiMap<String, String> innerClasses = HashBiMap.<String, String>create();
+    private final BiMap<String, String> innerClasses;
 
     /**
      * Shadow method list
@@ -203,10 +202,8 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
         this.sessionId = context.getSessionId();
         this.requireVersion(classNode.version);
         
-        InnerClassGenerator icg = context.getExtensions().getGenerator(InnerClassGenerator.class);
-        for (String innerClass : this.mixin.getInnerClasses()) {
-            this.innerClasses.put(innerClass, icg.registerInnerClass(this.mixin, innerClass, this));
-        }
+        InnerClassGenerator icg = context.getExtensions().<InnerClassGenerator>getGenerator(InnerClassGenerator.class);
+        this.innerClasses = icg.getInnerClasses(this.mixin, this.getTargetClassRef());
     }
     
     /**
@@ -445,7 +442,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
         this.activities.clear();
         
         try {
-            Activity activity = this.activities.begin("Validate");
+            IActivity activity = this.activities.begin("Validate");
             this.validateMethod(method);
             activity.next("Transform Descriptor");
             this.transformDescriptor(method);
@@ -460,7 +457,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
             AbstractInsnNode lastInsn = null;
             for (Iterator<AbstractInsnNode> iter = method.instructions.iterator(); iter.hasNext();) {
                 AbstractInsnNode insn = iter.next();
-                Activity insnActivity = this.activities.begin(Bytecode.getOpcodeName(insn) + " ");
+                IActivity insnActivity = this.activities.begin(Bytecode.getOpcodeName(insn) + " ");
     
                 if (insn instanceof MethodInsnNode) {
                     MethodInsnNode methodNode = (MethodInsnNode)insn;
@@ -537,7 +534,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
             return;
         }
         
-        Activity localVarActivity = this.activities.begin("?");
+        IActivity localVarActivity = this.activities.begin("?");
         for (LocalVariableNode local : method.localVariables) {
             if (local == null || local.desc == null) {
                 continue;
@@ -947,7 +944,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
     }
     
     private String transformSingleDescriptor(String desc, boolean isObject) {
-        Activity descriptorActivity = this.activities.begin("desc=%s", desc);
+        IActivity descriptorActivity = this.activities.begin("desc=%s", desc);
         boolean isArray = false;
         String type = desc;
         while (type.startsWith("[") || type.startsWith("L")) {
@@ -1217,6 +1214,13 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
     List<String> getNestMembers() {
         return ClassNodeAdapter.getNestMembers(this.classNode);
     }
+    
+    /**
+     * Get the map of inner classes to remapped inner classes
+     */
+    BiMap<String, String> getInnerClasses() {
+        return this.innerClasses;
+    }
 
     /* (non-Javadoc)
      * @see org.spongepowered.asm.mixin.transformer.IReferenceMapperContext
@@ -1233,7 +1237,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
      * @param transformedName Target class's transformed name
      * @param targetClass Target class
      */
-    void preApply(String transformedName, ClassNode targetClass) {
+    void preApply(String transformedName, ClassNode targetClass) throws Exception {
         this.mixin.preApply(transformedName, targetClass);
     }
 
@@ -1247,7 +1251,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
         this.activities.clear();
         
         try {
-            Activity activity = this.activities.begin("Validating Injector Groups");
+            IActivity activity = this.activities.begin("Validating Injector Groups");
             this.injectorGroups.validateAll();
             activity.next("Plugin Post-Application");
             this.mixin.postApply(transformedName, targetClass);
@@ -1300,10 +1304,10 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
         try {
             this.injectors.clear();
 
-            Activity prepareActivity = this.activities.begin("?");
+            IActivity prepareActivity = this.activities.begin("?");
             for (MethodNode method : this.mergedMethods) {
                 prepareActivity.next("%s%s", method.name, method.desc);
-                Activity methodActivity = this.activities.begin("Parse");
+                IActivity methodActivity = this.activities.begin("Parse");
                 InjectionInfo injectInfo = InjectionInfo.parse(this, method);
                 if (injectInfo == null) {
                     continue;
@@ -1337,22 +1341,22 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
         this.activities.clear();
         
         try {
-            Activity applyActivity = this.activities.begin("PreInject");
-            Activity preInjectActivity = this.activities.begin("?");
+            IActivity applyActivity = this.activities.begin("PreInject");
+            IActivity preInjectActivity = this.activities.begin("?");
             for (InjectionInfo injectInfo : this.injectors) {
                 preInjectActivity.next(injectInfo.toString());
                 injectInfo.preInject();
             }
 
             applyActivity.next("Inject");
-            Activity injectActivity = this.activities.begin("?");
+            IActivity injectActivity = this.activities.begin("?");
             for (InjectionInfo injectInfo : this.injectors) {
                 injectActivity.next(injectInfo.toString());
                 injectInfo.inject();
             }
 
             applyActivity.next("PostInject");
-            Activity postInjectActivity = this.activities.begin("?");
+            IActivity postInjectActivity = this.activities.begin("?");
             for (InjectionInfo injectInfo : this.injectors) {
                 postInjectActivity.next(injectInfo.toString());
                 injectInfo.postInject();
@@ -1378,22 +1382,22 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
         List<MethodNode> methods = new ArrayList<MethodNode>();
         
         try {
-            Activity accessorActivity = this.activities.begin("Locate");
-            Activity locateActivity = this.activities.begin("?");
+            IActivity accessorActivity = this.activities.begin("Locate");
+            IActivity locateActivity = this.activities.begin("?");
             for (AccessorInfo accessor : this.accessors) {
                 locateActivity.next(accessor.toString());
                 accessor.locate();
             }
             
             accessorActivity.next("Validate"); 
-            Activity validateActivity = this.activities.begin("?");
+            IActivity validateActivity = this.activities.begin("?");
             for (AccessorInfo accessor : this.accessors) {
                 validateActivity.next(accessor.toString());
                 accessor.validate();
             }
             
             accessorActivity.next("Generate"); 
-            Activity generateActivity = this.activities.begin("?");
+            IActivity generateActivity = this.activities.begin("?");
             for (AccessorInfo accessor : this.accessors) {
                 generateActivity.next(accessor.toString());
                 MethodNode generated = accessor.generate();
