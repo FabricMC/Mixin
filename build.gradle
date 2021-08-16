@@ -444,6 +444,7 @@ publishing {
 
             artifact sourceJar
             artifact javadocJar
+            artifact shadowJar
             artifact(proguardFile) {
                 builtBy stagingProguardJar
                 classifier = "universal"
