@@ -26,9 +26,16 @@
 package org.spongepowered.asm.mixin;
 
 import org.spongepowered.asm.mixin.extensibility.IMixinConfig;
+import org.spongepowered.asm.mixin.injection.selectors.ISelectorContext;
 
 public final class FabricUtil {
-    private static final String KEY_MOD_ID = "fabric-modId";
+    public static final String KEY_MOD_ID = "fabric-modId";
+    public static final String KEY_COMPATIBILITY = "fabric-compat";
+
+    // fabric mixin version compatibility boundaries, (major * 1000 + minor) * 1000 + patch
+    public static final int COMPATIBILITY_0_9_2 = 9002; // 0.9.2+mixin.0.8.2 incompatible local variable handling
+    public static final int COMPATIBILITY_0_10_0 = 10000; // 0.10.0+mixin.0.8.4
+    public static final int COMPATIBILITY_LATEST = COMPATIBILITY_0_10_0;
 
     public static String getModId(IMixinConfig config) {
         return getDecoration(config, KEY_MOD_ID, "(unknown)");
@@ -38,7 +45,19 @@ public final class FabricUtil {
         return getDecoration(getConfig(context), KEY_MOD_ID, "(unknown)");
     }
 
+    public static int getCompatibility(ISelectorContext context) {
+        return getDecoration(getConfig(context), KEY_COMPATIBILITY, COMPATIBILITY_LATEST);
+    }
+
+    private static IMixinConfig getConfig(ISelectorContext context) {
+        return context.getMixin().getMixin().getConfig();
+    }
+
     private static <T> T getDecoration(IMixinConfig config, String key, T defaultValue) {
-        return config.hasDecoration(key) ? config.getDecoration(key) : defaultValue;
+        if (config.hasDecoration(key)) {
+            return config.getDecoration(key);
+        } else {
+            return defaultValue;
+        }
     }
 }

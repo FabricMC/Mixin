@@ -455,7 +455,7 @@ public class CallbackInjector extends Injector {
     @Override
     protected void preInject(Target target, InjectionNode node) {
         if ((this.localCapture.isCaptureLocals() || this.localCapture.isPrintLocals()) && !node.hasDecoration(CallbackInjector.LOCALS_KEY)) {
-            LocalVariableNode[] locals = Locals.getLocalsAt(this.classNode, target.method, node.getCurrentTarget());
+            LocalVariableNode[] locals = Locals.getLocalsAt(this.classNode, target.method, node.getCurrentTarget(), org.spongepowered.asm.mixin.FabricUtil.getCompatibility(info));
             for (int j = 0; j < locals.length; j++) {
                 if (locals[j] != null && locals[j].desc != null && locals[j].desc.startsWith("Lorg/spongepowered/asm/mixin/injection/callback/")) {
                     locals[j] = null;

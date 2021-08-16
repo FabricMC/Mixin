@@ -232,19 +232,22 @@ public final class ClassInfo {
          * Frame local size 
          */
         public final int size;
+        public final int rawSize; // Fabric non-adjusted frame size for legacy support
 
         FrameData(int index, int type, int locals, int size) {
             this.index = index;
             this.type = type;
             this.locals = locals;
             this.size = size;
+            this.rawSize = size;
         }
 
         FrameData(int index, FrameNode frameNode, int initialFrameSize) {
             this.index = index;
             this.type = frameNode.type;
             this.locals = frameNode.local != null ? frameNode.local.size() : 0;
-            this.size = Locals.computeFrameSize(frameNode, initialFrameSize);
+            this.rawSize = Locals.computeFrameSize(frameNode, 0);
+            this.size = Math.max(rawSize, initialFrameSize);
         }
 
         /* (non-Javadoc)
