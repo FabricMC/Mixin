@@ -34,6 +34,8 @@ import org.spongepowered.asm.mixin.injection.struct.InjectionInfo;
 import org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Field;
 import org.spongepowered.asm.mixin.transformer.throwables.InvalidInterfaceMixinException;
+import org.spongepowered.asm.util.Annotations;
+import org.spongepowered.asm.util.Constants;
 import org.spongepowered.asm.util.LanguageFeatures;
 
 /**
@@ -66,20 +68,37 @@ class MixinApplicatorInterface extends MixinApplicatorStandard {
         }
     }
 
-    /* (non-Javadoc)
-     * @see org.spongepowered.asm.mixin.transformer.MixinApplicator
-     *      #applyFields(
-     *      org.spongepowered.asm.mixin.transformer.MixinTargetContext)
-     */
     @Override
-    protected void applyFields(MixinTargetContext mixin) {
-        // shadow fields have no meaning for interfaces, just spam the dev with messages
+    protected void mergeShadowFields(MixinTargetContext mixin) {
         for (Entry<FieldNode, Field> entry : mixin.getShadowFields()) {
             FieldNode shadow = entry.getKey();
-            this.logger.error("Ignoring redundant @Shadow field {}:{} in {}", shadow.name, shadow.desc, mixin);
+            FieldNode target = this.findTargetField(shadow);
+
+            if (target != null) {
+                Annotations.merge(shadow, target);
+
+                //Interface fields must be final, so to make them mutable would crash
+                if (entry.getValue().isDecoratedMutable()) {
+                    this.logger.error("Ignoring illegal @Mutable on {}:{} in {}", shadow.name, shadow.desc, mixin);
+                }
+            } else {
+            	//This is silently ignored for normal classes, but the only fields an interface has will be shadowed
+                this.logger.warn("Unable to find target for @Shadow {}:{} in {}", shadow.name, shadow.desc, mixin);
+            }
         }
-        
-        this.mergeNewFields(mixin);
+    }
+
+    @Override
+    protected void mergeNewFields(MixinTargetContext mixin) {
+        //Disabled for interface mixins
+    }
+
+    @Override
+    protected void applyNormalMethod(MixinTargetContext mixin, MethodNode mixinMethod) {
+        //Skip merging static blocks, the only contents will be setting shadowed fields
+        if (!Constants.CLINIT.equals(mixinMethod.name)) {
+            super.applyNormalMethod(mixin, mixinMethod);
+        }
     }
 
     /* (non-Javadoc)

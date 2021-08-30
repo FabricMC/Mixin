@@ -179,7 +179,7 @@ class MixinPreProcessorStandard {
             
             activity.next("Prepare method");
             for (MixinMethodNode mixinMethod : this.classNode.mixinMethods) {
-                Method method = this.mixin.getClassInfo().findMethod(mixinMethod);
+                Method method = this.mixin.getClassInfo().findMethod(mixinMethod, mixinMethod.access | ClassInfo.INCLUDE_INITIALISERS);
                 IActivity methodActivity = this.activities.begin(mixinMethod.toString());
                 this.prepareMethod(mixinMethod, method);
                 methodActivity.end();

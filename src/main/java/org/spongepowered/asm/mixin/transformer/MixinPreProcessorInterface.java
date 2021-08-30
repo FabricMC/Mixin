@@ -24,16 +24,23 @@
  */
 package org.spongepowered.asm.mixin.transformer;
 
+import java.lang.reflect.Modifier;
+
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Method;
 import org.spongepowered.asm.mixin.transformer.MixinInfo.MixinClassNode;
 import org.spongepowered.asm.mixin.transformer.MixinInfo.MixinMethodNode;
 import org.spongepowered.asm.mixin.transformer.throwables.InvalidInterfaceMixinException;
+import org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException;
+import org.spongepowered.asm.util.Annotations;
 import org.spongepowered.asm.util.Bytecode;
+import org.spongepowered.asm.util.Constants;
 import org.spongepowered.asm.util.LanguageFeatures;
 
 /**
@@ -68,6 +75,8 @@ class MixinPreProcessorInterface extends MixinPreProcessorStandard {
                             "Interface mixin contains a synthetic private method but compatibility level %s is required! Found %s in %s",
                             requiredLevel, method, this.mixin));
                 }
+            } else if (Constants.CLINIT.equals(mixinMethod.name) && "()V".equals(mixinMethod.desc)) {
+                return; //In order to shadow fields they must have a value set, this may result in a static initialiser being included
             } else if (!Bytecode.hasFlag(mixinMethod, Opcodes.ACC_PRIVATE) || !MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.PRIVATE_METHODS_IN_INTERFACES)) {
                 //On versions that support it private methods are also allowed
                 throw new InvalidInterfaceMixinException(this.mixin, "Interface mixin contains a non-public method! Found " + method + " in "
@@ -87,12 +96,38 @@ class MixinPreProcessorInterface extends MixinPreProcessorStandard {
      */
     @Override
     protected boolean validateField(MixinTargetContext context, FieldNode field, AnnotationNode shadow) {
-        if (!Bytecode.isStatic(field)) {
-            throw new InvalidInterfaceMixinException(this.mixin, String.format("Interface mixin contains an instance field! Found %s in %s",
-                    field.name, this.mixin));
+        //All fields in interfaces are public, static, final constants (or the JVM throws a ClassFormatError)
+        if (!Bytecode.isStatic(field) || !Bytecode.hasFlag(field, Opcodes.ACC_PUBLIC) || !Bytecode.hasFlag(field, Opcodes.ACC_FINAL)) {
+            throw new InvalidInterfaceMixinException(this.mixin, String.format("Interface mixin contains an illegal field! Found %s %s in %s",
+                    Modifier.toString(field.access), field.name, this.mixin));
         }
         
-        return super.validateField(context, field, shadow);
+        //Whilst we could support adding constants, they'd always be public so there's little benefit to allowing it
+        if (shadow == null) {
+            throw new InvalidInterfaceMixinException(this.mixin, String.format("Interface mixin %s contains a non-shadow field: %s",
+                    this.mixin, field.name));
+        }
+
+        //Making a field non-final will result in verification crashes, so @Mutable is always a mistake
+        if (Annotations.getVisible(field, Mutable.class) != null) {
+        	throw new InvalidInterfaceMixinException(this.mixin, String.format("@Shadow field %s.%s is marked as mutable. This is not allowed.",
+                    this.mixin, field.name));
+        }
+
+        //Shadow fields can't have prefixes, it's meaningless for them anyway
+        String prefix = Annotations.<String>getValue(shadow, "prefix", Shadow.class);
+        if (field.name.startsWith(prefix)) {
+            throw new InvalidMixinException(context, String.format("@Shadow field %s.%s has a shadow prefix. This is not allowed.",
+                    context, field.name));
+        }
+
+        //Imaginary super fields are only supported for classes
+        if (Constants.IMAGINARY_SUPER.equals(field.name)) {
+            throw new InvalidInterfaceMixinException(this.mixin, String.format("Interface mixin %s contains an imaginary super. This is not allowed",
+                    this.mixin));
+        }
+
+        return true;
     }
     
 }
