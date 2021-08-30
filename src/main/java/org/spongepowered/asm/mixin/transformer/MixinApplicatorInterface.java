@@ -82,7 +82,7 @@ class MixinApplicatorInterface extends MixinApplicatorStandard {
                     this.logger.error("Ignoring illegal @Mutable on {}:{} in {}", shadow.name, shadow.desc, mixin);
                 }
             } else {
-            	//This is silently ignored for normal classes, but the only fields an interface has will be shadowed
+                //This is silently ignored for normal classes, but the only fields an interface has will be shadowed
                 this.logger.warn("Unable to find target for @Shadow {}:{} in {}", shadow.name, shadow.desc, mixin);
             }
         }
