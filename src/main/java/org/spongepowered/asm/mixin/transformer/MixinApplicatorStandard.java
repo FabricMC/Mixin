@@ -487,6 +487,7 @@ class MixinApplicatorStandard {
             if (target == null) {
                 // This is just a local field, so add it
                 this.targetClass.fields.add(field);
+                mixin.fieldMerged(field);
                 
                 if (field.signature != null) {
                     if (this.mergeSignatures) {

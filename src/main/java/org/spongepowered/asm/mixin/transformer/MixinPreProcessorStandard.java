@@ -615,6 +615,7 @@ class MixinPreProcessorStandard {
             FieldNode target = context.findField(mixinField, shadow);
             if (target == null) {
                 if (shadow == null) {
+                    context.addMixinField(mixinField);
                     continue;
                 }
                 target = context.findRemappedField(mixinField);
@@ -638,6 +639,7 @@ class MixinPreProcessorStandard {
                     MixinPreProcessorStandard.logger.log(this.mixin.getLoggingLevel(), "Renaming @Unique field {}{} to {} in {}",
                             mixinField.name, mixinField.desc, uniqueName, this.mixin);
                     mixinField.name = field.renameTo(uniqueName);
+                    context.addMixinField(mixinField);
                     continue;
                 }
 

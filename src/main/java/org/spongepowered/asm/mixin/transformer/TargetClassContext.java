@@ -128,6 +128,13 @@ final class TargetClassContext extends ClassContext implements ITargetClassConte
     private final Set<MethodNode> mixinMethods = new HashSet<MethodNode>();
     
     /**
+     * Information about fields which have been discovered by mixin
+     * preprocessors in this pass but which have not yet been merged into the
+     * target class. 
+     */
+    private final Set<FieldNode> mixinFields = new HashSet<>();
+
+    /**
      * Exceptions which were suppressed during mixin application because they
      * were raised by an optional mixin 
      */
@@ -278,6 +285,21 @@ final class TargetClassContext extends ClassContext implements ITargetClassConte
         }
     }
     
+    /**
+     * Add the specified field to the pending mixin fields set
+     * 
+     * @param field field to add
+     */
+    void addMixinField(FieldNode field) {
+        this.mixinFields.add(field);
+    }
+
+    void fieldMerged(FieldNode field) {
+        if (!this.mixinFields.remove(field)) {
+            TargetClassContext.logger.debug("Unexpected: Merged unregistered field {} {} in {}", field.desc, field.name, this);
+        }
+    }
+
     MethodNode findMethod(Deque<String> aliases, String desc) {
         return this.findAliasedMethod(aliases, desc, true);
     }
@@ -309,6 +331,10 @@ final class TargetClassContext extends ClassContext implements ITargetClassConte
         return this.findAliasedMethod(aliases, desc);
     }
     
+    FieldNode findField(Deque<String> aliases, String desc) {
+        return this.findAliasedField(aliases, desc, true);
+    }
+
     /**
      * Finds a field in the target class
      * 
@@ -317,6 +343,10 @@ final class TargetClassContext extends ClassContext implements ITargetClassConte
      * @return Target field  or null if not found
      */
     FieldNode findAliasedField(Deque<String> aliases, String desc) {
+        return this.findAliasedField(aliases, desc, false);
+    }
+
+    private FieldNode findAliasedField(Deque<String> aliases, String desc, boolean includeMixinFields) {
         String alias = aliases.poll();
         if (alias == null) {
             return null;
@@ -328,7 +358,15 @@ final class TargetClassContext extends ClassContext implements ITargetClassConte
             }
         }
 
-        return this.findAliasedField(aliases, desc);
+        if (includeMixinFields) {
+            for (FieldNode target : this.mixinFields) {
+                if (target.name.equals(alias) && target.desc.equals(desc)) {
+                    return target;
+                }
+            } 
+        }
+
+        return this.findAliasedField(aliases, desc, includeMixinFields);
     }
 
     /**
@@ -416,6 +454,10 @@ final class TargetClassContext extends ClassContext implements ITargetClassConte
             if (!method.name.startsWith("<")) {
                 TargetClassContext.logger.debug("Unexpected: Registered method {}{} in {} was not merged", method.name, method.desc, this);
             }
+        }
+
+        for (FieldNode field : this.mixinFields) {
+            TargetClassContext.logger.debug("Unexpected: Registered field {} {} in {} was not merged", field.desc, field.name, this);
         }
     }
 

@@ -256,6 +256,25 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
                 "sessionId", this.sessionId);
     }
     
+    void addMixinField(FieldNode field) {
+        Annotations.setVisible(field, MixinMerged.class, "mixin", this.getClassName());
+        this.getTarget().addMixinField(field);
+    }
+
+    /**
+     * Callback from the applicator which notifies us that a field was merged
+     * 
+     * @param field merged field
+     */
+    void fieldMerged(FieldNode field) {
+        this.getTarget().fieldMerged(field);
+
+        Annotations.setVisible(field, MixinMerged.class,
+                "mixin", this.getClassName(),
+                "priority", this.getPriority(),
+                "sessionId", this.sessionId);
+    }
+
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */
@@ -1046,7 +1065,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
             }
         }
         
-        return this.getTarget().findAliasedField(aliases, field.desc);
+        return this.getTarget().findField(aliases, field.desc);
     }
 
     FieldNode findRemappedField(FieldNode field) {
