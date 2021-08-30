@@ -132,7 +132,7 @@ final class TargetClassContext extends ClassContext implements ITargetClassConte
      * preprocessors in this pass but which have not yet been merged into the
      * target class. 
      */
-    private final Set<FieldNode> mixinFields = new HashSet<>();
+    private final Set<FieldNode> mixinFields = new HashSet<FieldNode>();
 
     /**
      * Exceptions which were suppressed during mixin application because they
