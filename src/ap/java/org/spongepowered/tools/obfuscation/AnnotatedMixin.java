@@ -238,7 +238,7 @@ class AnnotatedMixin implements IMixinContext, IAnnotatedElement {
                 } else if (type == null) {
                     this.printMessage(Kind.ERROR, "Mixin target " + softTarget + " could not be found", this);
                     return null;
-                } else if (type.isImaginary()) {
+                } else if (type.isImaginary() && false /* Fabric: Disable this check as it breaks with anonymous classes, reverts it similar to 0.8.2 See https://github.com/SpongePowered/Mixin/issues/518*/) {
                     this.printMessage(Kind.WARNING, "Mixin target " + softTarget + " could not be fully resolved.", this,
                             SuppressedBy.UNRESOLVABLE_TARGET);
                     return null;
