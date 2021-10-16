@@ -45,7 +45,7 @@ import org.spongepowered.tools.obfuscation.mirror.TypeHandle;
 import org.spongepowered.tools.obfuscation.mirror.TypeReference;
 
 import com.google.common.io.Files;
-import com.google.gson.Gson;
+import com.google.gson.*;
 
 /**
  * Serialisable map of classes to their associated mixins, used so that we can
@@ -206,7 +206,19 @@ public final class TargetMap extends HashMap<TypeReference, Set<TypeReference>> 
      * @param temp Set "delete on exit" for the file
      */
     public void write(boolean temp) {
-        String json = GSON.toJson(this);
+        JsonObject jsonObject = new JsonObject();
+
+        for (Entry<TypeReference, Set<TypeReference>> entry : this.entrySet()) {
+            final JsonArray array = new JsonArray();
+
+            for (TypeReference reference : entry.getValue()) {
+                array.add(new JsonPrimitive(reference.getName()));
+            }
+
+            jsonObject.add(entry.getKey().getName(), array);
+        }
+
+        String json = GSON.toJson(jsonObject);
 
         File sessionFile = TargetMap.getSessionFile(this.sessionId);
         if (temp) {
@@ -228,9 +240,20 @@ public final class TargetMap extends HashMap<TypeReference, Set<TypeReference>> 
      */
     private static TargetMap read(File sessionFile) {
         try (Reader reader = new BufferedReader(new FileReader(sessionFile))) {
-            return GSON.fromJson(reader, TargetMap.class);
-        } catch (Exception e) {
-            e.printStackTrace();
+            final JsonObject jsonObject = GSON.fromJson(reader, JsonObject.class);
+            final TargetMap targetMap = new TargetMap();
+
+            for (Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+                JsonArray array = entry.getValue().getAsJsonArray();
+
+                for (JsonElement element : array) {
+                    targetMap.addMixin(entry.getKey(), element.getAsString());
+                }
+            }
+
+            return targetMap;
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
         return null;
     }
