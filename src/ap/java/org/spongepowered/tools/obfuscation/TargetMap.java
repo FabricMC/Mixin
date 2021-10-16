@@ -24,13 +24,14 @@
  */
 package org.spongepowered.tools.obfuscation;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.Reader;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,6 +45,7 @@ import org.spongepowered.tools.obfuscation.mirror.TypeHandle;
 import org.spongepowered.tools.obfuscation.mirror.TypeReference;
 
 import com.google.common.io.Files;
+import com.google.gson.Gson;
 
 /**
  * Serialisable map of classes to their associated mixins, used so that we can
@@ -52,6 +54,7 @@ import com.google.common.io.Files;
 public final class TargetMap extends HashMap<TypeReference, Set<TypeReference>> {
 
     private static final long serialVersionUID = 1L;
+    private static final Gson GSON = new Gson();
     
     /**
      * Session ID, used to identify the temp file
@@ -203,26 +206,17 @@ public final class TargetMap extends HashMap<TypeReference, Set<TypeReference>> 
      * @param temp Set "delete on exit" for the file
      */
     public void write(boolean temp) {
-        ObjectOutputStream oos = null;
-        FileOutputStream fout = null;
-        try {
-            File sessionFile = TargetMap.getSessionFile(this.sessionId);
-            if (temp) {
-                sessionFile.deleteOnExit();
-            }
-            fout = new FileOutputStream(sessionFile, true);
-            oos = new ObjectOutputStream(fout);
-            oos.writeObject(this);
+        String json = GSON.toJson(this);
+
+        File sessionFile = TargetMap.getSessionFile(this.sessionId);
+        if (temp) {
+            sessionFile.deleteOnExit();
+        }
+
+        try (FileOutputStream outputStream = new FileOutputStream(sessionFile, true)) {
+            outputStream.write(json.getBytes(StandardCharsets.UTF_8));
         } catch (Exception ex) {
             ex.printStackTrace();
-        } finally {
-            if (oos != null) {
-                try {
-                    oos.close();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
         }
     }
     
@@ -233,22 +227,10 @@ public final class TargetMap extends HashMap<TypeReference, Set<TypeReference>> 
      * @return deserialised map or null if deserialisation failed
      */
     private static TargetMap read(File sessionFile) {
-        ObjectInputStream objectinputstream = null;
-        FileInputStream streamIn = null;
-        try {
-            streamIn = new FileInputStream(sessionFile);
-            objectinputstream = new ObjectInputStream(streamIn);
-            return (TargetMap)objectinputstream.readObject();
+        try (Reader reader = new BufferedReader(new FileReader(sessionFile))) {
+            return GSON.fromJson(reader, TargetMap.class);
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            if (objectinputstream != null) {
-                try {
-                    objectinputstream .close();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            } 
         }
         return null;
     }

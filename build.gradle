@@ -103,7 +103,7 @@ sourceSets {
     ap {
         compileClasspath += main.output
         ext.languageVersion = 8
-        ext.compatibility = '1.6'
+        ext.compatibility = '1.8'
     }
     fernflower {
         compileClasspath += main.output
@@ -177,6 +177,7 @@ dependencies {
     // Annotation Processor
     apImplementation "org.ow2.asm:asm-tree:$asmVersion"
     apImplementation guava
+    apImplementation gson
     
     // Fernflower decompiler
     fernflowerImplementation 'org.jetbrains:intellij-fernflower:1.0.0.9'
