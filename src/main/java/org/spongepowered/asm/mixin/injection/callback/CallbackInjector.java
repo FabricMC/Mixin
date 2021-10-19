@@ -240,8 +240,9 @@ public class CallbackInjector extends Injector {
                         }
                     }
             	}
+
+            	Injector.logger.debug("{} w{} be passed a CallbackInfo{} as a result", info, seenCallbackInfoUse ? "ill" : "on't", Type.VOID_TYPE == target.returnType ? "" : "Returnable");
             }
-            Injector.logger.debug("{} w{} be passed a CallbackInfo{}", info, seenCallbackInfoUse ? "ill" : "on't", Type.VOID_TYPE == target.returnType ? "" : "Returnable");
             usesCallbackInfo = seenCallbackInfoUse;
         }
 
