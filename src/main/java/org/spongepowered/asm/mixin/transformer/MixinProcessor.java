@@ -520,6 +520,7 @@ class MixinProcessor {
             for (MixinCoprocessor coprocessor : this.coprocessors) {
                 config.addListener(coprocessor);
             }
+            config.addListener(MixinInheritanceTracker.INSTANCE);
             if (hotSwapper != null) {
                 config.addListener(new IListener() {
                     @Override

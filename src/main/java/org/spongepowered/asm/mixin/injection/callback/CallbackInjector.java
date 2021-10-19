@@ -44,6 +44,7 @@ import org.spongepowered.asm.mixin.injection.struct.Target;
 import org.spongepowered.asm.mixin.injection.struct.Target.Extension;
 import org.spongepowered.asm.mixin.injection.throwables.InjectionError;
 import org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException;
+import org.spongepowered.asm.mixin.transformer.MixinInheritanceTracker;
 import org.spongepowered.asm.util.Annotations;
 import org.spongepowered.asm.util.Bytecode;
 import org.spongepowered.asm.util.Constants;
@@ -226,6 +227,21 @@ public class CallbackInjector extends Injector {
                 }
             }
             Injector.logger.debug("{} does{} use it's CallbackInfo{}", info, seenCallbackInfoUse ? "" : "n't", Type.VOID_TYPE == target.returnType ? "" : "Returnable");
+            if (!seenCallbackInfoUse && info.getMixin().getMixin().isDetachedSuper() && !Bytecode.isStatic(handler) && (handler.access & Opcodes.ACC_FINAL) == 0 && (target.classNode.access & Opcodes.ACC_FINAL) == 0) {
+                //Although the CallbackInfo appears unused, there is the possibility that the handler is overridden, so we'll have to check
+            	List<MethodNode> childHandlers = MixinInheritanceTracker.INSTANCE.findOverrides(info.getClassInfo(), handler.name, handler.desc);
+            	Injector.logger.debug("{} has {} override(s) in child classes", info, childHandlers.size());
+
+            	out: for (MethodNode childHandle : childHandlers) {
+            		for (AbstractInsnNode insn : childHandle.instructions) {
+                        if (insn.getType() == AbstractInsnNode.VAR_INSN && insn.getOpcode() == Opcodes.ALOAD && ((VarInsnNode) insn).var == callbackInfoSlot) {
+                            seenCallbackInfoUse = true;
+                            break out; //If a child uses it then the parent will need to receive it
+                        }
+                    }
+            	}
+            }
+            Injector.logger.debug("{} w{} be passed a CallbackInfo{}", info, seenCallbackInfoUse ? "ill" : "on't", Type.VOID_TYPE == target.returnType ? "" : "Returnable");
             usesCallbackInfo = seenCallbackInfoUse;
         }
 
