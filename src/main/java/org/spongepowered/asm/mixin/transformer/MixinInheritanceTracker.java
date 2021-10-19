@@ -26,7 +26,13 @@ public enum MixinInheritanceTracker implements IListener {
 		assert mixinInfo.isMixin(); //The mixin should certainly be a mixin
 
 		for (ClassInfo superType = mixinInfo.getSuperClass(); superType != null && superType.isMixin(); superType = superType.getSuperClass()) {
-			parentMixins.computeIfAbsent(superType.getName(), k -> new ArrayList<MixinInfo>()).add(mixin);
+			List<MixinInfo> children = parentMixins.get(superType.getName());
+
+			if (children == null) {
+				parentMixins.put(superType.getName(), children = new ArrayList<MixinInfo>());
+			}
+
+			children.add(mixin);
 		}
 	}
 
