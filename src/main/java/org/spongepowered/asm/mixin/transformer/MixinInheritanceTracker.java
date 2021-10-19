@@ -68,7 +68,7 @@ public enum MixinInheritanceTracker implements IListener {
 			}
 		}
 
-		return out.isEmpty() ? Collections.emptyList() : out;
+		return out.isEmpty() ? Collections.<MethodNode>emptyList() : out;
 	}
 
 	private final Map<String, List<MixinInfo>> parentMixins = new HashMap<String, List<MixinInfo>>();
