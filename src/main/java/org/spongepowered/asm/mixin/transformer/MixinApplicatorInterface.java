@@ -81,6 +81,11 @@ class MixinApplicatorInterface extends MixinApplicatorStandard {
                 if (entry.getValue().isDecoratedMutable()) {
                     this.logger.error("Ignoring illegal @Mutable on {}:{} in {}", shadow.name, shadow.desc, mixin);
                 }
+
+                //If a final field has a primitive value assigned with the declaration, the value is likely inlined where the field is used
+                if (shadow.value != null) {
+                    this.logger.warn("@Shadow field {}:{} in {} has an inlinable value set, is this intended?", shadow.name, shadow.desc, mixin);
+                }
             } else {
                 //This is silently ignored for normal classes, but the only fields an interface has will be shadowed
                 this.logger.warn("Unable to find target for @Shadow {}:{} in {}", shadow.name, shadow.desc, mixin);
