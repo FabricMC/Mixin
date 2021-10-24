@@ -51,6 +51,7 @@ import org.spongepowered.asm.util.Constants;
 import org.spongepowered.asm.util.Locals;
 import org.spongepowered.asm.util.PrettyPrinter;
 import org.spongepowered.asm.util.SignaturePrinter;
+import org.spongepowered.asm.util.asm.MethodNodeEx;
 
 import com.google.common.base.Strings;
 
@@ -229,7 +230,8 @@ public class CallbackInjector extends Injector {
             Injector.logger.debug("{} does{} use it's CallbackInfo{}", info, seenCallbackInfoUse ? "" : "n't", Type.VOID_TYPE == target.returnType ? "" : "Returnable");
             if (!seenCallbackInfoUse && !Bytecode.isStatic(handler) && (handler.access & Opcodes.ACC_FINAL) == 0 && (target.classNode.access & Opcodes.ACC_FINAL) == 0) {
                 //Although the CallbackInfo appears unused, there is the possibility that the handler is overridden, so we'll have to check
-                List<MethodNode> childHandlers = MixinInheritanceTracker.INSTANCE.findOverrides(info.getClassInfo(), handler.name, handler.desc);
+                String handlerName = handler instanceof MethodNodeEx ? ((MethodNodeEx) handler).getOriginalName() : handler.name;
+                List<MethodNode> childHandlers = MixinInheritanceTracker.INSTANCE.findOverrides(info.getClassInfo(), handlerName, handler.desc);
                 Injector.logger.debug("{} has {} override(s) in child classes", info, childHandlers.size());
 
                 out: for (MethodNode childHandle : childHandlers) {
