@@ -130,7 +130,7 @@ class MixinProcessor {
         protected abstract String getContext(IMixinInfo mixin, String context);
 
         public String getLogMessage(String context, InvalidMixinException ex, IMixinInfo mixin) {
-            return String.format("Mixin %s failed %s: %s %s", this.text, this.getContext(mixin, context), ex.getClass().getName(), ex.getMessage());
+            return String.format("Mixin %s for mod %s failed %s: %s %s", this.text, org.spongepowered.asm.mixin.FabricUtil.getModId(mixin.getConfig()), this.getContext(mixin, context), ex.getClass().getName(), ex.getMessage());
         }
 
         public String getErrorMessage(IMixinInfo mixin, IMixinConfig config, Phase phase) {
