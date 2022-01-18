@@ -473,14 +473,16 @@ public class CallbackInjector extends Injector {
     
     @Override
     protected void preInject(Target target, InjectionNode node) {
-        if ((this.localCapture.isCaptureLocals() || this.localCapture.isPrintLocals()) && !node.hasDecoration(CallbackInjector.LOCALS_KEY)) {
-            LocalVariableNode[] locals = Locals.getLocalsAt(this.classNode, target.method, node.getCurrentTarget(), org.spongepowered.asm.mixin.FabricUtil.getCompatibility(info));
+        int fabricCompatibility = org.spongepowered.asm.mixin.FabricUtil.getCompatibility(info);
+        String decorationKey = CallbackInjector.LOCALS_KEY + ":" + fabricCompatibility;
+        if ((this.localCapture.isCaptureLocals() || this.localCapture.isPrintLocals()) && !node.hasDecoration(decorationKey)) {
+            LocalVariableNode[] locals = Locals.getLocalsAt(this.classNode, target.method, node.getCurrentTarget(), fabricCompatibility);
             for (int j = 0; j < locals.length; j++) {
                 if (locals[j] != null && locals[j].desc != null && locals[j].desc.startsWith("Lorg/spongepowered/asm/mixin/injection/callback/")) {
                     locals[j] = null;
                 }
             }
-            node.<LocalVariableNode[]>decorate(CallbackInjector.LOCALS_KEY, locals);
+            node.<LocalVariableNode[]>decorate(decorationKey, locals);
         }
     }
 
@@ -491,7 +493,7 @@ public class CallbackInjector extends Injector {
      */
     @Override
     protected void inject(Target target, InjectionNode node) {
-        LocalVariableNode[] locals = node.<LocalVariableNode[]>getDecoration(CallbackInjector.LOCALS_KEY);
+        LocalVariableNode[] locals = node.<LocalVariableNode[]>getDecoration(CallbackInjector.LOCALS_KEY + ":" + org.spongepowered.asm.mixin.FabricUtil.getCompatibility(info));
         this.inject(new Callback(this.methodNode, target, node, locals, this.localCapture.isCaptureLocals()));
     }
 
