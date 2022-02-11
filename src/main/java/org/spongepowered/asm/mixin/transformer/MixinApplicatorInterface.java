@@ -123,22 +123,21 @@ class MixinApplicatorInterface extends MixinApplicatorStandard {
      */
     @Override
     protected void prepareInjections(MixinTargetContext mixin) {
-        for (MethodNode method : this.targetClass.methods) {
-            try {
-                InjectionInfo injectInfo = InjectionInfo.parse(mixin, method);
-                if (injectInfo != null) {
-                    //Make sure we're running on a Java version which supports interfaces having method bodies
-                    if (!MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.METHODS_IN_INTERFACES)) {
-                        throw new InvalidInterfaceMixinException(mixin, injectInfo + " is not supported on interface mixin method " + method.name);
-                    }
-                }
-            } catch (InvalidInjectionException ex) {
-                String description = ex.getContext() != null ? ex.getContext().toString() : "Injection";
-                throw new InvalidInterfaceMixinException(mixin, description + " is not supported in interface mixin");
-            }
+        try {
+            super.prepareInjections(mixin);
+        } catch (InvalidInjectionException ex) {
+            String description = ex.getContext() != null ? ex.getContext().toString() : "Injection";
+            throw new InvalidInterfaceMixinException(mixin, description + " is not supported in interface mixin", ex);
         }
 
-        super.prepareInjections(mixin);
+        InjectionInfo injectInfo = mixin.getFirstInjectionInfo();
+
+        if (injectInfo != null) {
+            //Make sure we're running on a Java version which supports interfaces having method bodies
+            if (!MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.METHODS_IN_INTERFACES)) {
+                throw new InvalidInterfaceMixinException(mixin, injectInfo + " is not supported on interface mixin method " + injectInfo.getMethodName());
+            }
+        }
     }
     
     @Override

@@ -1353,6 +1353,10 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
         }
     }
 
+    InjectionInfo getFirstInjectionInfo() {
+        return injectors.isEmpty() ? null : injectors.get(0);
+    }
+
     /**
      * Apply injectors discovered in the {@link #prepareInjections()} pass
      */
