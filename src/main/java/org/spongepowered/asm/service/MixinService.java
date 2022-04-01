@@ -144,6 +144,21 @@ public final class MixinService {
     }
 
     private void runBootServices() {
+     // bypass service loader if the mixin.bootstrapService system property yields the desired IMixinServiceBootstrap implementation directly
+        String serviceCls = System.getProperty("mixin.bootstrapService");
+        
+        if (serviceCls != null) {
+            try {
+                IMixinServiceBootstrap bootService = (IMixinServiceBootstrap) Class.forName(serviceCls).getConstructor().newInstance();
+                bootService.bootstrap();
+                bootedServices.add(bootService.getServiceClassName());
+                
+                return;
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        
         this.bootstrapServiceLoader = ServiceLoader.<IMixinServiceBootstrap>load(IMixinServiceBootstrap.class, this.getClass().getClassLoader());
         Iterator<IMixinServiceBootstrap> iter = this.bootstrapServiceLoader.iterator();
         while (iter.hasNext()) {
@@ -200,6 +215,20 @@ public final class MixinService {
     }
 
     private IMixinService initService() {
+        // bypass service loader if the mixin.service system property yields the desired IMixinService implementation directly
+        String serviceCls = System.getProperty("mixin.service"); // FIXME: there is overlap with bootedServices, may just use that directly?
+        
+        if (serviceCls != null) {
+            try {
+                IMixinService service = (IMixinService) Class.forName(serviceCls).getConstructor().newInstance();
+                if (!service.isValid()) throw new RuntimeException("invalid service "+serviceCls+" configured via system property");
+                
+                return service;
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        
         this.serviceLoader = ServiceLoader.<IMixinService>load(IMixinService.class, this.getClass().getClassLoader());
         Iterator<IMixinService> iter = this.serviceLoader.iterator();
         List<String> badServices = new ArrayList<String>();
