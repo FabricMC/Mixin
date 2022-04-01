@@ -134,7 +134,7 @@ class MixinProcessor {
         }
 
         public String getErrorMessage(IMixinInfo mixin, IMixinConfig config, Phase phase) {
-            return String.format("Mixin [%s] from phase [%s] in config [%s] from mod [%s] FAILED during %s", mixin, phase, config, org.spongepowered.asm.mixin.FabricUtil.getModId(config), this.name());
+            return String.format("Mixin [%s] from phase [%s] in config [%s] FAILED during %s", mixin, phase, config, this.name());
         }
         
     }

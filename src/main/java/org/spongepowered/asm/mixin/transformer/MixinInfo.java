@@ -1384,7 +1384,7 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
      */
     @Override
     public String toString() {
-        return String.format("%s:%s", this.parent.getName(), this.name);
+        return String.format("%s:%s from mod %s", this.parent.getName(), this.name, org.spongepowered.asm.mixin.FabricUtil.getModId(getConfig()));
     }
     
     static Variant getVariant(ClassNode classNode) {
