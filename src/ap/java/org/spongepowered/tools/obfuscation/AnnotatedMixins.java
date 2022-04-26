@@ -86,7 +86,7 @@ import com.google.common.collect.ImmutableList.Builder;
  */
 final class AnnotatedMixins implements IMixinAnnotationProcessor, ITokenProvider, ITypeHandleProvider, IJavadocProvider {
 
-    private static final String MAPID_SYSTEM_PROPERTY = "mixin.target.mapid";
+    private static final String MAPID_SYSTEM_PROPERTY = "fabric.mixin.target.mapid";
     
     private static final String RECOMMENDED_MIXINGRADLE_VERSION = "0.7";
 
