@@ -84,7 +84,7 @@ public enum MixinInheritanceTracker implements IListener {
 				int ownerSplit = owner.lastIndexOf('/');
 				int childSplit = node.name.lastIndexOf('/');
 				//There is a reasonable chance mixins are in the same package, so it is viable that a package private method is overridden
-				if (ownerSplit != childSplit || (ownerSplit > 0 && !owner.regionMatches(0, child.getName(), 0, ownerSplit + 1))) break;
+				if (ownerSplit != childSplit || (ownerSplit > 0 && !owner.regionMatches(0, node.name, 0, ownerSplit + 1))) break;
 
 			default:
 				out.add(method);
