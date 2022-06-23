@@ -33,6 +33,7 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
+import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.injection.InjectionPoint;
 import org.spongepowered.asm.mixin.injection.InjectionPoint.RestrictTargetLevel;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -243,7 +244,7 @@ public class ModifyVariableInjector extends Injector {
             .kv("Match name(s)", this.discriminator.hasNames() ? this.discriminator.getNames() : "any")
             .kv("Args only", this.discriminator.isArgsOnly()).hr()
             .add(context)
-            .print(System.err);
+            .print(System.err).log(MixinEnvironment.logger);
     }
     
     /**

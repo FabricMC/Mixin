@@ -24,14 +24,7 @@
  */
 package org.spongepowered.asm.mixin;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.spongepowered.asm.logging.Level;
 import org.spongepowered.asm.logging.ILogger;
@@ -1033,7 +1026,7 @@ public final class MixinEnvironment implements ITokenProvider {
     /**
      * Logger 
      */
-    private static final ILogger logger = MixinService.getService().getLogger("mixin");
+    public static final ILogger logger = MixinService.getService().getLogger("mixin");
 
     /**
      * Active transformer
@@ -1120,6 +1113,11 @@ public final class MixinEnvironment implements ITokenProvider {
         String serviceName = this.service.getName();
         Side side = this.getSide();
         MixinEnvironment.logger.info("SpongePowered MIXIN Subsystem Version={} Source={} Service={} Env={}", version, codeSource, serviceName, side);
+        ArrayList<String> crap = new ArrayList();
+        for (int i = 0; i < options.length; i++) {
+            crap.add(Option.values()[i].name()+"="+options[i]);
+        }
+        MixinEnvironment.logger.info("Modes={} ", Arrays.toString(crap.toArray()));
         
         boolean verbose = this.getOption(Option.DEBUG_VERBOSE);
         if (verbose || this.getOption(Option.DEBUG_EXPORT) || this.getOption(Option.DEBUG_PROFILER)) {
@@ -1143,7 +1141,7 @@ public final class MixinEnvironment implements ITokenProvider {
                 printer.kv(option.property, "%s<%s>", indent, option);
             }
             printer.hr().kv("Detected Side", side);
-            printer.print(System.err);
+            printer.print(System.out).log(MixinService.getService().getLogger("mixin"));
         }
     }
 
@@ -1357,6 +1355,7 @@ public final class MixinEnvironment implements ITokenProvider {
      * @param value New option value
      */
     public void setOption(Option option, boolean value) {
+        logger.info("option {} set {}", option, value);
         this.options[option.ordinal()] = value;
     }
 

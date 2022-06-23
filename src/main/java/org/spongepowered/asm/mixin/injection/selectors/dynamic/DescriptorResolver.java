@@ -33,6 +33,7 @@ import java.util.Set;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.injection.Desc;
 import org.spongepowered.asm.mixin.injection.Descriptors;
 import org.spongepowered.asm.mixin.injection.selectors.ISelectorContext;
@@ -250,7 +251,7 @@ public final class DescriptorResolver {
 
         @Override
         public void postResolve() {
-            this.printer.print();
+            this.printer.print().log(MixinEnvironment.logger);
         }
         
     }        

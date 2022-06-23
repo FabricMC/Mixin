@@ -33,6 +33,7 @@ import java.util.Set;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
+import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.InjectionPoint;
@@ -659,7 +660,7 @@ public class CallbackInjector extends Injector {
         }
         printer.add().add("/**").add(" * Expected callback signature").add(" * /");
         printer.add("%s {", handlerSig);
-        printer.add("    // Method body").add("}").add().print(System.err);
+        printer.add("    // Method body").add("}").add().print(System.err).log(MixinEnvironment.logger);
     }
 
     /**

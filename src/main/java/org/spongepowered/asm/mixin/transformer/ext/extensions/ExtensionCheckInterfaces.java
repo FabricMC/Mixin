@@ -202,7 +202,7 @@ public class ExtensionCheckInterfaces implements IExtension {
 
         if (missingMethodCount > 0) {
             printer.hr().add("%82s%s: %d", "", "Total unimplemented", missingMethodCount);
-            printer.print(System.err);
+            printer.print(System.err).log(MixinEnvironment.logger);
             this.appendToTextReport(printer);
         }
     }
@@ -231,7 +231,7 @@ public class ExtensionCheckInterfaces implements IExtension {
             fos = new FileOutputStream(this.report, true);
             PrintStream stream = new PrintStream(fos);
             stream.print("\n");
-            printer.print(stream);
+            printer.print(stream).log(MixinEnvironment.logger);
         } catch (Exception ex) {
             // never mind
         } finally {
