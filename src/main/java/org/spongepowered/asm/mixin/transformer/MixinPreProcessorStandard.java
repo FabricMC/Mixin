@@ -628,7 +628,7 @@ class MixinPreProcessorStandard {
                 mixinField.name = field.renameTo(target.name);
             }
             
-            if (!Bytecode.compareFlags(mixinField, target, Opcodes.ACC_STATIC)) {
+            if (isShadow && !Bytecode.compareFlags(mixinField, target, Opcodes.ACC_STATIC)) {
                 throw new InvalidMixinException(this.mixin, String.format("STATIC modifier of @Shadow field %s in %s does not match the target",
                         mixinField.name, this.mixin));
             }
