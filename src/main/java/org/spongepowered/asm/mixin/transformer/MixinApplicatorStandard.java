@@ -35,6 +35,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 import org.objectweb.asm.tree.*;
+import org.spongepowered.asm.logging.MethodLoggers;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.MixinEnvironment;
@@ -288,7 +289,7 @@ class MixinApplicatorStandard {
         for (Iterator<MixinInfo> iter = mixins.iterator(); iter.hasNext();) {
             MixinInfo mixin = iter.next();
             try {
-                this.logger.log(mixin.getLoggingLevel(), "Mixing {} from {} into {}", mixin.getName(), mixin.getParent(), this.targetName);
+                MethodLoggers.loggerProcessor.log(mixin.getLoggingLevel(), "Mixing {} from {} into {}", mixin.getName(), mixin.getParent(), this.targetName);
                 mixinContexts.add(mixin.createContextFor(this.context));
                 if (this.auditTrail != null) {
                     this.auditTrail.onApply(this.targetName, mixin.toString());

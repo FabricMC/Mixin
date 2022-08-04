@@ -31,6 +31,7 @@ import org.spongepowered.asm.logging.Level;
 import org.spongepowered.asm.logging.ILogger;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.spongepowered.asm.logging.MethodLoggers;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.MixinEnvironment.Option;
@@ -539,7 +540,7 @@ class MixinProcessor {
         MixinProcessor.logger.info("Begin pendingConfigs preparing: total {}", pendingConfigs.size());
         for (MixinConfig config : this.pendingConfigs) {
             try {
-                MixinProcessor.logger.log(this.verboseLoggingLevel, "Preparing {} ({})", config, config.getDeclaredMixinCount());
+                MethodLoggers.loggerProcessor.log(this.verboseLoggingLevel, "Preparing {} ({})", config, config.getDeclaredMixinCount());
                 config.prepare(extensions);
                 totalMixins += config.getMixinCount();
             } catch (InvalidMixinException ex) {
