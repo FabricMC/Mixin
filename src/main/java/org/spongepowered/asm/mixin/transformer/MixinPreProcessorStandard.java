@@ -634,7 +634,7 @@ class MixinPreProcessorStandard {
             }
             
             if (field.isUnique()) {
-                if ((mixinField.access & (Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) != 0) {
+                if (Bytecode.getVisibility(mixinField).isLessThan(Visibility.PUBLIC)) {
                     String uniqueName = context.getUniqueName(mixinField);
                     MixinPreProcessorStandard.logger.log(this.mixin.getLoggingLevel(), "Renaming @Unique field {}{} to {} in {}",
                             mixinField.name, mixinField.desc, uniqueName, this.mixin);
