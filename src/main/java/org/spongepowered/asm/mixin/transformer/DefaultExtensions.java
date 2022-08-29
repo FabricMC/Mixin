@@ -25,6 +25,7 @@
 package org.spongepowered.asm.mixin.transformer;
 
 import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.spongepowered.asm.mixin.injection.callback.CallbackClassGenerator;
 import org.spongepowered.asm.mixin.injection.invoke.arg.ArgsClassGenerator;
 import org.spongepowered.asm.mixin.transformer.ext.Extensions;
 import org.spongepowered.asm.mixin.transformer.ext.extensions.ExtensionCheckClass;
@@ -51,6 +52,7 @@ final class DefaultExtensions {
         };
         
         extensions.add(new ArgsClassGenerator(registryDelegate));
+        extensions.add(new CallbackClassGenerator(registryDelegate));
         extensions.add(new InnerClassGenerator(registryDelegate, nestHostCoprocessor));
 
         extensions.add(new ExtensionClassExporter(environment));

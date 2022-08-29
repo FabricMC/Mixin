@@ -64,7 +64,7 @@ public class CallbackInjector extends Injector {
     /**
      * Struct to replace all the horrible state variables from before 
      */
-    private class Callback extends InsnList {
+    protected class Callback extends InsnList {
         
         /**
          * Handler method
@@ -219,6 +219,10 @@ public class CallbackInjector extends Injector {
 
             //If the handler doesn't captureArgs, the CallbackInfo(Returnable) will be the first LVT slot, otherwise it will be at the target's frameSize
             int callbackInfoSlot = handlerArgs.length == 1 ? Bytecode.isStatic(handler) ? 0 : 1 : frameSize;
+            usesCallbackInfo = usesCallbackInfo(handler, callbackInfoSlot);
+        }
+
+        protected boolean usesCallbackInfo(MethodNode handler, int callbackInfoSlot) {      
             boolean seenCallbackInfoUse = false;
             for (AbstractInsnNode insn : handler.instructions) {
                 //Look for anywhere the CallbackInfo(Returnable) is loaded in the handler, it's unused if it is never loaded in
@@ -245,7 +249,7 @@ public class CallbackInjector extends Injector {
 
                 Injector.logger.debug("{} w{} be passed a CallbackInfo{} as a result", info, seenCallbackInfoUse ? "ill" : "on't", Type.VOID_TYPE == target.returnType ? "" : "Returnable");
             }
-            usesCallbackInfo = seenCallbackInfoUse;
+            return seenCallbackInfoUse;
         }
 
         /**
@@ -265,6 +269,10 @@ public class CallbackInjector extends Injector {
         
         String getDescriptorWithAllLocals() {
             return this.target.getCallbackDescriptor(true, this.localTypes, this.target.arguments, this.frameSize, Short.MAX_VALUE);
+        }
+
+        protected String getCallbackInfoClass() {
+            return target.getCallbackInfoClass();
         }
 
         String getCallbackInfoConstructorDescriptor() {
@@ -367,7 +375,7 @@ public class CallbackInjector extends Injector {
     /**
      * Decorator key for local variables decoration
      */
-    private static final String LOCALS_KEY = "locals";
+    protected static final String LOCALS_KEY = "locals";
 
     /**
      * True if cancellable 
@@ -377,7 +385,7 @@ public class CallbackInjector extends Injector {
     /**
      * Local variable capture behaviour
      */
-    private final LocalCapture localCapture;
+    protected final LocalCapture localCapture;
     
     /**
      * ID to return from callbackinfo 
@@ -408,7 +416,11 @@ public class CallbackInjector extends Injector {
      * @param localCapture Local variable capture behaviour
      */
     public CallbackInjector(InjectionInfo info, boolean cancellable, LocalCapture localCapture, String identifier) {
-        super(info, "@Inject");
+    	this(info, "@Inject", cancellable, localCapture, identifier);
+    }
+
+    protected CallbackInjector(InjectionInfo info, String annotation, boolean cancellable, LocalCapture localCapture, String identifier) {
+        super(info, annotation);
         this.cancellable = cancellable;
         this.localCapture = localCapture;
         this.identifier = identifier;
@@ -610,7 +622,7 @@ public class CallbackInjector extends Injector {
      * @param message message for the error
      * @return generated method
      */
-    private MethodNode generateErrorMethod(Callback callback, String errorClass, String message) {
+    protected MethodNode generateErrorMethod(Callback callback, String errorClass, String message) {
         MethodNode method = this.info.addMethod(this.methodNode.access, this.methodNode.name + "$missing", callback.getDescriptor());
         method.maxLocals = Bytecode.getFirstNonArgLocalIndex(Type.getArgumentTypes(callback.getDescriptor()), !this.isStatic);
         method.maxStack = 3;
@@ -663,6 +675,20 @@ public class CallbackInjector extends Injector {
     }
 
     /**
+     * Adds the necessary instructions to use the given callback, if it is needed
+     *
+     * @param callback callback handle
+     */
+    protected void prepareCallbackIfNeeded(Callback callback, boolean forceStore) {
+    	if (callback.usesCallbackInfo) {
+            dupReturnValue(callback);
+            if (forceStore || cancellable || totalInjections > 1) {
+                createCallbackInfo(callback, true);
+            }
+        }
+    }
+
+    /**
      * @param callback callback handle
      * @param store store the callback info in a local variable
      */
@@ -688,10 +714,10 @@ public class CallbackInjector extends Injector {
     /**
      * @param callback callback handle
      */
-    private void loadOrCreateCallbackInfo(final Callback callback) {
+    protected void loadOrCreateCallbackInfo(final Callback callback, boolean forceStore) {
         if (!callback.usesCallbackInfo) {
             callback.add(new InsnNode(Opcodes.ACONST_NULL));
-        } else if (this.cancellable || this.totalInjections > 1) {
+        } else if (forceStore || this.cancellable || this.totalInjections > 1) {
             callback.add(new VarInsnNode(Opcodes.ALOAD, this.callbackInfoVar), false, true);
         } else {
             this.createCallbackInfo(callback, false);
@@ -727,7 +753,7 @@ public class CallbackInjector extends Injector {
         this.lastId = id;
         this.lastDesc = desc;
         this.callbackInfoVar = callback.marshalVar();
-        this.callbackInfoClass = callback.target.getCallbackInfoClass();
+        this.callbackInfoClass = callback.getCallbackInfoClass();
         
         // If we were going to store the CI anyway, and if we need it again, and if the current injection isn't at
         // return or cancellable, inject the CI creation at the method head so that it's available everywhere
@@ -768,7 +794,7 @@ public class CallbackInjector extends Injector {
         }
         
         // Push the callback info onto the stack
-        this.loadOrCreateCallbackInfo(callback);
+        this.loadOrCreateCallbackInfo(callback, false);
         
         // (Maybe) push the locals onto the stack
         if (callback.canCaptureLocals) {

@@ -212,6 +212,8 @@ public abstract class InjectionInfo extends SpecialMethodInfo implements ISliceC
         InjectionInfo.register(RedirectInjectionInfo.class);        // @Redirect
         InjectionInfo.register(ModifyVariableInjectionInfo.class);  // @ModifyVariable
         InjectionInfo.register(ModifyConstantInjectionInfo.class);  // @ModifyConstant
+        // Fabric added injectors
+        InjectionInfo.register(CallbackLocalInjectionInfo.class);   // @InjectWithLocals
     }
 
     /**
