@@ -229,6 +229,11 @@ public class CallbackLocalInjector extends CallbackInjector {
 		}
 
 		@Override
+		String getDescriptor() {
+			return desc; //Only used for the error throwing handler
+		}
+
+		@Override
 		public void print(PrettyPrinter printer) {
 			printer.add("  %5s  %7s  %30s  %s", "INDEX", "ORDINAL", "TYPE", "NAME");
 			for (int i = isStatic() ? 0 : 1; i < frameSize; i++) {
@@ -309,7 +314,7 @@ public class CallbackLocalInjector extends CallbackInjector {
 		}
 
 		prepareCallbackIfNeeded(callback, callback.willModifyLocals());
-		invokeCallback(callback, callbackMethod);
+		invokeCallback(callback, callbackMethod, callbackMethod != methodNode);
 		if (callback.usesCallbackInfo) injectCancellationCode(callback);
 
 		callback.inject();
@@ -364,7 +369,7 @@ public class CallbackLocalInjector extends CallbackInjector {
 		return Joiner.on("\n\t").join(errors);
 	}
 
-	private void invokeCallback(CallbackWithLocals callback, MethodNode callbackMethod) {
+	private void invokeCallback(CallbackWithLocals callback, MethodNode callbackMethod, boolean isError) {
 		// Push "this" onto the stack if the callback is not static
 		if (!isStatic) {
 			callback.add(new VarInsnNode(Opcodes.ALOAD, 0), false, true);
@@ -376,18 +381,20 @@ public class CallbackLocalInjector extends CallbackInjector {
 		}
 
 		// Push the callback info onto the stack
-		loadOrCreateCallbackInfo(callback, callback.willModifyLocals());
+		loadOrCreateCallbackInfo(callback, !isError && callback.willModifyLocals());
 
 		// Push the locals onto the stack
-		for (CapturedLocal local : callback.capturedLocals) {
-			callback.add(new VarInsnNode(local.type.getOpcode(Opcodes.ILOAD), local.index));
+		if (!isError) {
+			for (CapturedLocal local : callback.capturedLocals) {
+				callback.add(new VarInsnNode(local.type.getOpcode(Opcodes.ILOAD), local.index));
+			}
 		}
 
 		// Call the callback!
 		invokeHandler(callback, callbackMethod);
 
 		// Capture changes to locals in the handler
-		if (callback.willModifyLocals() && Annotations.getInvisible(callbackMethod, ModificationsCaught.class) == null) {
+		if (!isError && callback.willModifyLocals() && Annotations.getInvisible(callbackMethod, ModificationsCaught.class) == null) {
 			String callbackType = callback.getCallbackInfoClass();
 
 			for (AbstractInsnNode insn : callbackMethod.instructions) {
