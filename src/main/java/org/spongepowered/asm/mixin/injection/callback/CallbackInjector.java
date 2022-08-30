@@ -416,7 +416,7 @@ public class CallbackInjector extends Injector {
      * @param localCapture Local variable capture behaviour
      */
     public CallbackInjector(InjectionInfo info, boolean cancellable, LocalCapture localCapture, String identifier) {
-    	this(info, "@Inject", cancellable, localCapture, identifier);
+        this(info, "@Inject", cancellable, localCapture, identifier);
     }
 
     protected CallbackInjector(InjectionInfo info, String annotation, boolean cancellable, LocalCapture localCapture, String identifier) {
@@ -680,7 +680,7 @@ public class CallbackInjector extends Injector {
      * @param callback callback handle
      */
     protected void prepareCallbackIfNeeded(Callback callback, boolean forceStore) {
-    	if (callback.usesCallbackInfo) {
+        if (callback.usesCallbackInfo) {
             dupReturnValue(callback);
             if (forceStore || cancellable || totalInjections > 1) {
                 createCallbackInfo(callback, true);

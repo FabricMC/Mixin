@@ -34,9 +34,9 @@ public class CallbackLocalInjectionInfo extends CallbackInjectionInfo {
 		int i = 0;
 		for (AnnotationNode local : localNodes) {
 			int ordinal = Annotations.<Integer>getValue(local, "ordinal", -1);
-	        int index = Annotations.<Integer>getValue(local, "index", -1);
-	        List<String> names = Annotations.<List<String>>getValue(local, "name", Collections.emptyList());
-	        locals[i++] = new Local(ordinal, index, !names.isEmpty() ? new HashSet<String>(names) : Collections.emptySet());
+			int index = Annotations.<Integer>getValue(local, "index", -1);
+			List<String> names = Annotations.<List<String>>getValue(local, "name", Collections.emptyList());
+			locals[i++] = new Local(ordinal, index, !names.isEmpty() ? new HashSet<String>(names) : Collections.emptySet());
 		}
 		String identifier = Annotations.<String>getValue(injectAnnotation, "id", "");
 
@@ -44,7 +44,7 @@ public class CallbackLocalInjectionInfo extends CallbackInjectionInfo {
 	}
 
 	@Override
-    protected String getDescription() {
-        return "Callback method with locals";
-    }
+	protected String getDescription() {
+		return "Callback method with locals";
+	}
 }

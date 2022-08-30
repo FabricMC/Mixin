@@ -188,7 +188,7 @@ public class CallbackLocalInjector extends CallbackInjector {
 			}
 
 			return classGenerator.getArgsClass(info.getMixin().getMixin(), target.returnType, isAtReturn, modifyingLocals.toArray(new Type[0])).getName();
-        }
+		}
 
 		boolean willModifyLocals() {
 			return modifiesLocals;
@@ -363,7 +363,7 @@ public class CallbackLocalInjector extends CallbackInjector {
 		}
 
 		return Joiner.on("\n\t").join(errors);
-    }
+	}
 
 	private void invokeCallback(CallbackWithLocals callback, MethodNode callbackMethod) {
 		// Push "this" onto the stack if the callback is not static

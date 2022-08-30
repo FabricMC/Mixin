@@ -87,9 +87,9 @@ public class CallbackClassGenerator implements IClassGenerator {
 	static final String GET_LOCAL = "getLocal$";
 	private static final ILogger logger = MixinService.getService().getLogger("mixin");
 	private final IConsumer<ISyntheticClassInfo> registry;
-    private final Map<Key, CallbackClassInfo> pool = new HashMap<Key, CallbackClassInfo>();
-    private final Map<String, CallbackClassInfo> nameToClass = new HashMap<String, CallbackClassInfo>();
-    private int nextIndex = 1;
+	private final Map<Key, CallbackClassInfo> pool = new HashMap<Key, CallbackClassInfo>();
+	private final Map<String, CallbackClassInfo> nameToClass = new HashMap<String, CallbackClassInfo>();
+	private int nextIndex = 1;
 
 	public CallbackClassGenerator(IConsumer<ISyntheticClassInfo> registry) {
 		this.registry = registry;
