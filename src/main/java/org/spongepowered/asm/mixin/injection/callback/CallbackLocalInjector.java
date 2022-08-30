@@ -54,7 +54,7 @@ public class CallbackLocalInjector extends CallbackInjector {
 			return String.format("Local[ordinal=%d, index=%d, names=%s]", ordinal, index, names);
 		}
 	}
-	protected class CallbackWithLocals extends Callback implements IPrettyPrintable {
+	protected class CallbackWithLocals extends CallbackLocalInjector.Callback implements IPrettyPrintable {
 		public class CapturedLocal {
 			public final int index;
 			public final Type type;
