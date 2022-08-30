@@ -53,7 +53,7 @@ public class CallbackLocalInjector extends CallbackInjector {
 			return String.format("Local[ordinal=%d, index=%d, names=%s]", ordinal, index, names);
 		}
 	}
-	protected class CallbackWithLocals extends CallbackInjector.Callback implements PrettyPrinter.IPrettyPrintable {
+	protected class CallbackWithLocals extends CallbackInjector.Callback implements org.spongepowered.asm.util.PrettyPrinter.IPrettyPrintable {
 		public class CapturedLocal {
 			public final int index;
 			public final Type type;
