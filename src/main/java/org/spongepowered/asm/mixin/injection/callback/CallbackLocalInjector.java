@@ -54,7 +54,7 @@ public class CallbackLocalInjector extends CallbackInjector {
 			return String.format("Local[ordinal=%d, index=%d, names=%s]", ordinal, index, names);
 		}
 	}
-	protected class CallbackWithLocals extends CallbackLocalInjector.Callback implements IPrettyPrintable {
+	protected class CallbackWithLocals extends CallbackInjector.Callback implements IPrettyPrintable {
 		public class CapturedLocal {
 			public final int index;
 			public final Type type;
@@ -207,10 +207,10 @@ public class CallbackLocalInjector extends CallbackInjector {
 			}
 
 			Type callback = Type.getObjectType(target.getCallbackInfoClass());
-			if (i >= args.length || !callback.equals(args[i++])) {//Callback is wrong, perhaps a returnable one has/n't been used when it should/n't
+			if (i >= args.length || !callback.equals(args[i])) {//Callback is wrong, perhaps a returnable one has/n't been used when it should/n't
 				callback = Type.getObjectType(CallbackInfo.getCallInfoClassName(Type.VOID_TYPE.equals(target.returnType) ? Type.INT_TYPE : Type.VOID_TYPE));
 
-				if (--i < args.length && callback.equals(args[i])) {//Wrong callback it is
+				if (i < args.length && callback.equals(args[i])) {//Wrong callback it is
 					String correct = callback.getInternalName();
 					throw new InvalidInjectionException(info, String.format("Invalid descriptor on %s! %s is required!", info, correct.substring(correct.lastIndexOf('/') + 1)));
 				} else {//Still not right...
@@ -218,7 +218,7 @@ public class CallbackLocalInjector extends CallbackInjector {
 					throw new InvalidInjectionException(info, String.format("Invalid descriptor on %s! Expected %s after target parameter%s but found %s", info,
 							target.arguments.length > 1 ? "s" : "", correct.substring(correct.lastIndexOf('/') + 1), args.length > i ? args[i] : "<nothing>"));
 				}
-			}
+			} else i++;
 
 			for (CapturedLocal local : capturedLocals) {
 				if (!local.isSuccessful() || i >= args.length || !local.type.equals(args[i++])) {
