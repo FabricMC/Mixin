@@ -32,14 +32,17 @@ import java.util.Map;
 import org.spongepowered.asm.logging.ILogger;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.spongepowered.asm.mixin.FabricUtil;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.injection.struct.InjectionInfo;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Method;
 import org.spongepowered.asm.mixin.transformer.MixinInfo.MixinMethodNode;
 import org.spongepowered.asm.service.MixinService;
 import org.spongepowered.asm.util.Counter;
+import org.spongepowered.asm.util.asm.MethodNodeEx;
 
 import com.google.common.base.Strings;
+import com.google.common.primitives.Chars;
 
 /**
  * Maintains method remaps for a target class
@@ -108,8 +111,17 @@ class MethodMapper {
     public String getHandlerName(MixinMethodNode method) {
         String prefix = InjectionInfo.getInjectorPrefix(method.getInjectorAnnotation());
         String classUID = MethodMapper.getClassUID(method.getOwner().getClassRef());
-        String methodUID = MethodMapper.getMethodUID(method.name, method.desc, !method.isSurrogate());
-        return String.format("%s$%s%s$%s", prefix, classUID, methodUID, method.name);
+        String mod = FabricUtil.getModId(method.getOwner().getConfig(), "");
+        String methodName = method.name;
+        if (!mod.isEmpty()) {
+	    	//It's common for mods to prefix their own handlers, let's account for that happening
+	    	if (methodName.startsWith(mod) && methodName.length() > mod.length() + 1 && Chars.contains(new char[] {'_', '$'}, methodName.charAt(mod.length()))) {
+	    		methodName = methodName.substring(mod.length() + 1);
+	    	}
+	    	mod += '$';
+        }
+        String methodUID = MethodMapper.getMethodUID(methodName, method.desc, !method.isSurrogate());
+        return String.format("%s$%s%s$%s%s", prefix, classUID, methodUID, mod, methodName);
     }
 
     /**
@@ -123,8 +135,23 @@ class MethodMapper {
      */
     public String getUniqueName(MethodNode method, String sessionId, boolean preservePrefix) {
         String uniqueIndex = Integer.toHexString(this.nextUniqueMethodIndex++);
+        String methodName = method.name;
+        if (method instanceof MethodNodeEx) {
+        	String mod = FabricUtil.getModId(((MethodNodeEx) method).getOwner().getConfig(), "");
+        	if (!mod.isEmpty()) {
+	        	//It's rarer for mods to prefix their @Unique methods, but let's account for it anyway
+	        	if (methodName.startsWith(mod) && methodName.length() > mod.length() + 1 && Chars.contains(new char[] {'_', '$'}, methodName.charAt(mod.length()))) {
+	        		methodName = methodName.substring(mod.length() + 1);
+	        	}
+	        	if (preservePrefix) {
+	        		methodName += '$' + mod;
+	        	} else {
+	        		methodName = mod + '$' + methodName;
+	        	}
+        	}
+        }
         String pattern = preservePrefix ? "%2$s_$md$%1$s$%3$s" : "md%s$%s$%s";
-        return String.format(pattern, sessionId.substring(30), method.name, uniqueIndex);
+        return String.format(pattern, sessionId.substring(30), methodName, uniqueIndex);
     }
 
     /**

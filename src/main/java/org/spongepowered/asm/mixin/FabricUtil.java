@@ -38,7 +38,11 @@ public final class FabricUtil {
     public static final int COMPATIBILITY_LATEST = COMPATIBILITY_0_10_0;
 
     public static String getModId(IMixinConfig config) {
-        return getDecoration(config, KEY_MOD_ID, "(unknown)");
+        return getModId(config, "(unknown)");
+    }
+
+    public static String getModId(IMixinConfig config, String defaultValue) {
+        return getDecoration(config, KEY_MOD_ID, defaultValue);
     }
     
     public static String getModId(ISelectorContext context) {
