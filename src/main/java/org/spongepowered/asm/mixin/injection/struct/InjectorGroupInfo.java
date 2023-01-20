@@ -49,7 +49,7 @@ public class InjectorGroupInfo {
         
         private static final long serialVersionUID = 1L;
         
-        private static final InjectorGroupInfo NO_GROUP = new InjectorGroupInfo("NONE", true);
+        private final InjectorGroupInfo noGroup = new InjectorGroupInfo("NONE", true);
         
         @Override
         public InjectorGroupInfo get(Object key) {
@@ -94,7 +94,7 @@ public class InjectorGroupInfo {
          */
         public InjectorGroupInfo parseGroup(AnnotationNode annotation, String defaultGroup) {
             if (annotation == null) {
-                return InjectorGroupInfo.Map.NO_GROUP;
+                return noGroup;
             }
             
             String name = Annotations.<String>getValue(annotation, "name");
