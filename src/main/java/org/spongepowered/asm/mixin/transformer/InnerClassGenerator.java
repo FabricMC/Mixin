@@ -168,7 +168,7 @@ final class InnerClassGenerator implements IClassGenerator {
          */
         @Override
         public String mapFieldName(String owner, String name, String descriptor) {
-            if (this.ownerName.equalsIgnoreCase(owner)) {
+            if (this.ownerName.equals(owner)) {
                 Field field = this.owner.getClassInfo().findField(name, descriptor, ClassInfo.INCLUDE_ALL);
                 if (field != null) {
                     return field.getName();
@@ -185,7 +185,7 @@ final class InnerClassGenerator implements IClassGenerator {
          */
         @Override
         public String mapMethodName(String owner, String name, String desc) {
-            if (this.ownerName.equalsIgnoreCase(owner)) {
+            if (this.ownerName.equals(owner)) {
                 Method method = this.owner.getClassInfo().findMethod(name, desc, ClassInfo.INCLUDE_ALL);
                 if (method != null) {
                     return method.getName();
