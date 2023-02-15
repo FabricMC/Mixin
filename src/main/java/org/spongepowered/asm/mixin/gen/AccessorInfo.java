@@ -50,6 +50,7 @@ import org.spongepowered.asm.mixin.transformer.MixinTargetContext;
 import org.spongepowered.asm.service.MixinService;
 import org.spongepowered.asm.util.Annotations;
 import org.spongepowered.asm.util.Bytecode;
+import org.spongepowered.asm.util.asm.MethodNodeEx;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -355,7 +356,7 @@ public class AccessorInfo extends SpecialMethodInfo {
      * <tt>foo</tt> for example.  
      */
     protected String inflectTarget() {
-        return AccessorInfo.inflectTarget(this.method.name, this.type, this.toString(), this,
+        return AccessorInfo.inflectTarget(MethodNodeEx.getName(this.method), this.type, this.toString(), this,
                 this.mixin.getEnvironment().getOption(Option.DEBUG_VERBOSE));
     }
 
