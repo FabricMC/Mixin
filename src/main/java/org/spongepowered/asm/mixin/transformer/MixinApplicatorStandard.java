@@ -959,7 +959,7 @@ class MixinApplicatorStandard {
         // Fabric: also clone labels from the initialiser as they will be merged.
         for (AbstractInsnNode node : initialiser) {
             if (node instanceof LabelNode) {
-                labels.put((LabelNode) node, new LabelNode(((LabelNode) node).getLabel()));
+                labels.put((LabelNode) node, new LabelNode());
             }
         }
         
