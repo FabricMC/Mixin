@@ -970,18 +970,15 @@ class MixinApplicatorStandard {
         }
 
         for (AbstractInsnNode node : initialiser) {
-            AbstractInsnNode imACloneNow;
+            if (node instanceof LabelNode) {
+                // Fabric: Merge cloned labels instead of skipping them.
+                // continue;
+            }
             if (node instanceof JumpInsnNode) {
                 // Fabric: Jumps cause no issues if labels are cloned properly and should not be needlessly restricted.
                 // throw new InvalidMixinException(mixin, "Unsupported JUMP opcode in initialiser in " + mixin);
             }
-            if (node instanceof LabelNode) {
-                // Fabric: Merge cloned labels instead of skipping them.
-                imACloneNow = labels.get(node);
-            } else {
-                imACloneNow = node.clone(labels);
-            }
-
+            AbstractInsnNode imACloneNow = node.clone(labels);
             ctor.instructions.insert(insn, imACloneNow);
             insn = imACloneNow;
         }
