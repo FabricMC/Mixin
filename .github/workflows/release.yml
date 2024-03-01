@@ -14,3 +14,8 @@ jobs:
           MAVEN_URL: ${{ secrets.MAVEN_URL }}
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_CENTRAL_URL: ${{ secrets.MAVEN_CENTRAL_URL }}
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          SIGNING_SERVER: ${{ secrets.SIGNING_SERVER }}
+          SIGNING_PGP_KEY: ${{ secrets.SIGNING_PGP_KEY }}

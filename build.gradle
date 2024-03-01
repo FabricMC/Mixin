@@ -11,6 +11,10 @@ buildscript {
     }
 }
 
+plugins {
+	id "me.modmuss50.remotesign" version "0.4.0"
+}
+
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 // Apply plugin
@@ -504,7 +508,25 @@ publishing {
                 }
             }
         }
+
+		if (ENV.MAVEN_CENTRAL_URL) {
+			repositories.maven {
+				name "central"
+				url ENV.MAVEN_CENTRAL_URL
+				credentials {
+					username ENV.MAVEN_CENTRAL_USERNAME
+					password ENV.MAVEN_CENTRAL_PASSWORD
+				}
+			}
+		}
     }
+}
+
+remoteSign {
+	requestUrl = ENV.SIGNING_SERVER
+	pgpAuthKey = ENV.SIGNING_PGP_KEY
+	useDummyForTesting = ENV.SIGNING_SERVER == null
+	sign publishing.publications.developer
 }
 
 // A task to ensure that the version being released has not already been released.
