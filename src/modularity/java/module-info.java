@@ -152,4 +152,6 @@ module org.spongepowered.mixin {
     provides org.spongepowered.tools.obfuscation.service.IObfuscationService
         with org.spongepowered.tools.obfuscation.mcp.ObfuscationServiceMCP,
              org.spongepowered.tools.obfuscation.fg3.ObfuscationServiceFG3;
+			 
+    uses org.spongepowered.include.com.google.common.base.PatternCompiler;
 }

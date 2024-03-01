@@ -157,6 +157,7 @@ sourceSets {
         ext.languageVersion = 16
         ext.modularityExcluded = true // don't add ourselves
     }
+    modularityDummy {}
 }
 
 // Because Mixin aims to support a variety of environments, we have to be able to run with older versions of GSON and Guava that lack official module
@@ -364,7 +365,7 @@ if (JavaVersion.current().isJava8Compatible()) {
 }
 
 task stagingJar(type: ShadowJar) {
-    sourceSets.findAll { !(it.name =~ /example|test/) }.each {
+    sourceSets.findAll { !(it.name =~ /example|test|modularityDummy/) }.each {
         from it.output
     }
     configurations = [project.configurations.stagingJar]
