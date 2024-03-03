@@ -496,6 +496,45 @@ publishing {
                     }
                 }
             }
+
+			pom {
+				description = 'Fabric Mixin is a trait/mixin and bytecode weaving framework for Java using ASM.'
+				url = 'https://github.com/FabricMC/Mixin'
+
+				scm {
+					connection = "scm:git:https://github.com/FabricMC/Mixin.git"
+					developerConnection = "scm:git:git@github.com:FabricMC/Mixin.git"
+					url = "https://github.com/FabricMC/Mixin"
+				}
+
+				issueManagement {
+					system = "GitHub"
+					url = "https://github.com/FabricMC/Mixin/issues"
+				}
+
+				licenses {
+					license {
+						name = 'The MIT License'
+						url = 'https://raw.githubusercontent.com/FabricMC/Mixin/main/LICENSE.txt'
+					}
+				}
+
+				developers {
+					// Et. al. that arent in the fabric org on maven central
+
+					developer {
+						id = "modmuss50"
+						name = "modmuss50"
+						email = "modmuss50@fabricmc.net"
+					}
+
+					developer {
+						id = "sfPlayer"
+						name = "Player"
+						email = "player@fabricmc.net"
+					}
+				}
+			}
         }
     }
 
