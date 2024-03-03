@@ -784,7 +784,7 @@ public final class MixinEnvironment implements ITokenProvider {
 	    },
 
 	    /**
-	     * Java 20 or above is required
+	     * Java 21 or above is required
 	     */
 	    JAVA_21(21, Opcodes.V21, LanguageFeatures.METHODS_IN_INTERFACES | LanguageFeatures.PRIVATE_SYNTHETIC_METHODS_IN_INTERFACES
 		    | LanguageFeatures.PRIVATE_METHODS_IN_INTERFACES | LanguageFeatures.NESTING | LanguageFeatures.DYNAMIC_CONSTANTS
