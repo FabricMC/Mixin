@@ -1273,31 +1273,42 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
             return (this.priority < other.priority) ? -1 : 1;
         }
     }
-    
+
     /**
      * Factory method, creates a new mixin configuration bundle from the
      * specified configFile, which must be accessible on the classpath
-     * 
+     *
      * @param configFile configuration file to load
      * @param outer fallback environment
      * @return new Config
      */
     static Config create(String configFile, MixinEnvironment outer) {
+        return create(configFile, MixinService.getService().getResourceAsStream(configFile), outer);
+    }
+    
+    /**
+     * Factory method, creates a new mixin configuration bundle from the
+     * specified configName and resource.
+     * 
+     * @param configName configuration name
+     * @param resource configuration to load
+     * @param outer fallback environment
+     * @return new Config
+     */
+    static Config create(String configName, InputStream resource, MixinEnvironment outer) {
         try {
-            IMixinService service = MixinService.getService();
-            InputStream resource = service.getResourceAsStream(configFile);
             if (resource == null) {
-                throw new IllegalArgumentException(String.format("The specified resource '%s' was invalid or could not be read", configFile));
+                throw new IllegalArgumentException(String.format("The specified resource '%s' was invalid or could not be read", configName));
             }
             MixinConfig config = new Gson().fromJson(new InputStreamReader(resource), MixinConfig.class);
-            if (config.onLoad(service, configFile, outer)) {
+            if (config.onLoad(MixinService.getService(), configName, outer)) {
                 return config.getHandle();
             }
             return null;
         } catch (IllegalArgumentException ex) {
             throw ex;
         } catch (Exception ex) {
-            throw new IllegalArgumentException(String.format("The specified resource '%s' was invalid or could not be read", configFile), ex);
+            throw new IllegalArgumentException(String.format("The specified resource '%s' was invalid or could not be read", configName), ex);
         }
     }
 

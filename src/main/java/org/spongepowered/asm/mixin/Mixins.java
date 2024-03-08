@@ -24,6 +24,7 @@
  */
 package org.spongepowered.asm.mixin;
 
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -77,6 +78,24 @@ public final class Mixins {
             Mixins.createConfiguration(configFile, fallback);
         }
     }
+
+    /**
+     * Add a mixin configuration resource
+     *
+     * @param configName configuration name
+     * @param resource stream representing the JSON file
+     */
+    public static void addConfiguration(String configName, InputStream resource) {
+        Config config = null;
+
+        try {
+            config = Config.create(configName, resource);
+        } catch (Exception ex) {
+            Mixins.logger.error("Error encountered reading mixin config " + configName + ": " + ex.getClass().getName() + " " + ex.getMessage(), ex);
+        }
+
+        Mixins.registerConfiguration(config);
+    }
     
     /**
      * Add a mixin configuration resource
@@ -106,7 +125,20 @@ public final class Mixins {
     }
 
     private static void registerConfiguration(Config config) {
-        if (config == null || Mixins.registeredConfigs.contains(config.getName())) {
+        if (config == null) {
+            return;
+        }
+
+        if (Mixins.registeredConfigs.contains(config.getName())) {
+            Config prev = null;
+            for (Config config1 : Mixins.getConfigs()) {
+                if (config1.getName().equals(config.getName())) {
+                    prev = config1;
+                    break;
+                }
+            }
+            if (prev == null) return;
+            Mixins.logger.error("Non-unique Mixin config name " + config.getName() + " already used by mod " + FabricUtil.getModId(prev.getConfig()));
             return;
         }
         
