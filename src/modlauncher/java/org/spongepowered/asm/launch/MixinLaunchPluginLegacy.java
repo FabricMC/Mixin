@@ -235,7 +235,7 @@ public class MixinLaunchPluginLegacy implements ILaunchPluginService, IClassByte
         if (classBytes != null && classBytes.length != 0) {
             ClassNode classNode = new ClassNode();
             ClassReader classReader = new MixinClassReader(classBytes, canonicalName);
-            classReader.accept(classNode, ClassReader.EXPAND_FRAMES);
+            classReader.accept(classNode, 0);
             return classNode;
         }
         
