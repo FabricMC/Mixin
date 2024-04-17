@@ -24,6 +24,7 @@
  */
 package org.spongepowered.asm.mixin.transformer;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -176,6 +177,10 @@ public class Config {
         }
         
         return config;
+    }
+
+    public static Config create(String configName, InputStream resource) {
+        return MixinConfig.create(configName, resource, MixinEnvironment.getDefaultEnvironment());
     }
 
     /**
