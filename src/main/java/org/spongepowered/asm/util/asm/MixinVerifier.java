@@ -101,6 +101,11 @@ public class MixinVerifier extends SimpleVerifier {
         if (typeInfo.isInterface()) {
             typeInfo = ClassInfo.forName("java/lang/Object");
         }
-        return ClassInfo.forType(other, TypeLookup.ELEMENT_TYPE).hasSuperClass(typeInfo);
+
+        ClassInfo otherType = ClassInfo.forType(other, TypeLookup.ELEMENT_TYPE);
+        if (otherType != null)
+            return otherType.hasSuperClass(typeInfo);
+
+        return false;
     }
 }
