@@ -46,15 +46,15 @@ class MixinAgentClassLoader extends ClassLoader {
     private static final ILogger logger = MixinService.getService().getLogger("mixin.agent");
 
     /**
-     * Mapping of mixin mixin classes to their fake classes
+     * Mapping of mixin classes to their fake classes
      */
-    private Map<Class<?>, byte[]> mixins = new HashMap<Class<?>, byte[]>();
+    private final Map<Class<?>, byte[]> mixins = new HashMap<Class<?>, byte[]>();
 
     /**
      * Mapping that keep track of bytecode for classes that are targeted by
      * mixins
      */
-    private Map<String, byte[]> targets = new HashMap<String, byte[]>();
+    private final Map<String, byte[]> targets = new HashMap<String, byte[]>();
 
     /**
      * Add a fake mixin class
@@ -62,11 +62,16 @@ class MixinAgentClassLoader extends ClassLoader {
      * @param name Name of the fake class
      */
     void addMixinClass(String name) {
+        // Ensure that classes with '/'s in their names are replaced with '.'s,
+        // this can happen when hot swapping mixins in fabric, for more details see:
+        // https://github.com/FabricMC/fabric/issues/1934 and https://github.com/FabricMC/Mixin/issues/76.
+        name = name.replace('/', '.');
+
         MixinAgentClassLoader.logger.debug("Mixin class {} added to class loader", name);
         try {
             byte[] bytes = this.materialise(name);
             Class<?> clazz = this.defineClass(name, bytes, 0, bytes.length);
-            // apparently the class needs to be instantiated at least once
+            // Apparently the class needs to be instantiated at least once
             // to be including in list returned by allClasses() method in jdi api
             clazz.getDeclaredConstructor().newInstance();
             this.mixins.put(clazz, bytes);
