@@ -250,7 +250,6 @@ javadoc {
     options {
         docTitle 'Welcome to the Mixin Javadoc'
         overview 'docs/javadoc/overview.html'
-        stylesheetFile file('docs/javadoc/mixin.css')
         addBooleanOption '-allow-script-in-comments', true
     }
     doLast {
