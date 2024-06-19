@@ -73,7 +73,6 @@ import org.spongepowered.asm.util.Bytecode;
 import org.spongepowered.asm.util.LanguageFeatures;
 import org.spongepowered.asm.util.asm.ASM;
 import org.spongepowered.asm.util.asm.MethodNodeEx;
-import org.spongepowered.asm.util.CompareUtil;
 import org.spongepowered.asm.util.perf.Profiler;
 import org.spongepowered.asm.util.perf.Profiler.Section;
 
@@ -1342,7 +1341,7 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
             return 0;
         }
         if (other.priority == this.priority) {
-            return CompareUtil.compare(this.order, other.order);
+            return Integer.compare(this.order, other.order);
         } else {
             return (this.priority < other.priority) ? -1 : 1;
         }

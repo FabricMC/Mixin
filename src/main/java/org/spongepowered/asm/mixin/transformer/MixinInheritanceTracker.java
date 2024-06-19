@@ -38,62 +38,70 @@ import org.spongepowered.asm.mixin.transformer.MixinConfig.IListener;
 import org.spongepowered.asm.util.Bytecode;
 
 public enum MixinInheritanceTracker implements IListener {
-	INSTANCE;
+    INSTANCE;
 
-	@Override
-	public void onPrepare(MixinInfo mixin) {
-	}
+    @Override
+    public void onPrepare(MixinInfo mixin) {
+    }
 
-	@Override
-	public void onInit(MixinInfo mixin) {
-		ClassInfo mixinInfo = mixin.getClassInfo();
-		assert mixinInfo.isMixin(); //The mixin should certainly be a mixin
+    @Override
+    public void onInit(MixinInfo mixin) {
+        ClassInfo mixinInfo = mixin.getClassInfo();
+        assert mixinInfo.isMixin(); //The mixin should certainly be a mixin
 
-		for (ClassInfo superType = mixinInfo.getSuperClass(); superType != null && superType.isMixin(); superType = superType.getSuperClass()) {
-			List<MixinInfo> children = parentMixins.get(superType.getName());
+        for (ClassInfo superType = mixinInfo.getSuperClass(); superType != null && superType.isMixin(); superType = superType.getSuperClass()) {
+            List<MixinInfo> children = parentMixins.get(superType.getName());
 
-			if (children == null) {
-				parentMixins.put(superType.getName(), children = new ArrayList<MixinInfo>());
-			}
+            if (children == null) {
+                parentMixins.put(superType.getName(), children = new ArrayList<MixinInfo>());
+            }
 
-			children.add(mixin);
-		}
-	}
+            children.add(mixin);
+        }
+    }
 
-	public List<MethodNode> findOverrides(ClassInfo owner, String name, String desc) {
-		return findOverrides(owner.getName(), name, desc);
-	}
+    public List<MethodNode> findOverrides(ClassInfo owner, String name, String desc) {
+        return findOverrides(owner.getName(), name, desc);
+    }
 
-	public List<MethodNode> findOverrides(String owner, String name, String desc) {
-		List<MixinInfo> children = parentMixins.get(owner);
-		if (children == null) return Collections.emptyList();
+    public List<MethodNode> findOverrides(String owner, String name, String desc) {
+        List<MixinInfo> children = parentMixins.get(owner);
+        if (children == null) {
+            return Collections.emptyList();
+        }
 
-		List<MethodNode> out = new ArrayList<MethodNode>(children.size());
+        List<MethodNode> out = new ArrayList<MethodNode>(children.size());
 
-		for (MixinInfo child : children) {
-			ClassNode node = child.getClassNode(ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+        for (MixinInfo child : children) {
+            ClassNode node = child.getClassNode(ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
 
-			MethodNode method = Bytecode.findMethod(node, name, desc);
-			if (method == null || Bytecode.isStatic(method)) continue;
+            MethodNode method = Bytecode.findMethod(node, name, desc);
+            if (method == null || Bytecode.isStatic(method)) {
+                continue;
+            }
 
-			switch (Bytecode.getVisibility(method)) {
-			case PRIVATE:
-				break;
+            switch (Bytecode.getVisibility(method)) {
+            case PRIVATE:
+                break;
 
-			case PACKAGE:
-				int ownerSplit = owner.lastIndexOf('/');
-				int childSplit = node.name.lastIndexOf('/');
-				//There is a reasonable chance mixins are in the same package, so it is viable that a package private method is overridden
-				if (ownerSplit != childSplit || (ownerSplit > 0 && !owner.regionMatches(0, node.name, 0, ownerSplit + 1))) break;
+            case PACKAGE:
+                int ownerSplit = owner.lastIndexOf('/');
+                int childSplit = node.name.lastIndexOf('/');
+                //There is a reasonable chance mixins are in the same package, so it is viable that a package private method is overridden
+                if (ownerSplit != childSplit || (ownerSplit > 0 && !owner.regionMatches(0, node.name, 0, ownerSplit + 1))) {
+                    break;
+                }
 
-			default:
-				out.add(method);
-				break;
-			}
-		}
+                out.add(method);
+                break;
+            default:
+                out.add(method);
+                break;
+            }
+        }
 
-		return out.isEmpty() ? Collections.<MethodNode>emptyList() : out;
-	}
+        return out.isEmpty() ? Collections.<MethodNode>emptyList() : out;
+    }
 
-	private final Map<String, List<MixinInfo>> parentMixins = new HashMap<String, List<MixinInfo>>();
+    private final Map<String, List<MixinInfo>> parentMixins = new HashMap<String, List<MixinInfo>>();
 }

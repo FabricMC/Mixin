@@ -81,12 +81,12 @@ repositories {
 sourceSets {
     legacy {
         ext.languageVersion = 8
-        ext.compatibility = '1.6'
+        ext.compatibility = '1.8'
     }
     main {
         compileClasspath += legacy.output
         ext.languageVersion = 8
-        ext.compatibility = '1.6'
+        ext.compatibility = '1.8'
     }
     ap {
         compileClasspath += main.output
@@ -96,13 +96,13 @@ sourceSets {
     fernflower {
         compileClasspath += main.output
         ext.languageVersion = 8
-        ext.compatibility = '1.6'
+        ext.compatibility = '1.8'
         ext.modularityExcluded = true
     }
     agent {
         compileClasspath += main.output
         ext.languageVersion = 8
-        ext.compatibility = '1.6'
+        ext.compatibility = '1.8'
     }
     bridge {
         compileClasspath += main.output
@@ -322,7 +322,7 @@ checkstyle {
         "year"        : project.inceptionYear
     ]
     configFile = file("checkstyle.xml")
-    toolVersion = '8.44'
+    toolVersion = '10.17.0'
 }
 
 // Source compiler configuration

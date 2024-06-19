@@ -232,7 +232,11 @@ public final class ClassInfo {
          * Frame local size 
          */
         public final int size;
-        public final int rawSize; // Fabric non-adjusted frame size for legacy support
+
+        /**
+         * Fabric: non-adjusted frame size for legacy support
+         */
+        public final int rawSize;
 
         FrameData(int index, int type, int locals, int size) {
             this.index = index;

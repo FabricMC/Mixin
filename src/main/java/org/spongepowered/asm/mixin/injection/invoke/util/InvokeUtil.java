@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.injection.struct.InjectionNodes.InjectionNode
 
 import java.util.Arrays;
 
-public class InvokeUtil {
+public final class InvokeUtil {
     public static Type[] getOriginalArgs(InjectionNode node) {
         return Type.getArgumentTypes(((MethodInsnNode) node.getOriginalTarget()).desc);
     }
@@ -46,5 +46,8 @@ public class InvokeUtil {
             return Arrays.copyOfRange(currentArgs, 1, currentArgs.length);
         }
         return currentArgs;
+    }
+
+    private InvokeUtil() {
     }
 }

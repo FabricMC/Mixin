@@ -328,6 +328,7 @@ public final class Locals {
      *      bear in mind that if the specified node is itself a STORE opcode,
      *      then we will be looking at the state of the locals PRIOR to its
      *      invocation
+     * @param fabricCompatibility Fabric compatibility level
      * @return A sparse array containing a view (hopefully) of the locals at the
      *      specified location
      */
@@ -335,7 +336,7 @@ public final class Locals {
         if (fabricCompatibility >= org.spongepowered.asm.mixin.FabricUtil.COMPATIBILITY_0_10_0) {
             return Locals.getLocalsAt(classNode, method, node, Settings.DEFAULT);
         } else {
-            return getLocalsAt_0_9_2(classNode, method, node);
+            return getLocalsAt092(classNode, method, node);
         }
     }
     
@@ -580,7 +581,7 @@ public final class Locals {
         return frame;
     }
     
-    private static LocalVariableNode[] getLocalsAt_0_9_2(ClassNode classNode, MethodNode method, AbstractInsnNode node) {
+    private static LocalVariableNode[] getLocalsAt092(ClassNode classNode, MethodNode method, AbstractInsnNode node) {
         for (int i = 0; i < 3 && (node instanceof LabelNode || node instanceof LineNumberNode); i++) {
             node = Locals.nextNode(method.instructions, node);
         }

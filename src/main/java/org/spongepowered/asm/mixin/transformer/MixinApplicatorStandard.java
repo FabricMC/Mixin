@@ -781,7 +781,7 @@ class MixinApplicatorStandard {
 
     /**
      * Finds a method in the target class
-     * @param searchFor
+     * @param searchFor The method node to search for
      * 
      * @return Target method matching searchFor, or null if not found
      */
@@ -797,7 +797,7 @@ class MixinApplicatorStandard {
 
     /**
      * Finds a field in the target class
-     * @param searchFor
+     * @param searchFor The field node to search for
      * 
      * @return Target field matching searchFor, or null if not found
      */

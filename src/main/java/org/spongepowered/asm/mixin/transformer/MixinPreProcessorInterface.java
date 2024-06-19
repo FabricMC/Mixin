@@ -140,7 +140,7 @@ class MixinPreProcessorInterface extends MixinPreProcessorStandard {
 
         //Making a field non-final will result in verification crashes, so @Mutable is always a mistake
         if (Annotations.getVisible(field, Mutable.class) != null) {
-        	throw new InvalidInterfaceMixinException(this.mixin, String.format("@Shadow field %s.%s is marked as mutable. This is not allowed.",
+            throw new InvalidInterfaceMixinException(this.mixin, String.format("@Shadow field %s.%s is marked as mutable. This is not allowed.",
                     this.mixin, field.name));
         }
 

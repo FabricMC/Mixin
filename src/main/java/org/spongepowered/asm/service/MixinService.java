@@ -221,7 +221,9 @@ public final class MixinService {
         if (serviceCls != null) {
             try {
                 IMixinService service = (IMixinService) Class.forName(serviceCls).getConstructor().newInstance();
-                if (!service.isValid()) throw new RuntimeException("invalid service "+serviceCls+" configured via system property");
+                if (!service.isValid()) {
+                    throw new RuntimeException("invalid service " + serviceCls + " configured via system property");
+                }
                 
                 return service;
             } catch (ReflectiveOperationException e) {

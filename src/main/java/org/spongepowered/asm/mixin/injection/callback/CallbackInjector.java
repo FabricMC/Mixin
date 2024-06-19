@@ -570,7 +570,9 @@ public class CallbackInjector extends Injector {
             }
         }
         this.invokeCallback(callback, callbackMethod);
-        if (callback.usesCallbackInfo) this.injectCancellationCode(callback);
+        if (callback.usesCallbackInfo) {
+            this.injectCancellationCode(callback);
+        }
         
         callback.inject();
         this.info.notifyInjected(callback.target);

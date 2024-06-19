@@ -141,7 +141,7 @@ public final class VersionNumber implements Comparable<VersionNumber>, Serializa
         if (other == null) {
             return 1;
         }
-        return CompareUtil.compare(this.value, other.value);
+        return Long.compare(this.value, other.value);
     }
     
     /* (non-Javadoc)

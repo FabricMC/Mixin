@@ -122,11 +122,11 @@ class MethodMapper {
         String mod = MethodMapper.getMixinSourceId(mixin, "");
         String methodName = method.name;
         if (!mod.isEmpty()) {
-	    	//It's common for mods to prefix their own handlers, let's account for that happening
-	    	if (methodName.startsWith(mod) && methodName.length() > mod.length() + 1 && Chars.contains(new char[] {'_', '$'}, methodName.charAt(mod.length()))) {
-	    		methodName = methodName.substring(mod.length() + 1);
-	    	}
-	    	mod += '$';
+            //It's common for mods to prefix their own handlers, let's account for that happening
+            if (methodName.startsWith(mod) && methodName.length() > mod.length() + 1 && Chars.contains(new char[] {'_', '$'}, methodName.charAt(mod.length()))) {
+                methodName = methodName.substring(mod.length() + 1);
+            }
+            mod += '$';
         }
         String methodUID = MethodMapper.getMethodUID(methodName, method.desc, !method.isSurrogate());
         return String.format("%s$%s%s$%s%s", prefix, classUID, methodUID, mod, methodName);
@@ -145,18 +145,18 @@ class MethodMapper {
         String uniqueIndex = Integer.toHexString(this.nextUniqueMethodIndex++);
         String methodName = method.name;
         if (method instanceof MethodNodeEx) {
-        	String mod = MethodMapper.getMixinSourceId(mixin, "");
-        	if (!mod.isEmpty()) {
-	        	//It's rarer for mods to prefix their @Unique methods, but let's account for it anyway
-	        	if (methodName.startsWith(mod) && methodName.length() > mod.length() + 1 && Chars.contains(new char[] {'_', '$'}, methodName.charAt(mod.length()))) {
-	        		methodName = methodName.substring(mod.length() + 1);
-	        	}
-	        	if (preservePrefix) {
-	        		methodName += '$' + mod;
-	        	} else {
-	        		methodName = mod + '$' + methodName;
-	        	}
-        	}
+            String mod = MethodMapper.getMixinSourceId(mixin, "");
+            if (!mod.isEmpty()) {
+                //It's rarer for mods to prefix their @Unique methods, but let's account for it anyway
+                if (methodName.startsWith(mod) && methodName.length() > mod.length() + 1 && Chars.contains(new char[] {'_', '$'}, methodName.charAt(mod.length()))) {
+                    methodName = methodName.substring(mod.length() + 1);
+                }
+                if (preservePrefix) {
+                    methodName += '$' + mod;
+                } else {
+                    methodName = mod + '$' + methodName;
+                }
+            }
         }
         String pattern = preservePrefix ? "%2$s_$md$%1$s$%3$s" : "md%s$%s$%s";
         return String.format(pattern, sessionId.substring(30), methodName, uniqueIndex);

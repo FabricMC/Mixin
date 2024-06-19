@@ -543,7 +543,7 @@ class MixinProcessor {
                 this.handleMixinPrepareError(config, ex, environment);
             } catch (Exception ex) {
                 String message = ex.getMessage();
-                MixinProcessor.logger.error("Error encountered whilst initialising mixin config '" + config.getName() + "' from mod '"+org.spongepowered.asm.mixin.FabricUtil.getModId(config)+"': " + message, ex);
+                MixinProcessor.logger.error("Error encountered whilst initialising mixin config '" + config.getName() + "' from mod '" + org.spongepowered.asm.mixin.FabricUtil.getModId(config) + "': " + message, ex);
             }
         }
         
@@ -570,7 +570,7 @@ class MixinProcessor {
                 this.handleMixinPrepareError(config, ex, environment);
             } catch (Exception ex) {
                 String message = ex.getMessage();
-                MixinProcessor.logger.error("Error encountered during mixin config postInit step '" + config.getName() + "' from mod '"+org.spongepowered.asm.mixin.FabricUtil.getModId(config)+ "': " + message, ex);
+                MixinProcessor.logger.error("Error encountered during mixin config postInit step '" + config.getName() + "' from mod '" + org.spongepowered.asm.mixin.FabricUtil.getModId(config) + "': " + message, ex);
             }
         }
         
