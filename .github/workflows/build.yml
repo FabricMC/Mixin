@@ -6,7 +6,7 @@ jobs:
       fail-fast: false
       matrix:
         java: [17-jdk, 21-jdk]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     container:
       image: eclipse-temurin:${{ matrix.java }}
       options: --user root
