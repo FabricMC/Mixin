@@ -11,7 +11,7 @@ buildscript {
 }
 
 plugins {
-	id "me.modmuss50.remotesign" version "0.4.0"
+    id "me.modmuss50.remotesign" version "0.4.0"
     id "io.github.goooler.shadow"  version "8.1.7"
 }
 
@@ -440,7 +440,7 @@ task sourceJar(type: Jar) {
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-	from javadoc.destinationDir
+    from javadoc.destinationDir
     archiveClassifier = "javadoc"
 }
 
@@ -498,45 +498,45 @@ publishing {
                 }
             }
 
-			pom {
-				name = "Fabric Mixin"
-				description = 'Fabric Mixin is a trait/mixin and bytecode weaving framework for Java using ASM.'
-				url = 'https://github.com/FabricMC/Mixin'
+            pom {
+                name = "Fabric Mixin"
+                description = 'Fabric Mixin is a trait/mixin and bytecode weaving framework for Java using ASM.'
+                url = 'https://github.com/FabricMC/Mixin'
 
-				scm {
-					connection = "scm:git:https://github.com/FabricMC/Mixin.git"
-					developerConnection = "scm:git:git@github.com:FabricMC/Mixin.git"
-					url = "https://github.com/FabricMC/Mixin"
-				}
+                scm {
+                    connection = "scm:git:https://github.com/FabricMC/Mixin.git"
+                    developerConnection = "scm:git:git@github.com:FabricMC/Mixin.git"
+                    url = "https://github.com/FabricMC/Mixin"
+                }
 
-				issueManagement {
-					system = "GitHub"
-					url = "https://github.com/FabricMC/Mixin/issues"
-				}
+                issueManagement {
+                    system = "GitHub"
+                    url = "https://github.com/FabricMC/Mixin/issues"
+                }
 
-				licenses {
-					license {
-						name = 'The MIT License'
-						url = 'https://raw.githubusercontent.com/FabricMC/Mixin/main/LICENSE.txt'
-					}
-				}
+                licenses {
+                    license {
+                        name = 'The MIT License'
+                        url = 'https://raw.githubusercontent.com/FabricMC/Mixin/main/LICENSE.txt'
+                    }
+                }
 
-				developers {
-					// Et. al. that arent in the fabric org on maven central
+                developers {
+                    // Et. al. that arent in the fabric org on maven central
 
-					developer {
-						id = "modmuss50"
-						name = "modmuss50"
-						email = "modmuss50@fabricmc.net"
-					}
+                    developer {
+                        id = "modmuss50"
+                        name = "modmuss50"
+                        email = "modmuss50@fabricmc.net"
+                    }
 
-					developer {
-						id = "sfPlayer"
-						name = "Player"
-						email = "player@fabricmc.net"
-					}
-				}
-			}
+                    developer {
+                        id = "sfPlayer"
+                        name = "Player"
+                        email = "player@fabricmc.net"
+                    }
+                }
+            }
         }
     }
 
@@ -551,24 +551,24 @@ publishing {
             }
         }
 
-		if (ENV.MAVEN_CENTRAL_URL) {
-			repositories.maven {
-				name "central"
-				url ENV.MAVEN_CENTRAL_URL
-				credentials {
-					username ENV.MAVEN_CENTRAL_USERNAME
-					password ENV.MAVEN_CENTRAL_PASSWORD
-				}
-			}
-		}
+        if (ENV.MAVEN_CENTRAL_URL) {
+            repositories.maven {
+                name "central"
+                url ENV.MAVEN_CENTRAL_URL
+                credentials {
+                    username ENV.MAVEN_CENTRAL_USERNAME
+                    password ENV.MAVEN_CENTRAL_PASSWORD
+                }
+            }
+        }
     }
 }
 
 remoteSign {
-	requestUrl = ENV.SIGNING_SERVER
-	pgpAuthKey = ENV.SIGNING_PGP_KEY
-	useDummyForTesting = ENV.SIGNING_SERVER == null
-	sign publishing.publications.developer
+    requestUrl = ENV.SIGNING_SERVER
+    pgpAuthKey = ENV.SIGNING_PGP_KEY
+    useDummyForTesting = ENV.SIGNING_SERVER == null
+    sign publishing.publications.developer
 }
 
 // A task to ensure that the version being released has not already been released.
