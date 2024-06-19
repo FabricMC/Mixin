@@ -6,13 +6,13 @@ buildscript {
     }
     dependencies {
         classpath 'gradle.plugin.com.hierynomus.gradle.plugins:license-gradle-plugin:0.16.1'
-        classpath 'gradle.plugin.com.github.jengelman.gradle.plugins:shadow:7.0.0'
-        classpath 'com.guardsquare:proguard-gradle:' + (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11) ? '7.2.0' : '7.1.0')
+        classpath 'com.guardsquare:proguard-gradle:' + (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11) ? '7.5.0' : '7.1.0')
     }
 }
 
 plugins {
 	id "me.modmuss50.remotesign" version "0.4.0"
+    id "com.github.johnrengelman.shadow"  version "8.1.1"
 }
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
@@ -24,7 +24,6 @@ apply plugin: 'checkstyle'
 apply plugin: 'maven-publish'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
-apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'potemkin-modules'
 
 // Default tasks
@@ -32,9 +31,11 @@ defaultTasks 'licenseFormat', 'check', 'build'
 
 // Basic project information
 group = 'net.fabricmc'
-archivesBaseName = 'sponge-mixin'
 version = buildVersion + "+mixin." + upstreamMixinVersion
 
+base {
+    archivesName = 'sponge-mixin'
+}
 
 def ENV = System.getenv()
 if (!ENV.CI) {
@@ -50,12 +51,13 @@ ext.packaging = 'jar'
 ext.asmVersion = project.hasProperty("asmVersion") ? asmVersion : '9.0'
 ext.legacyForgeAsmVersion = project.hasProperty("legacyForgeAsmVersion") ? asmVersion : '5.0.3'
 
-// Minimum version of Java required
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
-
 java {
     modularity.inferModulePath = false
+    disableAutoTargetJvm()
+
+    // Minimum version of Java required
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
 }
 
 // Project repositories
@@ -73,26 +75,6 @@ repositories {
         // For modlauncher
         name = 'neoforged'
         url = 'https://maven.neoforged.net/releases'
-    }
-}
-
-configurations {
-    stagingJar
-    
-    exampleImplementation       .extendsFrom implementation
-    fernflowerImplementation    .extendsFrom implementation
-    launchwrapperImplementation .extendsFrom implementation
-    agentImplementation         .extendsFrom implementation
-    modlauncherImplementation   .extendsFrom implementation
-    modlauncher9Implementation  .extendsFrom modlauncherImplementation
-    modularityImplementation    .extendsFrom modlauncher9Implementation
-    modularityCompileOnly       .extendsFrom compileOnly
-
-    proguard {
-        extendsFrom fernflowerImplementation
-        extendsFrom launchwrapperImplementation
-        extendsFrom modlauncherImplementation
-        extendsFrom compileClasspath
     }
 }
 
@@ -162,6 +144,26 @@ sourceSets {
         ext.modularityExcluded = true // don't add ourselves
     }
     modularityDummy {}
+}
+
+configurations {
+    stagingJar
+
+    exampleImplementation       .extendsFrom implementation
+    fernflowerImplementation    .extendsFrom implementation
+    launchwrapperImplementation .extendsFrom implementation
+    agentImplementation         .extendsFrom implementation
+    modlauncherImplementation   .extendsFrom implementation
+    modlauncher9Implementation  .extendsFrom modlauncherImplementation
+    modularityImplementation    .extendsFrom modlauncher9Implementation
+    modularityCompileOnly       .extendsFrom compileOnly
+
+    proguard {
+        extendsFrom fernflowerImplementation
+        extendsFrom launchwrapperImplementation
+        extendsFrom modlauncherImplementation
+        extendsFrom compileClasspath
+    }
 }
 
 // Because Mixin aims to support a variety of environments, we have to be able to run with older versions of GSON and Guava that lack official module
@@ -334,10 +336,8 @@ tasks.withType(JavaCompile) {
 def modularityInputs = objects.fileCollection()
 
 project.sourceSets.each { set -> {
-    if (set.ext.has("languageVersion")) {
-        project.tasks[set.compileJavaTaskName].javaCompiler = javaToolchains.compilerFor {
-            languageVersion = JavaLanguageVersion.of(set.ext.languageVersion)
-        }
+    if (set.ext.has("languageVersion") && JavaVersion.current().isJava9Compatible()) {
+        project.tasks[set.compileJavaTaskName].options.release = set.ext.languageVersion
     } 
     if (set.ext.has("compatibility")) {
         project.tasks[set.compileJavaTaskName].sourceCompatibility = set.ext.compatibility
@@ -465,7 +465,7 @@ publishing {
     publications {
         developer(MavenPublication) { publication ->
             groupId project.group
-            artifactId project.archivesBaseName
+            artifactId project.base.archivesName.get()
             version project.version
 
             artifact sourceJar

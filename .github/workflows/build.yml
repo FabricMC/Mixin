@@ -5,12 +5,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [8-jdk, 11-jdk, 16-jdk, 17-jdk]
+        java: [8-jdk, 11-jdk, 16-jdk, 17-jdk, 21-jdk]
     runs-on: ubuntu-20.04
     container:
-      image: openjdk:${{ matrix.java }}
+      image: eclipse-temurin:${{ matrix.java }}
       options: --user root
     steps:
-      - uses: actions/checkout@v1
-      - uses: gradle/wrapper-validation-action@v1
-      - run: ./gradlew build publishToMavenLocal --stacktrace
+      - uses: actions/checkout@v4
+      - uses: gradle/wrapper-validation-action@v2
+      - run: ./gradlew build publishToMavenLocal --stacktrace --warning-mode fail
