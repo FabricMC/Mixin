@@ -129,7 +129,7 @@ class MixinPreProcessorStandard {
     /**
      * Logger
      */
-    private static final ILogger logger = MixinService.getService().getLogger("mixin");
+    private static final ILogger logger = MixinService.getService().getLogger("mixin.processor");
 
     /**
      * The mixin

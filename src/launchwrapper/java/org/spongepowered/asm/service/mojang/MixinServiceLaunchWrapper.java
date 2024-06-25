@@ -48,6 +48,7 @@ import org.spongepowered.asm.launch.platform.container.ContainerHandleURI;
 import org.spongepowered.asm.launch.platform.container.ContainerHandleVirtual;
 import org.spongepowered.asm.launch.platform.container.IContainerHandle;
 import org.spongepowered.asm.logging.ILogger;
+import org.spongepowered.asm.logging.MethodLoggers;
 import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel;
 import org.spongepowered.asm.mixin.MixinEnvironment.Phase;
 import org.spongepowered.asm.mixin.throwables.MixinException;
@@ -506,6 +507,7 @@ public class MixinServiceLaunchWrapper extends MixinServiceAbstract implements I
         
         Profiler profiler = Profiler.getProfiler("mixin");
         Section loadTime = profiler.begin(Profiler.ROOT, "class.load");
+        MethodLoggers.loggerAll.info("getClassBytes (and transform) {} aka {}", className, name);
         byte[] classBytes = this.getClassBytes(name, transformedName);
         loadTime.end();
 
