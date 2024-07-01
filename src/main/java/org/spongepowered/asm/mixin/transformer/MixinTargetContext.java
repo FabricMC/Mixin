@@ -871,6 +871,10 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
      * @param methodRef Unbound reference to the method
      */
     private void updateStaticBinding(MethodNode method, MemberRef methodRef) {
+        if (!methodRef.getOwner().equals(this.classNode.superName)) {
+            // Must be to an interface, no need to re-parent.
+            return;
+        }
         this.updateBinding(method, methodRef, Traversal.SUPER);
     }
 
