@@ -600,8 +600,13 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
         } else if (this.detachedSuper || this.inheritsFromMixin) {
             if (methodRef.getOpcode() == Opcodes.INVOKESPECIAL) {
                 this.updateStaticBinding(method, methodRef);
-            } else if (methodRef.getOpcode() == Opcodes.INVOKEVIRTUAL && ClassInfo.forName(methodRef.getOwner()).isMixin()) {
-                this.updateDynamicBinding(method, methodRef);
+            } else if (methodRef.getOpcode() == Opcodes.INVOKEVIRTUAL) {
+                // ignore method calls on arrays (i.e. #clone)
+                if (!methodRef.getOwner().startsWith("[")) {
+                    if (ClassInfo.forName(methodRef.getOwner()).isMixin()) {
+                        this.updateDynamicBinding(method, methodRef);
+                    }
+                }
             }
         }
 
