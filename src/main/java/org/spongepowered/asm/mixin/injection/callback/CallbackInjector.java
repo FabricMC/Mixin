@@ -33,6 +33,8 @@ import java.util.Set;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
+import org.spongepowered.asm.logging.MethodLoggers;
+import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.InjectionPoint;
@@ -226,7 +228,10 @@ public class CallbackInjector extends Injector {
                     break;
                 }
             }
-            Injector.logger.debug("{} does{} use it's CallbackInfo{}", info, seenCallbackInfoUse ? "" : "n't", Type.VOID_TYPE == target.returnType ? "" : "Returnable");
+            MethodLoggers.loggerInjector.debug("callback {} from {}",
+                    seenCallbackInfoUse ? "USED" : "NOT USED",
+                    info,
+                    Type.VOID_TYPE == target.returnType ? "" : "Returnable");
             if (!seenCallbackInfoUse && !Bytecode.isStatic(handler) && (handler.access & Opcodes.ACC_FINAL) == 0 && (target.classNode.access & Opcodes.ACC_FINAL) == 0) {
                 //Although the CallbackInfo appears unused, there is the possibility that the handler is overridden, so we'll have to check
                 String handlerName = handler instanceof MethodNodeEx ? ((MethodNodeEx) handler).getOriginalName() : handler.name;
@@ -242,7 +247,7 @@ public class CallbackInjector extends Injector {
                     }
                 }
 
-                Injector.logger.debug("{} w{} be passed a CallbackInfo{} as a result", info, seenCallbackInfoUse ? "ill" : "on't", Type.VOID_TYPE == target.returnType ? "" : "Returnable");
+                MethodLoggers.loggerInjector.debug("{} w{} be passed a CallbackInfo{} as a result", info, seenCallbackInfoUse ? "ill" : "on't", Type.VOID_TYPE == target.returnType ? "" : "Returnable");
             }
             usesCallbackInfo = seenCallbackInfoUse;
         }
@@ -654,7 +659,7 @@ public class CallbackInjector extends Injector {
         }
         printer.add().add("/**").add(" * Expected callback signature").add(" * /");
         printer.add("%s {", handlerSig);
-        printer.add("    // Method body").add("}").add().print(System.err);
+        printer.add("    // Method body").add("}").add().print(System.err).log(MixinEnvironment.logger);
     }
 
     /**

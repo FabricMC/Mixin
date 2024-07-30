@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 
 import org.spongepowered.asm.logging.ILogger;
 import org.spongepowered.asm.logging.Level;
+import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.service.MixinService;
 
 import com.google.common.base.Strings;
@@ -1177,7 +1178,7 @@ public class PrettyPrinter {
      * prints to stderr in pretty-printed format.
      */
     public static void dumpStack() {
-        new PrettyPrinter().add(new Exception("Stack trace")).print(System.err);
+        new PrettyPrinter().add(new Exception("Stack trace")).print(System.err).log(MixinEnvironment.logger);
     }
 
     /**
@@ -1186,7 +1187,7 @@ public class PrettyPrinter {
      * @param th Throwable to log
      */
     public static void print(Throwable th) {
-        new PrettyPrinter().add(th).print(System.err);
+        new PrettyPrinter().add(th).print(System.err).log(MixinEnvironment.logger);
     }
     
 }

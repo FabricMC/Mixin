@@ -33,6 +33,7 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
+import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.refmap.IMixinContext;
 import org.spongepowered.asm.mixin.throwables.MixinException;
 import org.spongepowered.asm.mixin.transformer.ClassInfo;
@@ -127,7 +128,7 @@ public class SyntheticBridgeException extends MixinException {
         String owner = merged != null ? merged : context.getTargetClassRef().replace('/', '.');
         this.printMethod(printer.add("Existing method").add().kv("Owner", owner).add(), mda).hr();
         this.printMethod(printer.add("Incoming method").add().kv("Owner", context.getClassRef().replace('/', '.')).add(), mdb).hr();
-        this.printProblem(printer, context, mda, mdb).print(System.err);
+        this.printProblem(printer, context, mda, mdb).print(System.err).log(MixinEnvironment.logger);
     }
 
     private PrettyPrinter printMethod(PrettyPrinter printer, MethodNode method) {
