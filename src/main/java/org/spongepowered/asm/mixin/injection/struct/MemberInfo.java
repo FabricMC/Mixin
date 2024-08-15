@@ -883,16 +883,6 @@ public final class MemberInfo implements ITargetSelectorRemappable, ITargetSelec
         if (context != null) {
             name = context.remap(name);
         }
-        
-        int lastDotPos = name.lastIndexOf('.');
-        int semiColonPos = name.indexOf(';');
-        if (lastDotPos > -1) {
-            owner = name.substring(0, lastDotPos).replace('.', '/');
-            name = name.substring(lastDotPos + 1);
-        } else if (semiColonPos > -1 && name.startsWith("L")) {
-            owner = name.substring(1, semiColonPos).replace('.', '/');
-            name = name.substring(semiColonPos + 1);
-        }
 
         int parenPos = name.indexOf('(');
         int colonPos = name.indexOf(':');
@@ -902,6 +892,16 @@ public final class MemberInfo implements ITargetSelectorRemappable, ITargetSelec
         } else if (colonPos > -1) {
             desc = name.substring(colonPos + 1);
             name = name.substring(0, colonPos);
+        }
+        
+        int lastDotPos = name.lastIndexOf('.');
+        int semiColonPos = name.indexOf(';');
+        if (lastDotPos > -1) {
+            owner = name.substring(0, lastDotPos).replace('.', '/');
+            name = name.substring(lastDotPos + 1);
+        } else if (semiColonPos > -1 && name.startsWith("L")) {
+            owner = name.substring(1, semiColonPos).replace('.', '/');
+            name = name.substring(semiColonPos + 1);
         }
         
         if ((name.indexOf('/') > -1 || name.indexOf('.') > -1) && owner == null) {
