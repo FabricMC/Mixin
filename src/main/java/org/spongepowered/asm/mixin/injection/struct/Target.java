@@ -44,6 +44,7 @@ import org.spongepowered.asm.mixin.injection.struct.InjectionNodes.InjectionNode
 import org.spongepowered.asm.mixin.transformer.ClassInfo;
 import org.spongepowered.asm.util.Bytecode;
 import org.spongepowered.asm.util.Constants;
+import org.spongepowered.asm.util.Counter;
 import org.spongepowered.asm.util.Locals.SyntheticLocalVariableNode;
 
 /**
@@ -460,12 +461,17 @@ public class Target implements Comparable<Target>, Iterable<AbstractInsnNode> {
         if (this.argMapVars == null) {
             this.argMapVars = new ArrayList<Integer>();
         }
-        
+
         int[] argMap = new int[args.length];
-        for (int arg = start, index = 0; arg < args.length; arg++) {
+        Counter index = new Counter();
+        for (int arg = start; arg < args.length; arg++) {
             int size = args[arg].getSize();
-            argMap[arg] = fresh ? this.allocateLocals(size) : this.allocateArgMapLocal(index, size);
-            index += size;
+            if (fresh) {
+                argMap[arg] = this.allocateLocals(size);
+                index.value += size;
+            } else {
+                argMap[arg] = this.allocateArgMapLocal(index, size);
+            }
         }
         return argMap;
     }
@@ -481,35 +487,40 @@ public class Target implements Comparable<Target>, Iterable<AbstractInsnNode> {
      * @param size Size of variable
      * @return local offset to use
      */
-    private int allocateArgMapLocal(int index, int size) {
-        // Allocate extra space if we've reached the end
-        if (index >= this.argMapVars.size()) {
-            int base = this.allocateLocals(size);
-            for (int offset = 0; offset < size; offset++) {
-                this.argMapVars.add(Integer.valueOf(base + offset));
-            }
-            return base;
-        }
-
-        int local = this.argMapVars.get(index);
-        
-        // Allocate extra space if the variable is oversize
-        if (size > 1 && index + size > this.argMapVars.size()) {
-            int nextLocal = this.allocateLocals(1);
-            if (nextLocal == local + 1) {
-                // Next allocated was contiguous, so we can continue
-                this.argMapVars.add(Integer.valueOf(nextLocal));
+    private int allocateArgMapLocal(Counter index, int size) {
+        boolean isLastSlotFree = index.value < this.argMapVars.size();
+        while (index.value < this.argMapVars.size()) {
+            int local = this.argMapVars.get(index.value);
+            if (size == 1) {
+                index.value++;
                 return local;
             }
-            
-            // Next allocated was not contiguous, allocate a new local slot so
-            // that indexes are contiguous
-            this.argMapVars.set(index, Integer.valueOf(nextLocal));
-            this.argMapVars.add(Integer.valueOf(this.allocateLocals(1)));
-            return nextLocal;
+            int nextIndex = index.value + 1;
+            if (nextIndex < this.argMapVars.size() && local + 1 == this.argMapVars.get(nextIndex)) {
+                // We own the next slot so this is a safe place to store a double-width type.
+                // We've consumed the next slot so increment the next available index.
+                index.value += 2;
+                return local;
+            }
+            index.value++;
         }
-
-        return local;
+        // We don't have anywhere to store the arg.
+        int newLocal = this.allocateLocal();
+        this.argMapVars.add(newLocal);
+        index.value++;
+        if (size == 1) {
+            return newLocal;
+        }
+        if (isLastSlotFree && newLocal == this.argMapVars.get(this.argMapVars.size() - 2) + 1) {
+            // We own the preceding local as well, and it is not yet used by this argMap, so we can store our
+            // double-width type there.
+            return newLocal - 1;
+        }
+        // Allocate 1 more local so we can fit the double-width type. We know it will follow directly from the
+        // previous one.
+        this.argMapVars.add(this.allocateLocal());
+        index.value++;
+        return newLocal;
     }
     
     /**
