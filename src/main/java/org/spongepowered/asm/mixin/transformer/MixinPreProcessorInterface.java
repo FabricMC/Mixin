@@ -108,10 +108,11 @@ class MixinPreProcessorInterface extends MixinPreProcessorStandard {
                     method, this.mixin));
         }
 
-        // Make injectors private synthetic if the current runtime supports it
+        CompatibilityLevel classLevel = CompatibilityLevel.forClassVersion(mixin.getClassVersion());
+        // Make injectors private synthetic if the current class version supports it
         if (isPublic
-                && !currentLevel.supports(LanguageFeatures.PRIVATE_METHODS_IN_INTERFACES)
-                && currentLevel.supports(LanguageFeatures.PRIVATE_SYNTHETIC_METHODS_IN_INTERFACES)) {
+                && !classLevel.supports(LanguageFeatures.PRIVATE_METHODS_IN_INTERFACES)
+                && classLevel.supports(LanguageFeatures.PRIVATE_SYNTHETIC_METHODS_IN_INTERFACES)) {
             Bytecode.setVisibility(mixinMethod, Bytecode.Visibility.PRIVATE);
             mixinMethod.access |= Opcodes.ACC_SYNTHETIC;
         }

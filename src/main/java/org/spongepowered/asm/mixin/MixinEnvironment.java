@@ -1080,7 +1080,17 @@ public final class MixinEnvironment implements ITokenProvider {
             }
             return sb.toString();
         }
-        
+
+        public static CompatibilityLevel forClassVersion(int version) {
+            CompatibilityLevel latest = null;
+            for (CompatibilityLevel level : values()) {
+                if (level.getClassVersion() >= version) {
+                    return level;
+                }
+                latest = level;
+            }
+            return latest;
+        }
     }
     
     /**

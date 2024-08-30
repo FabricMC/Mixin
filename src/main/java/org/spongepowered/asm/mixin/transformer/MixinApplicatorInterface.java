@@ -24,12 +24,10 @@
  */
 package org.spongepowered.asm.mixin.transformer;
 
-import java.lang.reflect.Modifier;
 import java.util.Map.Entry;
 
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
-import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.MixinEnvironment.Feature;
 import org.spongepowered.asm.mixin.injection.struct.InjectionInfo;
 import org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException;
@@ -37,7 +35,6 @@ import org.spongepowered.asm.mixin.transformer.ClassInfo.Field;
 import org.spongepowered.asm.mixin.transformer.throwables.InvalidInterfaceMixinException;
 import org.spongepowered.asm.util.Annotations;
 import org.spongepowered.asm.util.Constants;
-import org.spongepowered.asm.util.LanguageFeatures;
 
 /**
  * Applicator for interface mixins, mainly just disables things which aren't
@@ -165,18 +162,5 @@ class MixinApplicatorInterface extends MixinApplicatorStandard {
             super.applyInjections(mixin, injectorOrder);
             return;
         }
-    }
-    
-    @Override
-    protected void checkMethodVisibility(MixinTargetContext mixin, MethodNode mixinMethod) {
-        //Allow injecting into static interface methods where it isn't possible to control the access of the injection method
-        if (Modifier.isStatic(mixinMethod.access) && !MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.PRIVATE_METHODS_IN_INTERFACES)) {
-            InjectionInfo injectInfo = InjectionInfo.parse(mixin, mixinMethod);
-            if (injectInfo != null) {
-                return;
-            }
-        }
-
-        super.checkMethodVisibility(mixin, mixinMethod);
     }
 }
