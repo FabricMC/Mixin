@@ -31,6 +31,7 @@ import org.spongepowered.asm.logging.Level;
 import org.spongepowered.asm.logging.ILogger;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.spongepowered.asm.logging.MethodLoggers;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.MixinEnvironment.Option;
@@ -488,6 +489,7 @@ class MixinProcessor {
      * @param environment Environment to query
      */
     private void selectConfigs(MixinEnvironment environment) {
+        MixinProcessor.logger.info("Selecting config of {} configs", Mixins.getConfigs().size());
         for (Iterator<Config> iter = Mixins.getConfigs().iterator(); iter.hasNext();) {
             Config handle = iter.next();
             try {
@@ -514,7 +516,8 @@ class MixinProcessor {
      */
     private int prepareConfigs(MixinEnvironment environment, Extensions extensions) {
         int totalMixins = 0;
-        
+
+        MixinProcessor.logger.info("Begin adding {} coprocessors to {} pendingConfigs", coprocessors.size(), pendingConfigs.size());
         final IHotSwap hotSwapper = this.hotSwapper;
         for (MixinConfig config : this.pendingConfigs) {
             for (MixinCoprocessor coprocessor : this.coprocessors) {
@@ -533,10 +536,11 @@ class MixinProcessor {
                 });
             }
         }
-        
+
+        MixinProcessor.logger.info("Begin pendingConfigs preparing: total {}", pendingConfigs.size());
         for (MixinConfig config : this.pendingConfigs) {
             try {
-                MixinProcessor.logger.log(this.verboseLoggingLevel, "Preparing {} ({})", config, config.getDeclaredMixinCount());
+                MethodLoggers.loggerProcessor.log(this.verboseLoggingLevel, "Preparing {} ({})", config, config.getDeclaredMixinCount());
                 config.prepare(extensions);
                 totalMixins += config.getMixinCount();
             } catch (InvalidMixinException ex) {
@@ -546,7 +550,8 @@ class MixinProcessor {
                 MixinProcessor.logger.error("Error encountered whilst initialising mixin config '" + config.getName() + "' from mod '" + org.spongepowered.asm.mixin.FabricUtil.getModId(config) + "': " + message, ex);
             }
         }
-        
+
+        MixinProcessor.logger.info("Begin scanning other targets of {} pendingConfigs", pendingConfigs.size());
         for (MixinConfig config : this.pendingConfigs) {
             IMixinConfigPlugin plugin = config.getPlugin();
             if (plugin == null) {
@@ -563,6 +568,7 @@ class MixinProcessor {
             plugin.acceptTargets(config.getTargetsSet(), Collections.<String>unmodifiableSet(otherTargets));
         }
 
+        MixinProcessor.logger.info("Begin postInitialise pendingConfigs: total {}", pendingConfigs.size());
         for (MixinConfig config : this.pendingConfigs) {
             try {
                 config.postInitialise(this.extensions);
@@ -573,11 +579,12 @@ class MixinProcessor {
                 MixinProcessor.logger.error("Error encountered during mixin config postInit step '" + config.getName() + "' from mod '" + org.spongepowered.asm.mixin.FabricUtil.getModId(config) + "': " + message, ex);
             }
         }
-        
+
+        MixinProcessor.logger.info("Begin sorting pendingConfigs: total {}", pendingConfigs.size());
         this.configs.addAll(this.pendingConfigs);
         Collections.sort(this.configs);
         this.pendingConfigs.clear();
-        
+        MixinProcessor.logger.info("Mixin prepare complete for total {}", configs.size());
         return totalMixins;
     }
 

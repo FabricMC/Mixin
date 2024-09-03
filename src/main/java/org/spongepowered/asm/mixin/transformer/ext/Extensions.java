@@ -31,17 +31,20 @@ import java.util.List;
 import java.util.Map;
 
 import org.objectweb.asm.tree.ClassNode;
+import org.spongepowered.asm.logging.ILogger;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.service.ISyntheticClassRegistry;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import org.spongepowered.asm.service.MixinService;
 
 /**
  * Mixin transformer extensions and common modules such as class generators
  */
 public final class Extensions implements IExtensionRegistry {
-    
+
+    static final ILogger logger = MixinService.getService().getLogger("mixin");
     /**
      * All transformer extensions
      */
@@ -136,7 +139,7 @@ public final class Extensions implements IExtensionRegistry {
      */
     public void select(MixinEnvironment environment) {
         Builder<IExtension> activeExtensions = ImmutableList.<IExtension>builder();
-
+        MixinEnvironment.logger.info("Selecting extensions: total {}", extensions.size());
         for (IExtension extension : this.extensions) {
             if (extension.checkActive(environment)) {
                 activeExtensions.add(extension);

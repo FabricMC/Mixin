@@ -29,6 +29,8 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.Map.Entry;
 
+import org.spongepowered.asm.logging.ILogger;
+import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.service.MixinService;
 import org.spongepowered.asm.util.PrettyPrinter;
 import org.spongepowered.asm.util.PrettyPrinter.Alignment;
@@ -41,6 +43,8 @@ import com.google.common.collect.ImmutableList.Builder;
  * Performance profiler for Mixin.
  */
 public final class Profiler {
+
+    private static final ILogger logger = MixinService.getService().getLogger("mixin");
     
     private static final String METRONOME_AGENT_CLASS = "org.spongepowered.metronome.Agent";
 
@@ -729,6 +733,7 @@ public final class Profiler {
      * @param active new active state
      */
     public static void setActive(boolean active) {
+        logger.info("Profiler state update {}", active);
         Profiler.active = active;
     }
     
@@ -1043,7 +1048,7 @@ public final class Profiler {
     }
     
     private static void printSummary(String id, List<String> phases, Map<String, Section> sections) {
-        
+        logger.info("Audit printing");
         DecimalFormat threedp = new DecimalFormat("(###0.000");
         DecimalFormat onedp = new DecimalFormat("(###0.0");
         PrettyPrinter printer = Profiler.printer(false, false, phases, sections);
@@ -1103,7 +1108,7 @@ public final class Profiler {
         printer.add();
         
         try {
-            Class<?> agent = MixinService.getService().getClassProvider().findAgentClass(Profiler.METRONOME_AGENT_CLASS, false);
+            Class<?> agent = MixinService.getService().getClass();
             Method mdGetTimes = agent.getDeclaredMethod("getTimes");
             
             @SuppressWarnings("unchecked")
@@ -1137,9 +1142,10 @@ public final class Profiler {
             
         } catch (Throwable th) {
             // Metronome agent not loaded
+            logger.info("Metronome agent missing, can't gather profiling info.", th);
         }
 
-        printer.print();
+        printer.print().log(logger);
     }
     
     /**
