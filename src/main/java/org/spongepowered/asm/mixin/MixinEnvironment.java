@@ -629,7 +629,7 @@ public final class MixinEnvironment implements ITokenProvider {
         <E extends Enum<E>> E getEnumValue(E defaultValue) {
             String value = System.getProperty(this.property, defaultValue.name());
             try {
-                return (E)Enum.valueOf(defaultValue.getClass(), value.toUpperCase(Locale.ROOT));
+                return (E)Enum.valueOf(defaultValue.getDeclaringClass(), value.toUpperCase(Locale.ROOT));
             } catch (IllegalArgumentException ex) {
                 return defaultValue;
             }
