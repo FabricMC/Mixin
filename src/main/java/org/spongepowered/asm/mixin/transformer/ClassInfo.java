@@ -46,6 +46,7 @@ import org.objectweb.asm.tree.FrameNode;
 import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.spongepowered.asm.logging.MethodLoggers;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.Mutable;
@@ -2036,7 +2037,7 @@ public final class ClassInfo {
 
             // Put null in the cache if load failed
             ClassInfo.cache.put(className, info);
-            ClassInfo.logger.trace("Added class metadata for {} to metadata cache", className);
+            MethodLoggers.loggerMeta.trace("Added class metadata for {} to metadata cache", className);
         }
 
         return info;

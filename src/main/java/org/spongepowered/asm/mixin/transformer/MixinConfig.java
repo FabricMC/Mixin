@@ -37,6 +37,7 @@ import org.spongepowered.asm.logging.ILogger;
 import org.spongepowered.asm.launch.MixinInitialisationError;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
+import org.spongepowered.asm.logging.MethodLoggers;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel;
 import org.spongepowered.asm.mixin.MixinEnvironment.Feature;
@@ -627,7 +628,7 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
         String message = majorVersion > CompatibilityLevel.MAX_SUPPORTED.getClassMajorVersion()
                 ? "the current version of Mixin" : "the declared compatibility level";
         this.warnedClassVersion = majorVersion;
-        this.logger.log(logLevel, "{}: Class version {} required is higher than the class version supported by {} ({} supports class version {})",
+        MethodLoggers.loggerCompat.log(logLevel, "{}: Class version {} required is higher than the class version supported by {} ({} supports class version {})",
                 mixin, majorVersion, message, this.compatibilityLevel, this.compatibilityLevel.getClassMajorVersion());
     }
 
