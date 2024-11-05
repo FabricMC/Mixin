@@ -503,7 +503,7 @@ public class DynamicSelectorDesc implements ITargetSelectorDynamic, ITargetSelec
         if (node == null || this.disabled) {
             return MatchResult.NONE;
         } else if (node.isField()) {
-            return this.matches(node.getOwner(), node.getName(), node.getDesc(), this.returnType.getInternalName());
+            return this.matches(node.getOwner(), node.getName(), node.getDesc(), this.returnType.getDescriptor());
         } else {
             return this.matches(node.getOwner(), node.getName(), node.getDesc(), this.methodDesc);
         }
