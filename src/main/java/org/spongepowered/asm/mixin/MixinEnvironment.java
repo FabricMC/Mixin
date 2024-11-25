@@ -1833,7 +1833,7 @@ public final class MixinEnvironment implements ITokenProvider {
             }
             
             MixinEnvironment.compatibility = level;
-            MixinEnvironment.logger.info("Compatibility level set to {}", level);
+            MixinEnvironment.logger.debug("Compatibility level set to {}", level);
         }
     }
     
