@@ -179,7 +179,7 @@ public final class Extensions implements IExtensionRegistry {
      *      would normally disable it
      * @param classNode Class to export
      * @see #export(MixinEnvironment, String, boolean, Supplier) The supplier
-     * 		version, which may allow avoiding creating ClassNodes unnecessarily
+     *      version, which may allow avoiding creating ClassNodes unnecessarily
      */
     public void export(MixinEnvironment env, String name, boolean force, ClassNode classNode) {
         this.export(env, name, force, Suppliers.ofInstance(classNode));
