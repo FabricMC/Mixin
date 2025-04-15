@@ -68,6 +68,8 @@ import org.spongepowered.asm.util.perf.Profiler;
 import org.spongepowered.asm.util.perf.Profiler.Section;
 
 import com.google.common.base.Strings;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -2002,10 +2004,24 @@ public final class ClassInfo {
      * @return ClassInfo instance for the supplied classNode
      */
     static ClassInfo fromClassNode(ClassNode classNode) {
-        ClassInfo info = ClassInfo.cache.get(classNode.name);
+        return fromClassNode(classNode.name, Suppliers.ofInstance(classNode));
+    }
+
+    /**
+     * Return a ClassInfo for the supplied name. If a ClassInfo for
+     * the class was already defined, then the original ClassInfo is returned
+     * from the internal cache. Otherwise a new ClassInfo is created and
+     * returned from the {@link ClassNode}.
+     *
+     * @param name name of the class to get info for
+     * @param classNode provider of the classNode to gather info from (if necessary)
+     * @return ClassInfo instance for the supplied classNode
+     */
+    static ClassInfo fromClassNode(String name, Supplier<ClassNode> classNode) {
+        ClassInfo info = ClassInfo.cache.get(name);
         if (info == null) {
-            info = new ClassInfo(classNode);
-            ClassInfo.cache.put(classNode.name, info);
+            info = new ClassInfo(classNode.get());
+            ClassInfo.cache.put(name, info);
         }
 
         return info;

@@ -43,6 +43,7 @@ import org.spongepowered.asm.util.Constants;
 import org.spongepowered.asm.util.perf.Profiler;
 import org.spongepowered.asm.util.perf.Profiler.Section;
 
+import com.google.common.base.Supplier;
 import com.google.common.io.Files;
 
 /**
@@ -130,14 +131,14 @@ public class ExtensionClassExporter implements IExtension {
     }
 
     @Override
-    public void export(MixinEnvironment env, String name, boolean force, ClassNode classNode) {
+    public void export(MixinEnvironment env, String name, boolean force, Supplier<ClassNode> classNode) {
         // Export transformed class for debugging purposes
         if (force || env.getOption(Option.DEBUG_EXPORT)) {
             String filter = env.getOptionValue(Option.DEBUG_EXPORT_FILTER);
             if (force || filter == null || this.applyFilter(filter, name)) {
                 Section exportTimer = Profiler.getProfiler("export").begin("debug.export");
                 
-                File outputFile = this.dumpClass(name.replace('.', '/'), classNode);
+                File outputFile = this.dumpClass(name.replace('.', '/'), classNode.get());
                 if (this.decompiler != null) {
                     this.decompiler.decompile(outputFile);
                 }

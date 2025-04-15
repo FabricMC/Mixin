@@ -70,6 +70,7 @@ import org.spongepowered.asm.service.MixinService;
 import org.spongepowered.asm.util.Annotations;
 import org.spongepowered.asm.util.Bytecode;
 import org.spongepowered.asm.util.Bytecode.Visibility;
+import org.spongepowered.asm.util.Locals.SyntheticLocalVariableNode;
 import org.spongepowered.asm.util.ClassSignature;
 import org.spongepowered.asm.util.Constants;
 import org.spongepowered.asm.util.LanguageFeatures;
@@ -1498,6 +1499,17 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
         } catch (Exception ex) {
             throw new InvalidMixinException(this, "Unexpecteded " + ex.getClass().getSimpleName() + " whilst transforming the mixin class:", ex,
                     this.activities);
+        }
+
+        //Strip synthetic local variables from the LVT to avoid debuggers becoming confused by them
+        for (MethodNode method : classNode.methods) {
+            if (method.localVariables != null) {
+                for (Iterator<LocalVariableNode> it = method.localVariables.iterator(); it.hasNext();) {
+                    if (it.next() instanceof SyntheticLocalVariableNode) {
+                        it.remove();
+                    }
+                }
+            }
         }
     }
 

@@ -24,6 +24,9 @@
  */
 package org.spongepowered.asm.mixin.transformer.ext;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 
@@ -62,7 +65,23 @@ public interface IExtension {
      * @param force True to export even if the current environment settings
      *      would normally disable it
      * @param classNode Class to export
+     * @deprecated Use {@link #export(MixinEnvironment, String, boolean, Supplier) supplier version}
+     *         to avoid creating ClassNodes unnecessarily
      */
-    public abstract void export(MixinEnvironment env, String name, boolean force, ClassNode classNode);
+    @Deprecated
+    public default void export(MixinEnvironment env, String name, boolean force, ClassNode classNode) {
+        this.export(env, name, force, Suppliers.ofInstance(classNode));
+    }
+
+    /**
+     * Called when a class needs to be exported
+     * 
+     * @param env Environment
+     * @param name Class name
+     * @param force True to export even if the current environment settings
+     *      would normally disable it
+     * @param classNode Supplier providing the class to export
+     */
+    public abstract void export(MixinEnvironment env, String name, boolean force, Supplier<ClassNode> classNode);
 
 }

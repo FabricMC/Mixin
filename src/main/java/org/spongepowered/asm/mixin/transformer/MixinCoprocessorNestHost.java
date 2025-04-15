@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Supplier;
+
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerError;
@@ -75,7 +77,7 @@ class MixinCoprocessorNestHost extends MixinCoprocessor {
     }
 
     @Override
-    boolean postProcess(String className, ClassNode classNode) {
+    boolean postProcess(String className, Supplier<ClassNode> classNodeSupplier) {
         if (!this.nestHosts.containsKey(className)) {
             return false;
         }
@@ -85,6 +87,7 @@ class MixinCoprocessorNestHost extends MixinCoprocessor {
             return false;
         }
         
+        ClassNode classNode = classNodeSupplier.get();
         String nestHost = ClassNodeAdapter.getNestHostClass(classNode);
         if (nestHost != null) {
             throw new MixinTransformerError(String.format("Nest host candidate %s is a nest member", classNode.name));

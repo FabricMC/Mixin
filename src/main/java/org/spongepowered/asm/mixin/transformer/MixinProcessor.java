@@ -27,6 +27,8 @@ package org.spongepowered.asm.mixin.transformer;
 import java.text.DecimalFormat;
 import java.util.*;
 
+import com.google.common.base.Supplier;
+
 import org.spongepowered.asm.logging.Level;
 import org.spongepowered.asm.logging.ILogger;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -269,9 +271,9 @@ class MixinProcessor {
         }
     }
 
-    synchronized boolean applyMixins(MixinEnvironment environment, String name, ClassNode targetClassNode) {
+    synchronized ClassNode applyMixins(MixinEnvironment environment, String name, Supplier<ClassNode> targetClassNode) {
         if (name == null || this.errorState) {
-            return false;
+            return null;
         }
         
         boolean locked = this.lock.push().check();
@@ -309,7 +311,7 @@ class MixinProcessor {
                     this.auditTrail.onPostProcess(name);
                 }
                 this.extensions.export(environment, name, false, targetClassNode);
-                return transformed;
+                return transformed ? targetClassNode.get() : null;
             }
 
             MixinConfig packageOwnedByConfig = null;
@@ -326,12 +328,12 @@ class MixinProcessor {
 
             if (packageOwnedByConfig != null) {
                 // AMS - Temp passthrough for injection points and dynamic selectors. Moving to service in 0.9
-                ClassInfo targetInfo = ClassInfo.fromClassNode(targetClassNode);
+                ClassInfo targetInfo = ClassInfo.fromClassNode(name, targetClassNode);
                 if (targetInfo.hasSuperClass(InjectionPoint.class) || targetInfo.hasSuperClass(ITargetSelectorDynamic.class)) {
-                    return transformed;
+                    return transformed ? targetClassNode.get() : null;
                 }
                 
-                throw new IllegalClassLoadError(this.getInvalidClassError(name, targetClassNode, packageOwnedByConfig));
+                throw new IllegalClassLoadError(this.getInvalidClassError(name, targetClassNode.get(), packageOwnedByConfig));
             }
 
             SortedSet<MixinInfo> mixins = null;
@@ -355,11 +357,11 @@ class MixinProcessor {
                 }
 
                 if (this.hotSwapper != null) {
-                    this.hotSwapper.registerTargetClass(name, targetClassNode);
+                    this.hotSwapper.registerTargetClass(name, targetClassNode.get());
                 }
 
                 try {
-                    TargetClassContext context = new TargetClassContext(environment, this.extensions, this.sessionId, name, targetClassNode, mixins);
+                    TargetClassContext context = new TargetClassContext(environment, this.extensions, this.sessionId, name, targetClassNode.get(), mixins);
                     context.applyMixins();
                     
                     transformed |= this.coprocessors.postProcess(name, targetClassNode);
@@ -394,7 +396,7 @@ class MixinProcessor {
             this.lock.pop();
             mixinTimer.end();
         }
-        return transformed;
+        return transformed ? targetClassNode.get() : null;
     }
 
     private String getInvalidClassError(String name, ClassNode targetClassNode, MixinConfig ownedByConfig) {
@@ -658,10 +660,10 @@ class MixinProcessor {
         return handlers;
     }
 
-    private void dumpClassOnFailure(String className, ClassNode classNode, MixinEnvironment env) {
+    private void dumpClassOnFailure(String className, Supplier<ClassNode> classNode, MixinEnvironment env) {
         if (env.getOption(Option.DUMP_TARGET_ON_FAILURE)) {
             ExtensionClassExporter exporter = this.extensions.<ExtensionClassExporter>getExtension(ExtensionClassExporter.class);
-            exporter.dumpClass(className.replace('.', '/') + ".target", classNode);
+            exporter.dumpClass(className.replace('.', '/') + ".target", classNode.get());
         }
     }
 

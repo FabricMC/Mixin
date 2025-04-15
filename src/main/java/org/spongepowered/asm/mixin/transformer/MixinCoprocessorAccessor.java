@@ -27,6 +27,8 @@ package org.spongepowered.asm.mixin.transformer;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.base.Supplier;
+
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -86,7 +88,7 @@ class MixinCoprocessorAccessor extends MixinCoprocessor {
     }
 
     @Override
-    ProcessResult process(String className, ClassNode classNode) {
+    ProcessResult process(String className, Supplier<ClassNode> classNode) {
         if (!MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.METHODS_IN_INTERFACES)
                     || !this.accessorMixins.containsKey(className)) {
             return ProcessResult.NONE;
@@ -113,7 +115,7 @@ class MixinCoprocessorAccessor extends MixinCoprocessor {
                 Method method = this.getAccessorMethod(mixin, methodNode, targetClass);
                 MixinCoprocessorAccessor.createProxy(methodNode, targetClass, method);
                 Annotations.setVisible(methodNode, MixinProxy.class, "sessionId", this.sessionId);
-                classNode.methods.add(methodNode);
+                classNode.get().methods.add(methodNode);
                 transformed = true;
             }
         }
@@ -122,7 +124,7 @@ class MixinCoprocessorAccessor extends MixinCoprocessor {
             return ProcessResult.NONE;
         }
         
-        Bytecode.replace(mixinClassNode, classNode);
+        Bytecode.replace(mixinClassNode, classNode.get());
         return ProcessResult.PASSTHROUGH_TRANSFORMED;
     }
 

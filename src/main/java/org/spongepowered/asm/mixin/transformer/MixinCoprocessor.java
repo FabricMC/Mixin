@@ -24,6 +24,8 @@
  */
 package org.spongepowered.asm.mixin.transformer;
 
+import com.google.common.base.Supplier;
+
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.transformer.MixinConfig.IListener;
 
@@ -145,11 +147,11 @@ abstract class MixinCoprocessor implements IListener {
      * indicated by the return value
      * 
      * @param className Name of the target class
-     * @param classNode Classnode of the target class
+     * @param classNode Supplier providing a classnode of the target class
      * @return result indicating whether the class was transformed, and whether
      *      or not to passthrough instead of apply mixins
      */
-    ProcessResult process(String className, ClassNode classNode) {
+    ProcessResult process(String className, Supplier<ClassNode> classNode) {
         return ProcessResult.NONE;
     }
 
@@ -161,10 +163,10 @@ abstract class MixinCoprocessor implements IListener {
      * applied.
      * 
      * @param className Name of the target class
-     * @param classNode Classnode of the target class
+     * @param classNode Supplier providing a classnode of the target class
      * @return true if the coprocessor applied any transformations
      */
-    boolean postProcess(String className, ClassNode classNode) {
+    boolean postProcess(String className, Supplier<ClassNode> classNode) {
         return false;
     }
     

@@ -27,6 +27,8 @@ package org.spongepowered.asm.mixin.transformer;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.base.Supplier;
+
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -74,11 +76,12 @@ class MixinCoprocessorSyntheticInner extends MixinCoprocessor {
      * new home in the target class
      */
     @Override
-    ProcessResult process(String className, ClassNode classNode) {
+    ProcessResult process(String className, Supplier<ClassNode> classNodeSupplier) {
         if (!this.syntheticInnerClasses.contains(className)) {
             return ProcessResult.NONE;
         }
 
+        ClassNode classNode = classNodeSupplier.get();
         classNode.access |= Opcodes.ACC_PUBLIC;
         
         for (FieldNode field : classNode.fields) {

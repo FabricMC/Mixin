@@ -27,6 +27,9 @@ package org.spongepowered.asm.mixin.transformer;
 import java.lang.reflect.Constructor;
 import java.util.List;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.launch.MixinInitialisationError;
 import org.spongepowered.asm.mixin.MixinEnvironment;
@@ -230,8 +233,8 @@ final class MixinTransformer extends TreeTransformer implements IMixinTransforme
      */
     @Override
     public byte[] transformClass(MixinEnvironment environment, String name, byte[] classBytes) {
-        ClassNode classNode = this.readClass(name, classBytes);
-        if (this.processor.applyMixins(environment, name, classNode)) {
+        ClassNode classNode = this.transformClass(environment, name, Suppliers.memoize(() -> this.readClass(name, classBytes)));
+        if (classNode != null) {
             return this.writeClass(classNode);
         }
         return classBytes;
@@ -247,6 +250,10 @@ final class MixinTransformer extends TreeTransformer implements IMixinTransforme
      */
     @Override
     public boolean transformClass(MixinEnvironment environment, String name, ClassNode classNode) {
+        return this.transformClass(environment, name, Suppliers.ofInstance(classNode)) != null;
+    }
+
+    private ClassNode transformClass(MixinEnvironment environment, String name, Supplier<ClassNode> classNode) {
         return this.processor.applyMixins(environment, name, classNode);
     }
     

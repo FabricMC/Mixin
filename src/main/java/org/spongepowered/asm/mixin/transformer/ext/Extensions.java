@@ -34,6 +34,8 @@ import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.service.ISyntheticClassRegistry;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 
@@ -176,10 +178,30 @@ public final class Extensions implements IExtensionRegistry {
      * @param force True to export even if the current environment settings
      *      would normally disable it
      * @param classNode Class to export
+     * @see #export(MixinEnvironment, String, boolean, Supplier) The supplier
+     * 		version, which may allow avoiding creating ClassNodes unnecessarily
      */
     public void export(MixinEnvironment env, String name, boolean force, ClassNode classNode) {
+        this.export(env, name, force, Suppliers.ofInstance(classNode));
+    }
+
+    /**
+     * Export class bytecode to disk
+     * 
+     * @param env Environment
+     * @param name Class name
+     * @param force True to export even if the current environment settings
+     *      would normally disable it
+     * @param classNode Supplier providing the class to export
+     */
+    @SuppressWarnings("deprecation")
+    public void export(MixinEnvironment env, String name, boolean force, Supplier<ClassNode> classNode) {
         for (IExtension extension : this.activeExtensions) {
-            extension.export(env, name, force, classNode);
+            try {
+                extension.export(env, name, force, classNode);
+            } catch (AbstractMethodError e) {
+                extension.export(env, name, force, classNode.get());
+            }
         }
     }
 
