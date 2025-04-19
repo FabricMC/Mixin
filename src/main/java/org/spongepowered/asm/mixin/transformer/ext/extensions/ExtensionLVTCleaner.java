@@ -72,7 +72,10 @@ public class ExtensionLVTCleaner implements IExtension {
      */
     @Override
     public void export(MixinEnvironment env, String name, boolean force, ILazyClassNode classNode) {
-        if (!classNode.hasLoaded()) return; //No changes can have happened to the LVT if it's not loaded
+        if (!classNode.hasLoaded()) {
+            return; //No changes can have happened to the LVT if it's not loaded
+        }
+
         for (MethodNode methodNode : classNode.get().methods) {
             if (methodNode.localVariables != null) {
                 for (Iterator<LocalVariableNode> it = methodNode.localVariables.iterator(); it.hasNext(); ) {

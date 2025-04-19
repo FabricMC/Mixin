@@ -129,12 +129,14 @@ abstract class MixinCoprocessor implements IListener {
                 oldOverride = true;
                 break;
             } catch (NoSuchMethodException e) {
+                //No process override
             }
             try {
                 instance.getDeclaredMethod("postProcess", String.class, ClassNode.class);
                 oldOverride = true;
                 break;
             } catch (NoSuchMethodException e) {
+                //No postProcess override
             }
         }
 
