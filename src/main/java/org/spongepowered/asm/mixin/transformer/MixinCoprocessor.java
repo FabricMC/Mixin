@@ -123,7 +123,7 @@ abstract class MixinCoprocessor implements IListener {
         boolean oldOverride = false;
 
         //Work out whether this is an old coprocessor based on whether it's using the old methods
-        for (Class<?> instance = getClass(); instance != MixinCoprocessor.class; instance = getClass()) {
+        for (Class<?> instance = getClass(); instance != MixinCoprocessor.class; instance = instance.getSuperclass()) {
             try {
                 instance.getDeclaredMethod("process", String.class, ClassNode.class);
                 oldOverride = true;
