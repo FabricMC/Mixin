@@ -38,6 +38,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.MixinEnvironment.Option;
 import org.spongepowered.asm.mixin.transformer.ClassInfo;
+import org.spongepowered.asm.mixin.transformer.ILazyClassNode;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Method;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.SearchType;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Traversal;
@@ -49,7 +50,6 @@ import org.spongepowered.asm.util.PrettyPrinter;
 import org.spongepowered.asm.util.SignaturePrinter;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Supplier;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
@@ -221,10 +221,10 @@ public class ExtensionCheckInterfaces implements IExtension {
     /* (non-Javadoc)
      * @see org.spongepowered.asm.mixin.transformer.ext.IExtension
      *      #export(org.spongepowered.asm.mixin.MixinEnvironment,
-     *      java.lang.String, boolean, com.google.common.base.Supplier)
+     *      java.lang.String, boolean, org.spongepowered.asm.mixin.transformer.ILazyClassNode)
      */
     @Override
-    public void export(MixinEnvironment env, String name, boolean force, Supplier<ClassNode> classNode) {
+    public void export(MixinEnvironment env, String name, boolean force, ILazyClassNode classNode) {
     }
 
     private void appendToCSVReport(String className, Method method, String iface) {

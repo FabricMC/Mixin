@@ -24,51 +24,29 @@
  */
 package org.spongepowered.asm.mixin.transformer.ext.extensions;
 
-import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.util.CheckClassAdapter;
+import org.objectweb.asm.tree.LocalVariableNode;
+import org.objectweb.asm.tree.MethodNode;
 import org.spongepowered.asm.mixin.MixinEnvironment;
-import org.spongepowered.asm.mixin.MixinEnvironment.Option;
-import org.spongepowered.asm.mixin.throwables.MixinException;
 import org.spongepowered.asm.mixin.transformer.ILazyClassNode;
 import org.spongepowered.asm.mixin.transformer.ext.IExtension;
 import org.spongepowered.asm.mixin.transformer.ext.ITargetClassContext;
-import org.spongepowered.asm.transformers.MixinClassWriter;
+import org.spongepowered.asm.util.Locals;
+
+import java.util.Iterator;
 
 /**
- * Mixin transformer module which runs CheckClassAdapter on the post-mixin
- * bytecode
+ * Strips synthetic local variables from the LVT after exporting to avoid debuggers becoming confused by them.
  */
-public class ExtensionCheckClass implements IExtension {
-    
-    /**
-     * Exception thrown when checkclass fails
-     */
-    public static class ValidationFailedException extends MixinException {
+public class ExtensionLVTCleaner implements IExtension {
 
-        private static final long serialVersionUID = 1L;
-
-        public ValidationFailedException(String message, Throwable cause) {
-            super(message, cause);
-        }
-
-        public ValidationFailedException(String message) {
-            super(message);
-        }
-
-        public ValidationFailedException(Throwable cause) {
-            super(cause);
-        }
-        
-    }
-    
     /* (non-Javadoc)
      * @see org.spongepowered.asm.mixin.transformer.ext.IExtension#checkActive(
      *      org.spongepowered.asm.mixin.MixinEnvironment)
      */
     @Override
     public boolean checkActive(MixinEnvironment environment) {
-        return environment.getOption(Option.DEBUG_VERIFY);
+        return true;
     }
 
     /* (non-Javadoc)
@@ -78,28 +56,13 @@ public class ExtensionCheckClass implements IExtension {
     @Override
     public void preApply(ITargetClassContext context) {
     }
-    
+
     /* (non-Javadoc)
      * @see org.spongepowered.asm.mixin.transformer.IMixinTransformerModule
      *    #postApply(org.spongepowered.asm.mixin.transformer.TargetClassContext)
      */
     @Override
     public void postApply(ITargetClassContext context) {
-        try {
-            context.getClassNode().accept(new CheckClassAdapter(new MixinClassWriter(ClassWriter.COMPUTE_FRAMES)));
-        } catch (RuntimeException ex) {
-            throw new ValidationFailedException(ex.getMessage(), ex);
-        }
-    }
-    
-    /* (non-Javadoc)
-     * @see org.spongepowered.asm.mixin.transformer.ext.IExtension
-     *      #export(org.spongepowered.asm.mixin.MixinEnvironment,
-     *      java.lang.String, boolean, org.objectweb.asm.tree.ClassNode)
-     */
-    @Override
-    @Deprecated
-    public void export(MixinEnvironment env, String name, boolean force, ClassNode classNode) {
     }
 
     /* (non-Javadoc)
@@ -109,5 +72,16 @@ public class ExtensionCheckClass implements IExtension {
      */
     @Override
     public void export(MixinEnvironment env, String name, boolean force, ILazyClassNode classNode) {
+        if (!classNode.hasLoaded()) return; //No changes can have happened to the LVT if it's not loaded
+        for (MethodNode methodNode : classNode.get().methods) {
+            if (methodNode.localVariables != null) {
+                for (Iterator<LocalVariableNode> it = methodNode.localVariables.iterator(); it.hasNext(); ) {
+                    if (it.next() instanceof Locals.SyntheticLocalVariableNode) {
+                        it.remove();
+                    }
+                }
+            }
+        }
     }
+
 }

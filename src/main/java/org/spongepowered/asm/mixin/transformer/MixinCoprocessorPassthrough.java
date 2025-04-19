@@ -27,8 +27,6 @@ package org.spongepowered.asm.mixin.transformer;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.base.Supplier;
-
 import org.objectweb.asm.tree.ClassNode;
 
 /**
@@ -62,7 +60,7 @@ class MixinCoprocessorPassthrough extends MixinCoprocessor {
     }
     
     @Override
-    ProcessResult process(String className, Supplier<ClassNode> classNode) {
+    ProcessResult process(String className, ILazyClassNode classNode) {
         return this.loadable.contains(className) ? ProcessResult.PASSTHROUGH_NONE : ProcessResult.NONE;
     }
 

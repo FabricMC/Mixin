@@ -27,8 +27,6 @@ package org.spongepowered.asm.mixin.transformer;
 import java.text.DecimalFormat;
 import java.util.*;
 
-import com.google.common.base.Supplier;
-
 import org.spongepowered.asm.logging.Level;
 import org.spongepowered.asm.logging.ILogger;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -271,9 +269,9 @@ class MixinProcessor {
         }
     }
 
-    synchronized ClassNode applyMixins(MixinEnvironment environment, String name, Supplier<ClassNode> targetClassNode) {
+    synchronized boolean applyMixins(MixinEnvironment environment, String name, ILazyClassNode targetClassNode) {
         if (name == null || this.errorState) {
-            return null;
+            return false;
         }
         
         boolean locked = this.lock.push().check();
@@ -311,7 +309,7 @@ class MixinProcessor {
                     this.auditTrail.onPostProcess(name);
                 }
                 this.extensions.export(environment, name, false, targetClassNode);
-                return transformed ? targetClassNode.get() : null;
+                return transformed;
             }
 
             MixinConfig packageOwnedByConfig = null;
@@ -330,7 +328,7 @@ class MixinProcessor {
                 // AMS - Temp passthrough for injection points and dynamic selectors. Moving to service in 0.9
                 ClassInfo targetInfo = ClassInfo.fromClassNode(name, targetClassNode);
                 if (targetInfo.hasSuperClass(InjectionPoint.class) || targetInfo.hasSuperClass(ITargetSelectorDynamic.class)) {
-                    return transformed ? targetClassNode.get() : null;
+                    return transformed;
                 }
                 
                 throw new IllegalClassLoadError(this.getInvalidClassError(name, targetClassNode.get(), packageOwnedByConfig));
@@ -396,7 +394,7 @@ class MixinProcessor {
             this.lock.pop();
             mixinTimer.end();
         }
-        return transformed ? targetClassNode.get() : null;
+        return transformed;
     }
 
     private String getInvalidClassError(String name, ClassNode targetClassNode, MixinConfig ownedByConfig) {
@@ -660,7 +658,7 @@ class MixinProcessor {
         return handlers;
     }
 
-    private void dumpClassOnFailure(String className, Supplier<ClassNode> classNode, MixinEnvironment env) {
+    private void dumpClassOnFailure(String className, ILazyClassNode classNode, MixinEnvironment env) {
         if (env.getOption(Option.DUMP_TARGET_ON_FAILURE)) {
             ExtensionClassExporter exporter = this.extensions.<ExtensionClassExporter>getExtension(ExtensionClassExporter.class);
             exporter.dumpClass(className.replace('.', '/') + ".target", classNode.get());

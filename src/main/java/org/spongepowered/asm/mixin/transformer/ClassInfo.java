@@ -68,8 +68,6 @@ import org.spongepowered.asm.util.perf.Profiler;
 import org.spongepowered.asm.util.perf.Profiler.Section;
 
 import com.google.common.base.Strings;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -2004,7 +2002,7 @@ public final class ClassInfo {
      * @return ClassInfo instance for the supplied classNode
      */
     static ClassInfo fromClassNode(ClassNode classNode) {
-        return fromClassNode(classNode.name, Suppliers.ofInstance(classNode));
+        return fromClassNode(classNode.name, LazyClassNode.of(classNode));
     }
 
     /**
@@ -2014,10 +2012,10 @@ public final class ClassInfo {
      * returned from the {@link ClassNode}.
      *
      * @param name name of the class to get info for
-     * @param classNode provider of the classNode to gather info from (if necessary)
+     * @param classNode lazy provider of the classNode to gather info from (if necessary)
      * @return ClassInfo instance for the supplied classNode
      */
-    static ClassInfo fromClassNode(String name, Supplier<ClassNode> classNode) {
+    static ClassInfo fromClassNode(String name, ILazyClassNode classNode) {
         ClassInfo info = ClassInfo.cache.get(name);
         if (info == null) {
             info = new ClassInfo(classNode.get());

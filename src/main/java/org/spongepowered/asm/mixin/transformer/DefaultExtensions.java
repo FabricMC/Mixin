@@ -30,6 +30,7 @@ import org.spongepowered.asm.mixin.transformer.ext.Extensions;
 import org.spongepowered.asm.mixin.transformer.ext.extensions.ExtensionCheckClass;
 import org.spongepowered.asm.mixin.transformer.ext.extensions.ExtensionCheckInterfaces;
 import org.spongepowered.asm.mixin.transformer.ext.extensions.ExtensionClassExporter;
+import org.spongepowered.asm.mixin.transformer.ext.extensions.ExtensionLVTCleaner;
 import org.spongepowered.asm.service.ISyntheticClassInfo;
 import org.spongepowered.asm.util.IConsumer;
 
@@ -54,6 +55,7 @@ final class DefaultExtensions {
         extensions.add(new InnerClassGenerator(registryDelegate, nestHostCoprocessor));
 
         extensions.add(new ExtensionClassExporter(environment));
+        extensions.add(new ExtensionLVTCleaner());
         extensions.add(new ExtensionCheckClass());
         extensions.add(new ExtensionCheckInterfaces());
     }

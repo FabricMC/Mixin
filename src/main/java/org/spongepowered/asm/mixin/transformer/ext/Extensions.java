@@ -32,10 +32,10 @@ import java.util.Map;
 
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.spongepowered.asm.mixin.transformer.ILazyClassNode;
+import org.spongepowered.asm.mixin.transformer.LazyClassNode;
 import org.spongepowered.asm.service.ISyntheticClassRegistry;
 
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 
@@ -178,11 +178,11 @@ public final class Extensions implements IExtensionRegistry {
      * @param force True to export even if the current environment settings
      *      would normally disable it
      * @param classNode Class to export
-     * @see #export(MixinEnvironment, String, boolean, Supplier) The supplier
+     * @see #export(MixinEnvironment, String, boolean, ILazyClassNode) The lazy
      *      version, which may allow avoiding creating ClassNodes unnecessarily
      */
     public void export(MixinEnvironment env, String name, boolean force, ClassNode classNode) {
-        this.export(env, name, force, Suppliers.ofInstance(classNode));
+        this.export(env, name, force, LazyClassNode.of(classNode));
     }
 
     /**
@@ -192,10 +192,10 @@ public final class Extensions implements IExtensionRegistry {
      * @param name Class name
      * @param force True to export even if the current environment settings
      *      would normally disable it
-     * @param classNode Supplier providing the class to export
+     * @param classNode Lazy provider of the class to export
      */
     @SuppressWarnings("deprecation")
-    public void export(MixinEnvironment env, String name, boolean force, Supplier<ClassNode> classNode) {
+    public void export(MixinEnvironment env, String name, boolean force, ILazyClassNode classNode) {
         for (IExtension extension : this.activeExtensions) {
             try {
                 extension.export(env, name, force, classNode);

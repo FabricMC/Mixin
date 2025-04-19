@@ -26,8 +26,6 @@ package org.spongepowered.asm.mixin.transformer;
 
 import java.util.ArrayList;
 
-import com.google.common.base.Supplier;
-
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.transformer.MixinCoprocessor.ProcessResult;
 import org.spongepowered.asm.util.perf.Profiler;
@@ -55,11 +53,11 @@ class MixinCoprocessors extends ArrayList<MixinCoprocessor> {
      * a mixin target) then this is indicated by the return value.
      * 
      * @param className Name of the target class
-     * @param classNode Supplier providing a classnode of the target class
+     * @param classNode Lazy provider of the classnode of the target class
      * @return result indicating whether the class was transformed, and whether
      *      or not to passthrough instead of apply mixins
      */
-    ProcessResult process(String className, Supplier<ClassNode> classNode) {
+    ProcessResult process(String className, ILazyClassNode classNode) {
         Section timer = this.profiler.begin("coprocessor");
         ProcessResult result = ProcessResult.NONE;
         for (MixinCoprocessor coprocessor : this) {
@@ -74,10 +72,10 @@ class MixinCoprocessors extends ArrayList<MixinCoprocessor> {
      * coprocessors.
      * 
      * @param className Name of the target class
-     * @param classNode Supplier providing a classnode of the target class
+     * @param classNode Lazy provider of the classnode of the target class
      * @return true if the coprocessor applied any transformations
      */
-    boolean postProcess(String className, Supplier<ClassNode> classNode) {
+    boolean postProcess(String className, ILazyClassNode classNode) {
         Section timer = this.profiler.begin("coprocessor");
         boolean transformed = false;
         for (MixinCoprocessor coprocessor : this) {

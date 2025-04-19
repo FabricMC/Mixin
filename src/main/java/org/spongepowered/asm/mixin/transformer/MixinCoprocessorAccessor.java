@@ -27,8 +27,6 @@ package org.spongepowered.asm.mixin.transformer;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.base.Supplier;
-
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -88,7 +86,7 @@ class MixinCoprocessorAccessor extends MixinCoprocessor {
     }
 
     @Override
-    ProcessResult process(String className, Supplier<ClassNode> classNode) {
+    ProcessResult process(String className, ILazyClassNode classNode) {
         if (!MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.METHODS_IN_INTERFACES)
                     || !this.accessorMixins.containsKey(className)) {
             return ProcessResult.NONE;
