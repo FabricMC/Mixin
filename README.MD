@@ -73,7 +73,7 @@ easily troubleshoot your mixins. To do so:
 
 Enhanced functionality for working with **Mixin** in IntelliJ IDEA is available
 via the [Minecraft Development for IntelliJ IDEA](https://plugins.jetbrains.com/idea/plugin/8327)
-plugin developed by [DemonWav](https://github.com/demonwav).  
+plugin developed by [DenWav](https://github.com/DenWav).  
 
 ### Version History
 
