@@ -552,19 +552,14 @@ public final class Annotations {
      */
     @SuppressWarnings("unchecked")
     public static <T> T getValue(AnnotationNode annotation, String key) {
-        boolean getNextValue = false;
-
         if (annotation == null || annotation.values == null) {
             return null;
         }
 
         // Keys and value are stored in successive pairs, search for the key and if found return the following entry
-        for (Object value : annotation.values) {
-            if (getNextValue) {
-                return (T) value;
-            }
-            if (value.equals(key)) {
-                getNextValue = true;
+        for (int i = 0; i < annotation.values.size() - 1; i += 2) {
+            if (annotation.values.get(i).equals(key)) {
+                return (T) annotation.values.get(i + 1);
             }
         }
 
