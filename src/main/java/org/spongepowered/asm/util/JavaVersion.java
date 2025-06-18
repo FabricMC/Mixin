@@ -116,6 +116,21 @@ public abstract class JavaVersion {
      * Version number for Java 22
      */
     public static final double JAVA_22 = 22.0;
+
+    /**
+     * Version number for Java 23
+     */
+    public static final double JAVA_23 = 23.0;
+
+    /**
+     * Version number for Java 24
+     */
+    public static final double JAVA_24 = 24.0;
+
+    /**
+     * Version number for Java 25
+     */
+    public static final double JAVA_25 = 25.0;
     
     private static double current = 0.0;
     
