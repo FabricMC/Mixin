@@ -28,6 +28,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.spongepowered.asm.mixin.transformer.ILazyClassNode;
 import org.spongepowered.asm.mixin.transformer.ext.IExtension;
 import org.spongepowered.asm.mixin.transformer.ext.ITargetClassContext;
 import org.spongepowered.asm.util.Locals;
@@ -67,11 +68,15 @@ public class ExtensionLVTCleaner implements IExtension {
     /* (non-Javadoc)
      * @see org.spongepowered.asm.mixin.transformer.ext.IExtension
      *      #export(org.spongepowered.asm.mixin.MixinEnvironment,
-     *      java.lang.String, boolean, org.objectweb.asm.tree.ClassNode)
+     *      java.lang.String, boolean, org.spongepowered.asm.mixin.transformer.ILazyClassNode)
      */
     @Override
-    public void export(MixinEnvironment env, String name, boolean force, ClassNode classNode) {
-        for (MethodNode methodNode : classNode.methods) {
+    public void export(MixinEnvironment env, String name, boolean force, ILazyClassNode classNode) {
+        if (!classNode.hasLoaded()) {
+            return; //No changes can have happened to the LVT if it's not loaded
+        }
+
+        for (MethodNode methodNode : classNode.get().methods) {
             if (methodNode.localVariables != null) {
                 for (Iterator<LocalVariableNode> it = methodNode.localVariables.iterator(); it.hasNext(); ) {
                     if (it.next() instanceof Locals.SyntheticLocalVariableNode) {

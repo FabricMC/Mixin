@@ -230,9 +230,9 @@ final class MixinTransformer extends TreeTransformer implements IMixinTransforme
      */
     @Override
     public byte[] transformClass(MixinEnvironment environment, String name, byte[] classBytes) {
-        ClassNode classNode = this.readClass(name, classBytes);
+        ILazyClassNode classNode = LazyClassNode.of(() -> this.readClass(name, classBytes));
         if (this.processor.applyMixins(environment, name, classNode)) {
-            return this.writeClass(classNode);
+            return this.writeClass(classNode.get());
         }
         return classBytes;
     }
@@ -247,7 +247,7 @@ final class MixinTransformer extends TreeTransformer implements IMixinTransforme
      */
     @Override
     public boolean transformClass(MixinEnvironment environment, String name, ClassNode classNode) {
-        return this.processor.applyMixins(environment, name, classNode);
+        return this.processor.applyMixins(environment, name, LazyClassNode.of(classNode));
     }
     
     /**

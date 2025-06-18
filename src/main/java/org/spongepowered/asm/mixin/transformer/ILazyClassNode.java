@@ -24,44 +24,23 @@
  */
 package org.spongepowered.asm.mixin.transformer;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.objectweb.asm.tree.ClassNode;
 
 /**
- * Passthrough coprocessor which simply keeps track of classes which are
- * loadable.
+ * A provider of a {@link ClassNode}, which allows only creating it if necessary
  */
-class MixinCoprocessorPassthrough extends MixinCoprocessor {
-    
+public interface ILazyClassNode {
     /**
-     * Loadable classes within mixin packages
+     * Check if the {@link ClassNode} is immediately available
+     *
+     * @return Whether {@link #get()} can return the {@link ClassNode} without loading it first
      */
-    private final Set<String> loadable = new HashSet<String>();
+    boolean hasLoaded();
 
-    MixinCoprocessorPassthrough() {
-    }
-    
-    @Override
-    String getName() {
-        return "passthrough";
-    }
-
-    @Override
-    public void onPrepare(MixinInfo mixin) {
-        if (mixin.isLoadable()) {
-            this.registerLoadable(mixin.getClassName());
-        }
-    }
-
-    void registerLoadable(String className) {
-        this.loadable.add(className);
-    }
-    
-    @Override
-    ProcessResult process(String className, ILazyClassNode classNode) {
-        return this.loadable.contains(className) ? ProcessResult.PASSTHROUGH_NONE : ProcessResult.NONE;
-    }
-
+    /**
+     * Get the {@link ClassNode} that this provider is for
+     *
+     * @return The {@link ClassNode} this provider is for
+     */
+    ClassNode get();
 }

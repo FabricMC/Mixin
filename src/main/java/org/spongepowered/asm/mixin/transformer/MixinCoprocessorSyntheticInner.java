@@ -74,11 +74,12 @@ class MixinCoprocessorSyntheticInner extends MixinCoprocessor {
      * new home in the target class
      */
     @Override
-    ProcessResult process(String className, ClassNode classNode) {
+    ProcessResult process(String className, ILazyClassNode lazyClassNode) {
         if (!this.syntheticInnerClasses.contains(className)) {
             return ProcessResult.NONE;
         }
 
+        ClassNode classNode = lazyClassNode.get();
         classNode.access |= Opcodes.ACC_PUBLIC;
         
         for (FieldNode field : classNode.fields) {

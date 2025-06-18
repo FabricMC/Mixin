@@ -53,11 +53,11 @@ class MixinCoprocessors extends ArrayList<MixinCoprocessor> {
      * a mixin target) then this is indicated by the return value.
      * 
      * @param className Name of the target class
-     * @param classNode Classnode of the target class
+     * @param classNode Lazy provider of the classnode of the target class
      * @return result indicating whether the class was transformed, and whether
      *      or not to passthrough instead of apply mixins
      */
-    ProcessResult process(String className, ClassNode classNode) {
+    ProcessResult process(String className, ILazyClassNode classNode) {
         Section timer = this.profiler.begin("coprocessor");
         ProcessResult result = ProcessResult.NONE;
         for (MixinCoprocessor coprocessor : this) {
@@ -72,10 +72,10 @@ class MixinCoprocessors extends ArrayList<MixinCoprocessor> {
      * coprocessors.
      * 
      * @param className Name of the target class
-     * @param classNode Classnode of the target class
+     * @param classNode Lazy provider of the classnode of the target class
      * @return true if the coprocessor applied any transformations
      */
-    boolean postProcess(String className, ClassNode classNode) {
+    boolean postProcess(String className, ILazyClassNode classNode) {
         Section timer = this.profiler.begin("coprocessor");
         boolean transformed = false;
         for (MixinCoprocessor coprocessor : this) {

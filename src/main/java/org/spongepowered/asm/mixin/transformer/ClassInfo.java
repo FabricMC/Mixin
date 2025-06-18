@@ -2002,10 +2002,24 @@ public final class ClassInfo {
      * @return ClassInfo instance for the supplied classNode
      */
     static ClassInfo fromClassNode(ClassNode classNode) {
-        ClassInfo info = ClassInfo.cache.get(classNode.name);
+        return fromClassNode(classNode.name, LazyClassNode.of(classNode));
+    }
+
+    /**
+     * Return a ClassInfo for the supplied name. If a ClassInfo for
+     * the class was already defined, then the original ClassInfo is returned
+     * from the internal cache. Otherwise a new ClassInfo is created and
+     * returned from the {@link ClassNode}.
+     *
+     * @param name name of the class to get info for
+     * @param classNode lazy provider of the classNode to gather info from (if necessary)
+     * @return ClassInfo instance for the supplied classNode
+     */
+    static ClassInfo fromClassNode(String name, ILazyClassNode classNode) {
+        ClassInfo info = ClassInfo.cache.get(name);
         if (info == null) {
-            info = new ClassInfo(classNode);
-            ClassInfo.cache.put(classNode.name, info);
+            info = new ClassInfo(classNode.get());
+            ClassInfo.cache.put(name, info);
         }
 
         return info;

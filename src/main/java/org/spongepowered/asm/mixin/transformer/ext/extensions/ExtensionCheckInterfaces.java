@@ -38,6 +38,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.MixinEnvironment.Option;
 import org.spongepowered.asm.mixin.transformer.ClassInfo;
+import org.spongepowered.asm.mixin.transformer.ILazyClassNode;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Method;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.SearchType;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Traversal;
@@ -213,7 +214,17 @@ public class ExtensionCheckInterfaces implements IExtension {
      *      java.lang.String, boolean, org.objectweb.asm.tree.ClassNode)
      */
     @Override
+    @Deprecated
     public void export(MixinEnvironment env, String name, boolean force, ClassNode classNode) {
+    }
+
+    /* (non-Javadoc)
+     * @see org.spongepowered.asm.mixin.transformer.ext.IExtension
+     *      #export(org.spongepowered.asm.mixin.MixinEnvironment,
+     *      java.lang.String, boolean, org.spongepowered.asm.mixin.transformer.ILazyClassNode)
+     */
+    @Override
+    public void export(MixinEnvironment env, String name, boolean force, ILazyClassNode classNode) {
     }
 
     private void appendToCSVReport(String className, Method method, String iface) {

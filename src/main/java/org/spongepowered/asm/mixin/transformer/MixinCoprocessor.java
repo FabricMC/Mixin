@@ -44,6 +44,7 @@ import org.spongepowered.asm.mixin.transformer.MixinConfig.IListener;
  * that class made its role unclear and slightly schizophrenic.</p>
  */
 abstract class MixinCoprocessor implements IListener {
+    private final boolean useFallback;
     
     /**
      * The result of a specific coprocessor's action on a supplied class,
@@ -118,6 +119,30 @@ abstract class MixinCoprocessor implements IListener {
         
     }
     
+    MixinCoprocessor() {
+        boolean oldOverride = false;
+
+        //Work out whether this is an old coprocessor based on whether it's using the old methods
+        for (Class<?> instance = getClass(); instance != MixinCoprocessor.class; instance = instance.getSuperclass()) {
+            try {
+                instance.getDeclaredMethod("process", String.class, ClassNode.class);
+                oldOverride = true;
+                break;
+            } catch (NoSuchMethodException e) {
+                //No process override
+            }
+            try {
+                instance.getDeclaredMethod("postProcess", String.class, ClassNode.class);
+                oldOverride = true;
+                break;
+            } catch (NoSuchMethodException e) {
+                //No postProcess override
+            }
+        }
+
+        useFallback = oldOverride;
+    }
+
     /**
      * Coprocessor name, for debugging only
      */
@@ -148,9 +173,26 @@ abstract class MixinCoprocessor implements IListener {
      * @param classNode Classnode of the target class
      * @return result indicating whether the class was transformed, and whether
      *      or not to passthrough instead of apply mixins
+     * @deprecated Use {@link #process(String, ILazyClassNode) lazy version}
+     *      to avoid creating ClassNodes unnecessarily
      */
+    @Deprecated
     ProcessResult process(String className, ClassNode classNode) {
-        return ProcessResult.NONE;
+        return useFallback ? ProcessResult.NONE : process(className, LazyClassNode.of(classNode));
+    }
+
+    /**
+     * Process the supplied class. If the class is transformed, or should be
+     * passed through (rather than treated as a mixin target) then this is
+     * indicated by the return value
+     * 
+     * @param className Name of the target class
+     * @param classNode Lazy provider of the classnode of the target class
+     * @return result indicating whether the class was transformed, and whether
+     *      or not to passthrough instead of apply mixins
+     */
+    ProcessResult process(String className, ILazyClassNode classNode) {
+        return useFallback ? process(className, classNode.get()) : ProcessResult.NONE;
     }
 
     /**
@@ -163,9 +205,26 @@ abstract class MixinCoprocessor implements IListener {
      * @param className Name of the target class
      * @param classNode Classnode of the target class
      * @return true if the coprocessor applied any transformations
+     * @deprecated Use {@link #postProcess(String, ILazyClassNode) lazy version}
+     *      to avoid creating ClassNodes unnecessarily
      */
+    @Deprecated
     boolean postProcess(String className, ClassNode classNode) {
-        return false;
+        return useFallback ? false : postProcess(className, LazyClassNode.of(classNode));
     }
     
+    /**
+     * Perform postprocessing actions on the supplied class. This is called for
+     * all classes. For passthrough classes and classes which are not mixin 
+     * targets this is called immediately after {@link #process} is completed
+     * for all coprocessors. For mixin targets this is called after mixins are
+     * applied.
+     * 
+     * @param className Name of the target class
+     * @param classNode Lazy provider of the classnode of the target class
+     * @return true if the coprocessor applied any transformations
+     */
+    boolean postProcess(String className, ILazyClassNode classNode) {
+        return useFallback ? postProcess(className, classNode.get()) : false;
+    }
 }
