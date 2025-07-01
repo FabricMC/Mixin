@@ -4,8 +4,8 @@ plugins {
 
 repositories {
     maven {
-        name 'sponge'
-        url 'https://repo.spongepowered.org/repository/maven-public'
+        name = 'sponge'
+        url = 'https://repo.spongepowered.org/repository/maven-public'
     }
 }
 

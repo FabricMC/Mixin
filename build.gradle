@@ -5,21 +5,19 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'gradle.plugin.com.hierynomus.gradle.plugins:license-gradle-plugin:0.16.1'
         classpath 'com.guardsquare:proguard-gradle:' + (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11) ? '7.5.0' : '7.1.0')
     }
 }
 
 plugins {
-    id "me.modmuss50.remotesign" version "0.4.0"
-    id "io.github.goooler.shadow"  version "8.1.7"
+    id "me.modmuss50.remotesign" version "0.5.0"
+    id "com.gradleup.shadow"  version "9.0.0-beta17"
 }
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 // Apply plugin
 apply plugin: 'java'
-apply plugin: 'com.github.hierynomus.license'
 apply plugin: 'checkstyle'
 apply plugin: 'maven-publish'
 apply plugin: 'eclipse'
@@ -27,7 +25,7 @@ apply plugin: 'idea'
 apply plugin: 'potemkin-modules'
 
 // Default tasks
-defaultTasks 'licenseFormat', 'check', 'build'
+defaultTasks 'check', 'build'
 
 // Basic project information
 group = 'net.fabricmc'
@@ -298,21 +296,12 @@ processResources {
 }
 
 // License header formatting
-license {
-    ext {
-        name = "Mixin"
-        organization = "SpongePowered"
-        url = "https://www.spongepowered.org"
-    }
-    include '**/*.java'
-    header file("HEADER.txt")
-    sourceSets = project.sourceSets
-    ignoreFailures false
-    strictCheck true
-    mapping {
-        java = 'SLASHSTAR_STYLE'
-    }
+def validateHeaders = tasks.register("validateHeaders", org.spongepowered.asm.mixin.build.ValidateLicenseHeadersTasks) {
+    header = resources.text.fromFile("HEADER.txt")
+    source = sourceSets.collect { it.allJava }
 }
+
+tasks.check.dependsOn validateHeaders
 
 checkstyle {
     configProperties = [
@@ -463,9 +452,9 @@ ext.excludePomDeps = [
 publishing {
     publications {
         developer(MavenPublication) { publication ->
-            groupId project.group
-            artifactId project.base.archivesName.get()
-            version project.version
+            groupId = project.group
+            artifactId = project.base.archivesName.get()
+            version = project.version
 
             artifact sourceJar
             artifact javadocJar
@@ -542,10 +531,10 @@ publishing {
     repositories {
         if (ENV.MAVEN_URL) {
             maven {
-                url ENV.MAVEN_URL
+                url = ENV.MAVEN_URL
                 credentials {
-                    username ENV.MAVEN_USERNAME
-                    password ENV.MAVEN_PASSWORD
+                    username = ENV.MAVEN_USERNAME
+                    password = ENV.MAVEN_PASSWORD
                 }
             }
         }
@@ -553,10 +542,10 @@ publishing {
         if (ENV.MAVEN_CENTRAL_URL) {
             repositories.maven {
                 name "central"
-                url ENV.MAVEN_CENTRAL_URL
+                url = ENV.MAVEN_CENTRAL_URL
                 credentials {
-                    username ENV.MAVEN_CENTRAL_USERNAME
-                    password ENV.MAVEN_CENTRAL_PASSWORD
+                    username = ENV.MAVEN_CENTRAL_USERNAME
+                    password = ENV.MAVEN_CENTRAL_PASSWORD
                 }
             }
         }
