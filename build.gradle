@@ -12,6 +12,7 @@ buildscript {
 plugins {
     id "me.modmuss50.remotesign" version "0.5.0"
     id "com.gradleup.shadow"  version "9.0.0-beta17"
+    id "dev.lukebemish.central-portal-publishing" version "0.1.7"
 }
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
@@ -449,6 +450,13 @@ ext.excludePomDeps = [
     'log4j-core'
 ]
 
+centralPortalPublishing.bundle('mixin') {
+    username = ENV.MAVEN_CENTRAL_USERNAME
+    password = ENV.MAVEN_CENTRAL_PASSWORD
+}
+
+tasks.publish.dependsOn tasks.named("publishMixinCentralPortalBundle")
+
 publishing {
     publications {
         developer(MavenPublication) { publication ->
@@ -539,16 +547,7 @@ publishing {
             }
         }
 
-        if (ENV.MAVEN_CENTRAL_URL) {
-            repositories.maven {
-                name "central"
-                url = ENV.MAVEN_CENTRAL_URL
-                credentials {
-                    username = ENV.MAVEN_CENTRAL_USERNAME
-                    password = ENV.MAVEN_CENTRAL_PASSWORD
-                }
-            }
-        }
+        centralPortalPublishing.portalBundle(':', 'mixin')
     }
 }
 
