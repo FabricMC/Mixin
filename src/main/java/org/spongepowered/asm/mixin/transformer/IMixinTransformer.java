@@ -101,6 +101,15 @@ public interface IMixinTransformer {
      * @return true if the class was transformed
      */
     public abstract boolean transformClass(MixinEnvironment environment, String name, ClassNode classNode);
+
+    /**
+     * Determines whether mixin could transform the provided class, without actually running the transformation
+     * 
+     * @param environment Current environment
+     * @param name Class transformed name
+     * @return true if the class could be transformed
+     */
+    public abstract boolean couldTransformClass(MixinEnvironment environment, String name);
     
     /**
      * Generate the specified mixin-synthetic class

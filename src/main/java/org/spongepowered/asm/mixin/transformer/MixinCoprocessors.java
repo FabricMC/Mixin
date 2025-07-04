@@ -68,6 +68,21 @@ class MixinCoprocessors extends ArrayList<MixinCoprocessor> {
     }
 
     /**
+     * Determine ahead-of-time whether a given class could be transformed by any registered coprocessor.
+     * 
+     * @param className
+     * @return
+     */
+    public boolean processingCouldTransform(String className) {
+        for (MixinCoprocessor coprocessor : this) {
+            if (coprocessor.processingCouldTransform(className)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Perform postprocessing actions on the supplied class using all registered
      * coprocessors.
      * 
