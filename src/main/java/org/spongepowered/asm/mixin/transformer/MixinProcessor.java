@@ -412,20 +412,11 @@ class MixinProcessor {
             return true;
         }
 
-        MixinConfig packageOwnedByConfig = null;
-
         for (MixinConfig config : this.configs) {
             if (config.packageMatch(name)) {
-                int packageLen = packageOwnedByConfig != null ? packageOwnedByConfig.getMixinPackage().length() : 0;
-                if (config.getMixinPackage().length() > packageLen) {
-                    packageOwnedByConfig = config;
-                }
+                // If the class is in a mixin package, it may be transformed
+                return true;
             }
-        }
-
-        if (packageOwnedByConfig != null) {
-            // Assume a package owned by a config will always be transformed (to make it unloadable, if nothing else)
-            return true;
         }
 
         for (MixinConfig config : this.configs) {
