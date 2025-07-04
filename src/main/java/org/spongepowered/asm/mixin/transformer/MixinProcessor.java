@@ -398,14 +398,14 @@ class MixinProcessor {
     }
 
     synchronized boolean couldApplyMixins(MixinEnvironment environment, String name) {
+        if (name == null || this.errorState) {
+            return false;
+        }
+
         try {
             this.checkSelect(environment);
         } catch (Exception ex) {
             throw new MixinException(ex);
-        }
-
-        if (name == null || this.errorState) {
-            return false;
         }
 
         if (this.coprocessors.processingCouldTransform(name)) {
