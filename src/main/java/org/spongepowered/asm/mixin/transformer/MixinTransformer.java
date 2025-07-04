@@ -259,7 +259,7 @@ final class MixinTransformer extends TreeTransformer implements IMixinTransforme
      */
     @Override
     public synchronized boolean couldTransformClass(MixinEnvironment environment, String name) {
-        return this.processor.couldApplyMixins(name);
+        return this.processor.couldApplyMixins(environment, name);
     }
 
     /**
