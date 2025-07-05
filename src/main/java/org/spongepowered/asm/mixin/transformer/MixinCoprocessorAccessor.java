@@ -126,6 +126,11 @@ class MixinCoprocessorAccessor extends MixinCoprocessor {
         return ProcessResult.PASSTHROUGH_TRANSFORMED;
     }
 
+    @Override
+    public boolean couldTransform(String className) {
+        return MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.METHODS_IN_INTERFACES) && this.accessorMixins.containsKey(className);
+    }
+
     private Method getAccessorMethod(MixinInfo mixin, MethodNode methodNode, ClassInfo targetClass) throws MixinTransformerError {
         Method method = mixin.getClassInfo().findMethod(methodNode, ClassInfo.INCLUDE_ALL);
         

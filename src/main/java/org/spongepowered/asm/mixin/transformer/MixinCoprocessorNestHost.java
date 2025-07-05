@@ -105,4 +105,8 @@ class MixinCoprocessorNestHost extends MixinCoprocessor {
         return true;
     }
 
+    @Override
+    public boolean couldTransform(String className) {
+        return this.nestHosts.containsKey(className);
+    }
 }

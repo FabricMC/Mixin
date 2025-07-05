@@ -397,6 +397,38 @@ class MixinProcessor {
         return transformed;
     }
 
+    synchronized boolean couldTransformClass(MixinEnvironment environment, String name) {
+        if (name == null || this.errorState) {
+            return false;
+        }
+
+        try {
+            this.checkSelect(environment);
+        } catch (Exception ex) {
+            throw new MixinException(ex);
+        }
+
+        if (this.coprocessors.processingCouldTransform(name)) {
+            return true;
+        }
+
+        for (MixinConfig config : this.configs) {
+            if (config.packageMatch(name)) {
+                // If the class is in a mixin package, it may be transformed
+                return true;
+            }
+        }
+
+        for (MixinConfig config : this.configs) {
+            if (config.hasMixinsFor(name)) {
+                // If any config has mixins for the class, it may be transformed
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
     private String getInvalidClassError(String name, ClassNode targetClassNode, MixinConfig ownedByConfig) {
         if (ownedByConfig.getClasses().contains(name)) {
             return String.format("Illegal classload request for %s. Mixin is defined in %s and cannot be referenced directly", name, ownedByConfig);

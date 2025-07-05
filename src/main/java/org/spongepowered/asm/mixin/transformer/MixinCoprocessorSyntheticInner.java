@@ -68,6 +68,11 @@ class MixinCoprocessorSyntheticInner extends MixinCoprocessor {
         this.syntheticInnerClasses.add(className);
     }
 
+    @Override
+    public boolean couldTransform(String className) {
+        return this.syntheticInnerClasses.contains(className);
+    }
+
     /**
      * "Pass through" a synthetic inner class. Transforms package-private
      * members in the class into public so that they are accessible from their

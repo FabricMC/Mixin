@@ -25,7 +25,9 @@
 package org.spongepowered.asm.mixin.transformer;
 
 import org.objectweb.asm.tree.ClassNode;
+import org.spongepowered.asm.logging.ILogger;
 import org.spongepowered.asm.mixin.transformer.MixinConfig.IListener;
+import org.spongepowered.asm.service.MixinService;
 
 /**
  * Coprocessors are parts of the mixin pipeline which aren't involved in
@@ -152,6 +154,25 @@ abstract class MixinCoprocessor implements IListener {
     ProcessResult process(String className, ClassNode classNode) {
         return ProcessResult.NONE;
     }
+
+    private static final ILogger logger = MixinService.getService().getLogger("mixin");
+    private boolean willLogUnimplementedCouldTransform = true;
+    
+    /**
+     * Determine ahead-of-time whether a given class could be transformed ({@link ProcessResult#TRANSFORMED},
+     * {@link ProcessResult#PASSTHROUGH_TRANSFORMED}, or modification in
+     * {@link MixinCoprocessor#postProcess(String, ClassNode)}) by processing by this coprocessor.
+     * 
+     * @param className Name of the target class
+     * @return true if the coprocessor might transform the class when processed
+     */
+    public boolean couldTransform(String className) {
+        if (willLogUnimplementedCouldTransform) {
+            willLogUnimplementedCouldTransform = false;
+            logger.error("MixinCoprocessor {} ({}) does not implement processingCouldTransform, which may lead to unnecessary transformation", getName(), getClass().getName());
+        }
+        return true;
+    } 
 
     /**
      * Perform postprocessing actions on the supplied class. This is called for
