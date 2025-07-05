@@ -156,7 +156,8 @@ abstract class MixinCoprocessor implements IListener {
     }
 
     private static final ILogger logger = MixinService.getService().getLogger("mixin");
-
+    private boolean willLogUnimplementedCouldTransform = true;
+    
     /**
      * Determine ahead-of-time whether a given class could be transformed ({@link ProcessResult#TRANSFORMED},
      * {@link ProcessResult#PASSTHROUGH_TRANSFORMED}, or modification in
@@ -165,8 +166,11 @@ abstract class MixinCoprocessor implements IListener {
      * @param className Name of the target class
      * @return true if the coprocessor might transform the class when processed
      */
-    public boolean processingCouldTransform(String className) {
-        logger.error("MixinCoprocessor {} does not implement processingCouldTransform, which may lead to unnecessary transformation of class {}", getName(), className);
+    public boolean couldTransform(String className) {
+        if (willLogUnimplementedCouldTransform) {
+            willLogUnimplementedCouldTransform = false;
+            logger.error("MixinCoprocessor {} does not implement processingCouldTransform, which may lead to unnecessary transformation", getName());
+        }
         return true;
     } 
 

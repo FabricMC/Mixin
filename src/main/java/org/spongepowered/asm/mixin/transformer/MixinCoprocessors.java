@@ -75,7 +75,7 @@ class MixinCoprocessors extends ArrayList<MixinCoprocessor> {
      */
     public boolean processingCouldTransform(String className) {
         for (MixinCoprocessor coprocessor : this) {
-            if (coprocessor.processingCouldTransform(className)) {
+            if (coprocessor.couldTransform(className)) {
                 return true;
             }
         }

@@ -397,7 +397,7 @@ class MixinProcessor {
         return transformed;
     }
 
-    synchronized boolean couldApplyMixins(MixinEnvironment environment, String name) {
+    synchronized boolean couldTransformClass(MixinEnvironment environment, String name) {
         if (name == null || this.errorState) {
             return false;
         }
