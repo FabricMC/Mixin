@@ -398,6 +398,10 @@ class MixinProcessor {
     }
 
     synchronized boolean couldTransformClass(MixinEnvironment environment, String name) {
+        if (environment != MixinEnvironment.getCurrentEnvironment()) {
+            throw new MixinException("Current environment must match the supplied environment");
+        }
+        
         if (name == null || this.errorState) {
             return false;
         }
