@@ -401,36 +401,53 @@ class MixinProcessor {
         if (environment != MixinEnvironment.getCurrentEnvironment()) {
             throw new MixinException("Current environment must match the supplied environment");
         }
-        
+
         if (name == null || this.errorState) {
             return false;
         }
 
+        boolean locked = this.lock.push().check();
+
+        if (locked) {
+            for (MixinConfig config : this.pendingConfigs) {
+                if (config.hasPendingMixinsFor(name)) {
+                    ReEntrantTransformerError error = new ReEntrantTransformerError("Re-entrance error.");
+                    MixinProcessor.logger.warn("Re-entrance detected during prepare phase, this will cause serious problems.", error);
+                    throw error;
+                }
+            }
+        } else {
+            try {
+                this.checkSelect(environment);
+            } catch (Exception ex) {
+                this.lock.pop();
+                throw new MixinException(ex);
+            }
+        }
+
         try {
-            this.checkSelect(environment);
-        } catch (Exception ex) {
-            throw new MixinException(ex);
-        }
-
-        if (this.coprocessors.processingCouldTransform(name)) {
-            return true;
-        }
-
-        for (MixinConfig config : this.configs) {
-            if (config.packageMatch(name)) {
-                // If the class is in a mixin package, it may be transformed
+            if (this.coprocessors.processingCouldTransform(name)) {
                 return true;
             }
-        }
 
-        for (MixinConfig config : this.configs) {
-            if (config.hasMixinsFor(name)) {
-                // If any config has mixins for the class, it may be transformed
-                return true;
+            for (MixinConfig config : this.configs) {
+                if (config.packageMatch(name)) {
+                    // If the class is in a mixin package, it may be transformed
+                    return true;
+                }
             }
+
+            for (MixinConfig config : this.configs) {
+                if (config.hasMixinsFor(name)) {
+                    // If any config has mixins for the class, it may be transformed
+                    return true;
+                }
+            }
+
+            return false;
+        } finally {
+            this.lock.pop();
         }
-        
-        return false;
     }
 
     private String getInvalidClassError(String name, ClassNode targetClassNode, MixinConfig ownedByConfig) {
