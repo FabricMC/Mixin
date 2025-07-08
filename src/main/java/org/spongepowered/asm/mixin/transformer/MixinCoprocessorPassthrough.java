@@ -64,4 +64,8 @@ class MixinCoprocessorPassthrough extends MixinCoprocessor {
         return this.loadable.contains(className) ? ProcessResult.PASSTHROUGH_NONE : ProcessResult.NONE;
     }
 
+    @Override
+    public boolean couldTransform(String className) {
+        return false;
+    }
 }
