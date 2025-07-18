@@ -230,6 +230,9 @@ final class MixinTransformer extends TreeTransformer implements IMixinTransforme
      */
     @Override
     public synchronized byte[] transformClass(MixinEnvironment environment, String name, byte[] classBytes) {
+        if (!couldTransformClass(environment, name)) {
+            return classBytes;
+        }
         ClassNode classNode = this.readClass(name, classBytes);
         if (this.processor.applyMixins(environment, name, classNode)) {
             return this.writeClass(classNode);
@@ -249,7 +252,19 @@ final class MixinTransformer extends TreeTransformer implements IMixinTransforme
     public synchronized boolean transformClass(MixinEnvironment environment, String name, ClassNode classNode) {
         return this.processor.applyMixins(environment, name, classNode);
     }
-    
+
+    /**
+     * Determines whether mixin could transform the provided class, without actually running the transformation
+     *
+     * @param environment Current environment
+     * @param name Class transformed name
+     * @return true if the class could be transformed
+     */
+    @Override
+    public synchronized boolean couldTransformClass(MixinEnvironment environment, String name) {
+        return this.processor.couldTransformClass(environment, name);
+    }
+
     /**
      * Generate the specified mixin-synthetic class
      * 

@@ -274,25 +274,14 @@ class MixinProcessor {
             return false;
         }
         
-        boolean locked = this.lock.push().check();
         Section mixinTimer = this.profiler.begin("mixin");
-
-        if (locked) {
-            for (MixinConfig config : this.pendingConfigs) {
-                if (config.hasPendingMixinsFor(name)) {
-                    ReEntrantTransformerError error = new ReEntrantTransformerError("Re-entrance error.");
-                    MixinProcessor.logger.warn("Re-entrance detected during prepare phase, this will cause serious problems.", error);
-                    throw error;
-                }
-            }
-        } else {
-            try {
-                this.checkSelect(environment);
-            } catch (Exception ex) {
-                this.lock.pop();
-                mixinTimer.end();
-                throw new MixinException(ex);
-            }
+        boolean locked;
+        
+        try {
+            locked = lockAndSelect(environment, name);
+        } catch (Throwable th) {
+            mixinTimer.end();
+            throw th;
         }
         
         boolean transformed = false;
@@ -395,6 +384,65 @@ class MixinProcessor {
             mixinTimer.end();
         }
         return transformed;
+    }
+
+    synchronized boolean couldTransformClass(MixinEnvironment environment, String name) {
+        if (environment != MixinEnvironment.getCurrentEnvironment()) {
+            throw new MixinException("Current environment must match the supplied environment");
+        }
+
+        if (name == null || this.errorState) {
+            return false;
+        }
+        
+        lockAndSelect(environment, name);
+
+        try {
+            if (this.coprocessors.processingCouldTransform(name)) {
+                return true;
+            }
+
+            for (MixinConfig config : this.configs) {
+                if (config.packageMatch(name)) {
+                    // If the class is in a mixin package, it may be transformed
+                    return true;
+                }
+            }
+
+            for (MixinConfig config : this.configs) {
+                if (config.hasMixinsFor(name)) {
+                    // If any config has mixins for the class, it may be transformed
+                    return true;
+                }
+            }
+
+            return false;
+        } finally {
+            this.lock.pop();
+        }
+    }
+    
+    private boolean lockAndSelect(MixinEnvironment environment, String name) {
+        boolean locked = this.lock.push().check();
+
+        if (locked) {
+            for (MixinConfig config : this.pendingConfigs) {
+                if (config.hasPendingMixinsFor(name)) {
+                    ReEntrantTransformerError error = new ReEntrantTransformerError("Re-entrance error.");
+                    MixinProcessor.logger.warn("Re-entrance detected during prepare phase, this will cause serious problems.", error);
+                    throw error;
+                }
+            }
+        } else {
+            try {
+                this.checkSelect(environment);
+            } catch (Exception ex) {
+                this.lock.pop();
+                throw new MixinException(ex);
+            }
+        }
+        
+        return locked;
     }
 
     private String getInvalidClassError(String name, ClassNode targetClassNode, MixinConfig ownedByConfig) {
