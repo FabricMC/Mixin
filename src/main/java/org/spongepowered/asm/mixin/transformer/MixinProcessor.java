@@ -274,124 +274,110 @@ class MixinProcessor {
             return false;
         }
         
-        boolean locked = this.lock.push().check();
         Section mixinTimer = this.profiler.begin("mixin");
 
-        if (locked) {
-            for (MixinConfig config : this.pendingConfigs) {
-                if (config.hasPendingMixinsFor(name)) {
-                    ReEntrantTransformerError error = new ReEntrantTransformerError("Re-entrance error.");
-                    MixinProcessor.logger.warn("Re-entrance detected during prepare phase, this will cause serious problems.", error);
-                    throw error;
-                }
-            }
-        } else {
-            try {
-                this.checkSelect(environment);
-            } catch (Exception ex) {
-                this.lock.pop();
-                mixinTimer.end();
-                throw new MixinException(ex);
-            }
-        }
+        boolean locked = lockAndSelect(environment, name);
         
         boolean transformed = false;
         
         try {
-            ProcessResult result = this.coprocessors.process(name, targetClassNode);
-            transformed |= result.isTransformed();
-            
-            if (result.isPassthrough()) {
-                for (MixinCoprocessor coprocessor : this.coprocessors) {
-                    transformed |= coprocessor.postProcess(name, targetClassNode);
-                }
-                if (this.auditTrail != null) {
-                    this.auditTrail.onPostProcess(name);
-                }
-                this.extensions.export(environment, name, false, targetClassNode);
-                return transformed;
-            }
+            try {
+                ProcessResult result = this.coprocessors.process(name, targetClassNode);
+                transformed |= result.isTransformed();
 
-            MixinConfig packageOwnedByConfig = null;
-            
-            for (MixinConfig config : this.configs) {
-                if (config.packageMatch(name)) {
-                    int packageLen = packageOwnedByConfig != null ? packageOwnedByConfig.getMixinPackage().length() : 0;
-                    if (config.getMixinPackage().length() > packageLen) {
-                        packageOwnedByConfig = config;
+                if (result.isPassthrough()) {
+                    for (MixinCoprocessor coprocessor : this.coprocessors) {
+                        transformed |= coprocessor.postProcess(name, targetClassNode);
                     }
-                    continue;
-                }
-            }                
-
-            if (packageOwnedByConfig != null) {
-                // AMS - Temp passthrough for injection points and dynamic selectors. Moving to service in 0.9
-                ClassInfo targetInfo = ClassInfo.fromClassNode(targetClassNode);
-                if (targetInfo.hasSuperClass(InjectionPoint.class) || targetInfo.hasSuperClass(ITargetSelectorDynamic.class)) {
+                    if (this.auditTrail != null) {
+                        this.auditTrail.onPostProcess(name);
+                    }
+                    this.extensions.export(environment, name, false, targetClassNode);
                     return transformed;
                 }
-                
-                throw new IllegalClassLoadError(this.getInvalidClassError(name, targetClassNode, packageOwnedByConfig));
-            }
 
-            SortedSet<MixinInfo> mixins = null;
-            for (MixinConfig config : this.configs) {
-                if (config.hasMixinsFor(name)) {
-                    if (mixins == null) {
-                        mixins = new TreeSet<MixinInfo>();
+                MixinConfig packageOwnedByConfig = null;
+
+                for (MixinConfig config : this.configs) {
+                    if (config.packageMatch(name)) {
+                        int packageLen = packageOwnedByConfig != null ? packageOwnedByConfig.getMixinPackage().length() : 0;
+                        if (config.getMixinPackage().length() > packageLen) {
+                            packageOwnedByConfig = config;
+                        }
+                        continue;
                     }
-                    
-                    // Get and sort mixins for the class
-                    mixins.addAll(config.getMixinsFor(name));
-                }
-            }
-            
-            if (mixins != null) {
-                // Re-entrance is "safe" as long as we don't need to apply any mixins, if there are mixins then we need to panic now
-                if (locked) {
-                    ReEntrantTransformerError error = new ReEntrantTransformerError("Re-entrance error.");
-                    MixinProcessor.logger.warn("Re-entrance detected, this will cause serious problems.", error);
-                    throw error;
                 }
 
-                if (this.hotSwapper != null) {
-                    this.hotSwapper.registerTargetClass(name, targetClassNode);
-                }
-
-                try {
-                    TargetClassContext context = new TargetClassContext(environment, this.extensions, this.sessionId, name, targetClassNode, mixins);
-                    context.applyMixins();
-                    
-                    transformed |= this.coprocessors.postProcess(name, targetClassNode);
-
-                    if (context.isExported()) {
-                        this.extensions.export(environment, context.getClassName(), context.isExportForced(), context.getClassNode());
-                    }
-                    
-                    for (InvalidMixinException suppressed : context.getSuppressedExceptions()) {
-                        this.handleMixinApplyError(context.getClassName(), suppressed, environment);
+                if (packageOwnedByConfig != null) {
+                    // AMS - Temp passthrough for injection points and dynamic selectors. Moving to service in 0.9
+                    ClassInfo targetInfo = ClassInfo.fromClassNode(targetClassNode);
+                    if (targetInfo.hasSuperClass(InjectionPoint.class) || targetInfo.hasSuperClass(ITargetSelectorDynamic.class)) {
+                        return transformed;
                     }
 
-                    this.transformedCount++;
-                    transformed = true;
-                } catch (InvalidMixinException th) {
-                    this.dumpClassOnFailure(name, targetClassNode, environment);
-                    this.handleMixinApplyError(name, th, environment);
+                    throw new IllegalClassLoadError(this.getInvalidClassError(name, targetClassNode, packageOwnedByConfig));
                 }
-            } else {
-                // No mixins, but still need to run postProcess stage of coprocessors
-                if (this.coprocessors.postProcess(name, targetClassNode)) {
-                    transformed = true;
-                    this.extensions.export(environment, name, false, targetClassNode);
+
+                SortedSet<MixinInfo> mixins = null;
+                for (MixinConfig config : this.configs) {
+                    if (config.hasMixinsFor(name)) {
+                        if (mixins == null) {
+                            mixins = new TreeSet<MixinInfo>();
+                        }
+
+                        // Get and sort mixins for the class
+                        mixins.addAll(config.getMixinsFor(name));
+                    }
                 }
+
+                if (mixins != null) {
+                    // Re-entrance is "safe" as long as we don't need to apply any mixins, if there are mixins then we need to panic now
+                    if (locked) {
+                        ReEntrantTransformerError error = new ReEntrantTransformerError("Re-entrance error.");
+                        MixinProcessor.logger.warn("Re-entrance detected, this will cause serious problems.", error);
+                        throw error;
+                    }
+
+                    if (this.hotSwapper != null) {
+                        this.hotSwapper.registerTargetClass(name, targetClassNode);
+                    }
+
+                    try {
+                        TargetClassContext context = new TargetClassContext(environment, this.extensions, this.sessionId, name, targetClassNode, mixins);
+                        context.applyMixins();
+
+                        transformed |= this.coprocessors.postProcess(name, targetClassNode);
+
+                        if (context.isExported()) {
+                            this.extensions.export(environment, context.getClassName(), context.isExportForced(), context.getClassNode());
+                        }
+
+                        for (InvalidMixinException suppressed : context.getSuppressedExceptions()) {
+                            this.handleMixinApplyError(context.getClassName(), suppressed, environment);
+                        }
+
+                        this.transformedCount++;
+                        transformed = true;
+                    } catch (InvalidMixinException th) {
+                        this.dumpClassOnFailure(name, targetClassNode, environment);
+                        this.handleMixinApplyError(name, th, environment);
+                    }
+                } else {
+                    // No mixins, but still need to run postProcess stage of coprocessors
+                    if (this.coprocessors.postProcess(name, targetClassNode)) {
+                        transformed = true;
+                        this.extensions.export(environment, name, false, targetClassNode);
+                    }
+                }
+            } catch (MixinTransformerError er) {
+                throw er;
+            } catch (Throwable th) {
+                this.dumpClassOnFailure(name, targetClassNode, environment);
+                throw new MixinTransformerError("An unexpected critical error was encountered", th);
+            } finally {
+                this.lock.pop();
             }
-        } catch (MixinTransformerError er) {
-            throw er;
-        } catch (Throwable th) {
-            this.dumpClassOnFailure(name, targetClassNode, environment);
-            throw new MixinTransformerError("An unexpected critical error was encountered", th);
         } finally {
-            this.lock.pop();
             mixinTimer.end();
         }
         return transformed;
@@ -405,25 +391,8 @@ class MixinProcessor {
         if (name == null || this.errorState) {
             return false;
         }
-
-        boolean locked = this.lock.push().check();
-
-        if (locked) {
-            for (MixinConfig config : this.pendingConfigs) {
-                if (config.hasPendingMixinsFor(name)) {
-                    ReEntrantTransformerError error = new ReEntrantTransformerError("Re-entrance error.");
-                    MixinProcessor.logger.warn("Re-entrance detected during prepare phase, this will cause serious problems.", error);
-                    throw error;
-                }
-            }
-        } else {
-            try {
-                this.checkSelect(environment);
-            } catch (Exception ex) {
-                this.lock.pop();
-                throw new MixinException(ex);
-            }
-        }
+        
+        lockAndSelect(environment, name);
 
         try {
             if (this.coprocessors.processingCouldTransform(name)) {
@@ -448,6 +417,29 @@ class MixinProcessor {
         } finally {
             this.lock.pop();
         }
+    }
+    
+    private boolean lockAndSelect(MixinEnvironment environment, String name) {
+        boolean locked = this.lock.push().check();
+
+        if (locked) {
+            for (MixinConfig config : this.pendingConfigs) {
+                if (config.hasPendingMixinsFor(name)) {
+                    ReEntrantTransformerError error = new ReEntrantTransformerError("Re-entrance error.");
+                    MixinProcessor.logger.warn("Re-entrance detected during prepare phase, this will cause serious problems.", error);
+                    throw error;
+                }
+            }
+        } else {
+            try {
+                this.checkSelect(environment);
+            } catch (Exception ex) {
+                this.lock.pop();
+                throw new MixinException(ex);
+            }
+        }
+        
+        return locked;
     }
 
     private String getInvalidClassError(String name, ClassNode targetClassNode, MixinConfig ownedByConfig) {
