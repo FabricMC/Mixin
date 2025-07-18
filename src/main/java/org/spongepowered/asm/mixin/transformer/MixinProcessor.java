@@ -412,7 +412,7 @@ class MixinProcessor {
         }, mixinTimer::end, environment, name);
     }
 
-    synchronized boolean couldTransformClass(MixinEnvironment environment, String name) {
+    synchronized boolean couldTransformClass(MixinEnvironment environment, String name, byte[] classBytes) {
         if (environment != MixinEnvironment.getCurrentEnvironment()) {
             throw new MixinException("Current environment must match the supplied environment");
         }
@@ -422,7 +422,7 @@ class MixinProcessor {
         }
         
         return ensureLock(locked -> {
-            if (this.coprocessors.processingCouldTransform(name)) {
+            if (this.coprocessors.processingCouldTransform(name, classBytes)) {
                 return true;
             }
 

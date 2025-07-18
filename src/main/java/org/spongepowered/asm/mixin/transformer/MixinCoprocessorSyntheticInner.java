@@ -69,7 +69,7 @@ class MixinCoprocessorSyntheticInner extends MixinCoprocessor {
     }
 
     @Override
-    public boolean couldTransform(String className) {
+    public boolean couldTransform(String className, byte[] classBytes) {
         return this.syntheticInnerClasses.contains(className);
     }
 

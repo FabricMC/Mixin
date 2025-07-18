@@ -107,9 +107,10 @@ public interface IMixinTransformer {
      * 
      * @param environment Current environment
      * @param name Class transformed name
+     * @param classBytes The untransformed bytes of the class; may be {@code null}
      * @return true if the class could be transformed
      */
-    public abstract boolean couldTransformClass(MixinEnvironment environment, String name);
+    public abstract boolean couldTransformClass(MixinEnvironment environment, String name, byte[] classBytes);
     
     /**
      * Generate the specified mixin-synthetic class

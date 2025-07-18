@@ -162,11 +162,12 @@ abstract class MixinCoprocessor implements IListener {
      * Determine ahead-of-time whether a given class could be transformed ({@link ProcessResult#TRANSFORMED},
      * {@link ProcessResult#PASSTHROUGH_TRANSFORMED}, or modification in
      * {@link MixinCoprocessor#postProcess(String, ClassNode)}) by processing by this coprocessor.
-     * 
-     * @param className Name of the target class
+     *
+     * @param className  Name of the target class
+     * @param classBytes The untransformed bytes of the class; may be {@code null}
      * @return true if the coprocessor might transform the class when processed
      */
-    public boolean couldTransform(String className) {
+    public boolean couldTransform(String className, byte[] classBytes) {
         if (willLogUnimplementedCouldTransform) {
             willLogUnimplementedCouldTransform = false;
             logger.error("MixinCoprocessor {} ({}) does not implement processingCouldTransform, which may lead to unnecessary transformation", getName(), getClass().getName());
