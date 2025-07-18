@@ -311,7 +311,7 @@ class MixinProcessor {
                     }
                     continue;
                 }
-            }
+            }                
 
             if (packageOwnedByConfig != null) {
                 // AMS - Temp passthrough for injection points and dynamic selectors. Moving to service in 0.9
