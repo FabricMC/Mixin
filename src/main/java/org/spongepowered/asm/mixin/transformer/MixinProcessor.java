@@ -275,110 +275,113 @@ class MixinProcessor {
         }
         
         Section mixinTimer = this.profiler.begin("mixin");
-
-        boolean locked = lockAndSelect(environment, name);
-        
-        boolean transformed = false;
+        boolean locked;
         
         try {
-            try {
-                ProcessResult result = this.coprocessors.process(name, targetClassNode);
-                transformed |= result.isTransformed();
+            locked = lockAndSelect(environment, name);
+        } catch (Throwable th) {
+            mixinTimer.end();
+            throw th;
+        }
+        
+        boolean transformed = false;
 
-                if (result.isPassthrough()) {
-                    for (MixinCoprocessor coprocessor : this.coprocessors) {
-                        transformed |= coprocessor.postProcess(name, targetClassNode);
+        try {
+            ProcessResult result = this.coprocessors.process(name, targetClassNode);
+            transformed |= result.isTransformed();
+
+            if (result.isPassthrough()) {
+                for (MixinCoprocessor coprocessor : this.coprocessors) {
+                    transformed |= coprocessor.postProcess(name, targetClassNode);
+                }
+                if (this.auditTrail != null) {
+                    this.auditTrail.onPostProcess(name);
+                }
+                this.extensions.export(environment, name, false, targetClassNode);
+                return transformed;
+            }
+
+            MixinConfig packageOwnedByConfig = null;
+
+            for (MixinConfig config : this.configs) {
+                if (config.packageMatch(name)) {
+                    int packageLen = packageOwnedByConfig != null ? packageOwnedByConfig.getMixinPackage().length() : 0;
+                    if (config.getMixinPackage().length() > packageLen) {
+                        packageOwnedByConfig = config;
                     }
-                    if (this.auditTrail != null) {
-                        this.auditTrail.onPostProcess(name);
-                    }
-                    this.extensions.export(environment, name, false, targetClassNode);
+                    continue;
+                }
+            }
+
+            if (packageOwnedByConfig != null) {
+                // AMS - Temp passthrough for injection points and dynamic selectors. Moving to service in 0.9
+                ClassInfo targetInfo = ClassInfo.fromClassNode(targetClassNode);
+                if (targetInfo.hasSuperClass(InjectionPoint.class) || targetInfo.hasSuperClass(ITargetSelectorDynamic.class)) {
                     return transformed;
                 }
 
-                MixinConfig packageOwnedByConfig = null;
-
-                for (MixinConfig config : this.configs) {
-                    if (config.packageMatch(name)) {
-                        int packageLen = packageOwnedByConfig != null ? packageOwnedByConfig.getMixinPackage().length() : 0;
-                        if (config.getMixinPackage().length() > packageLen) {
-                            packageOwnedByConfig = config;
-                        }
-                        continue;
-                    }
-                }
-
-                if (packageOwnedByConfig != null) {
-                    // AMS - Temp passthrough for injection points and dynamic selectors. Moving to service in 0.9
-                    ClassInfo targetInfo = ClassInfo.fromClassNode(targetClassNode);
-                    if (targetInfo.hasSuperClass(InjectionPoint.class) || targetInfo.hasSuperClass(ITargetSelectorDynamic.class)) {
-                        return transformed;
-                    }
-
-                    throw new IllegalClassLoadError(this.getInvalidClassError(name, targetClassNode, packageOwnedByConfig));
-                }
-
-                SortedSet<MixinInfo> mixins = null;
-                for (MixinConfig config : this.configs) {
-                    if (config.hasMixinsFor(name)) {
-                        if (mixins == null) {
-                            mixins = new TreeSet<MixinInfo>();
-                        }
-
-                        // Get and sort mixins for the class
-                        mixins.addAll(config.getMixinsFor(name));
-                    }
-                }
-
-                if (mixins != null) {
-                    // Re-entrance is "safe" as long as we don't need to apply any mixins, if there are mixins then we need to panic now
-                    if (locked) {
-                        ReEntrantTransformerError error = new ReEntrantTransformerError("Re-entrance error.");
-                        MixinProcessor.logger.warn("Re-entrance detected, this will cause serious problems.", error);
-                        throw error;
-                    }
-
-                    if (this.hotSwapper != null) {
-                        this.hotSwapper.registerTargetClass(name, targetClassNode);
-                    }
-
-                    try {
-                        TargetClassContext context = new TargetClassContext(environment, this.extensions, this.sessionId, name, targetClassNode, mixins);
-                        context.applyMixins();
-
-                        transformed |= this.coprocessors.postProcess(name, targetClassNode);
-
-                        if (context.isExported()) {
-                            this.extensions.export(environment, context.getClassName(), context.isExportForced(), context.getClassNode());
-                        }
-
-                        for (InvalidMixinException suppressed : context.getSuppressedExceptions()) {
-                            this.handleMixinApplyError(context.getClassName(), suppressed, environment);
-                        }
-
-                        this.transformedCount++;
-                        transformed = true;
-                    } catch (InvalidMixinException th) {
-                        this.dumpClassOnFailure(name, targetClassNode, environment);
-                        this.handleMixinApplyError(name, th, environment);
-                    }
-                } else {
-                    // No mixins, but still need to run postProcess stage of coprocessors
-                    if (this.coprocessors.postProcess(name, targetClassNode)) {
-                        transformed = true;
-                        this.extensions.export(environment, name, false, targetClassNode);
-                    }
-                }
-            } catch (MixinTransformerError er) {
-                throw er;
-            } catch (Throwable th) {
-                this.dumpClassOnFailure(name, targetClassNode, environment);
-                throw new MixinTransformerError("An unexpected critical error was encountered", th);
-            } finally {
-                this.lock.pop();
+                throw new IllegalClassLoadError(this.getInvalidClassError(name, targetClassNode, packageOwnedByConfig));
             }
+
+            SortedSet<MixinInfo> mixins = null;
+            for (MixinConfig config : this.configs) {
+                if (config.hasMixinsFor(name)) {
+                    if (mixins == null) {
+                        mixins = new TreeSet<MixinInfo>();
+                    }
+
+                    // Get and sort mixins for the class
+                    mixins.addAll(config.getMixinsFor(name));
+                }
+            }
+
+            if (mixins != null) {
+                // Re-entrance is "safe" as long as we don't need to apply any mixins, if there are mixins then we need to panic now
+                if (locked) {
+                    ReEntrantTransformerError error = new ReEntrantTransformerError("Re-entrance error.");
+                    MixinProcessor.logger.warn("Re-entrance detected, this will cause serious problems.", error);
+                    throw error;
+                }
+
+                if (this.hotSwapper != null) {
+                    this.hotSwapper.registerTargetClass(name, targetClassNode);
+                }
+
+                try {
+                    TargetClassContext context = new TargetClassContext(environment, this.extensions, this.sessionId, name, targetClassNode, mixins);
+                    context.applyMixins();
+
+                    transformed |= this.coprocessors.postProcess(name, targetClassNode);
+
+                    if (context.isExported()) {
+                        this.extensions.export(environment, context.getClassName(), context.isExportForced(), context.getClassNode());
+                    }
+
+                    for (InvalidMixinException suppressed : context.getSuppressedExceptions()) {
+                        this.handleMixinApplyError(context.getClassName(), suppressed, environment);
+                    }
+
+                    this.transformedCount++;
+                    transformed = true;
+                } catch (InvalidMixinException th) {
+                    this.dumpClassOnFailure(name, targetClassNode, environment);
+                    this.handleMixinApplyError(name, th, environment);
+                }
+            } else {
+                // No mixins, but still need to run postProcess stage of coprocessors
+                if (this.coprocessors.postProcess(name, targetClassNode)) {
+                    transformed = true;
+                    this.extensions.export(environment, name, false, targetClassNode);
+                }
+            }
+        } catch (MixinTransformerError er) {
+            throw er;
+        } catch (Throwable th) {
+            this.dumpClassOnFailure(name, targetClassNode, environment);
+            throw new MixinTransformerError("An unexpected critical error was encountered", th);
         } finally {
             mixinTimer.end();
+            this.lock.pop();
         }
         return transformed;
     }
