@@ -127,7 +127,7 @@ class MixinCoprocessorAccessor extends MixinCoprocessor {
     }
 
     @Override
-    public boolean couldTransform(String className, byte[] classBytes) {
+    public boolean couldTransform(String className) {
         return MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.METHODS_IN_INTERFACES) && this.accessorMixins.containsKey(className);
     }
 

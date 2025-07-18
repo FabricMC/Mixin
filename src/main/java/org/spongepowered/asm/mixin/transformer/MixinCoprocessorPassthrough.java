@@ -65,7 +65,7 @@ class MixinCoprocessorPassthrough extends MixinCoprocessor {
     }
 
     @Override
-    public boolean couldTransform(String className, byte[] classBytes) {
+    public boolean couldTransform(String className) {
         return false;
     }
 }

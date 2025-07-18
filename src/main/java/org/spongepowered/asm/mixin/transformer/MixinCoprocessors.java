@@ -71,12 +71,11 @@ class MixinCoprocessors extends ArrayList<MixinCoprocessor> {
      * Determine ahead-of-time whether a given class could be transformed by any registered coprocessor.
      * 
      * @param className Name of the target class
-     * @param classBytes The untransformed bytes of the class; may be {@code null}
      * @return true if the coprocessors might transform the class when processed
      */
-    public boolean processingCouldTransform(String className, byte[] classBytes) {
+    public boolean processingCouldTransform(String className) {
         for (MixinCoprocessor coprocessor : this) {
-            if (coprocessor.couldTransform(className, classBytes)) {
+            if (coprocessor.couldTransform(className)) {
                 return true;
             }
         }
