@@ -285,11 +285,11 @@ class MixinProcessor {
         }
         
         boolean transformed = false;
-
+        
         try {
             ProcessResult result = this.coprocessors.process(name, targetClassNode);
             transformed |= result.isTransformed();
-
+            
             if (result.isPassthrough()) {
                 for (MixinCoprocessor coprocessor : this.coprocessors) {
                     transformed |= coprocessor.postProcess(name, targetClassNode);
@@ -302,7 +302,7 @@ class MixinProcessor {
             }
 
             MixinConfig packageOwnedByConfig = null;
-
+            
             for (MixinConfig config : this.configs) {
                 if (config.packageMatch(name)) {
                     int packageLen = packageOwnedByConfig != null ? packageOwnedByConfig.getMixinPackage().length() : 0;
@@ -319,7 +319,7 @@ class MixinProcessor {
                 if (targetInfo.hasSuperClass(InjectionPoint.class) || targetInfo.hasSuperClass(ITargetSelectorDynamic.class)) {
                     return transformed;
                 }
-
+                
                 throw new IllegalClassLoadError(this.getInvalidClassError(name, targetClassNode, packageOwnedByConfig));
             }
 
@@ -329,12 +329,12 @@ class MixinProcessor {
                     if (mixins == null) {
                         mixins = new TreeSet<MixinInfo>();
                     }
-
+                    
                     // Get and sort mixins for the class
                     mixins.addAll(config.getMixinsFor(name));
                 }
             }
-
+            
             if (mixins != null) {
                 // Re-entrance is "safe" as long as we don't need to apply any mixins, if there are mixins then we need to panic now
                 if (locked) {
@@ -350,13 +350,13 @@ class MixinProcessor {
                 try {
                     TargetClassContext context = new TargetClassContext(environment, this.extensions, this.sessionId, name, targetClassNode, mixins);
                     context.applyMixins();
-
+                    
                     transformed |= this.coprocessors.postProcess(name, targetClassNode);
 
                     if (context.isExported()) {
                         this.extensions.export(environment, context.getClassName(), context.isExportForced(), context.getClassNode());
                     }
-
+                    
                     for (InvalidMixinException suppressed : context.getSuppressedExceptions()) {
                         this.handleMixinApplyError(context.getClassName(), suppressed, environment);
                     }
@@ -380,8 +380,8 @@ class MixinProcessor {
             this.dumpClassOnFailure(name, targetClassNode, environment);
             throw new MixinTransformerError("An unexpected critical error was encountered", th);
         } finally {
-            mixinTimer.end();
             this.lock.pop();
+            mixinTimer.end();
         }
         return transformed;
     }
