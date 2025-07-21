@@ -169,7 +169,7 @@ abstract class MixinCoprocessor implements IListener {
     public boolean couldTransform(String className) {
         if (willLogUnimplementedCouldTransform) {
             willLogUnimplementedCouldTransform = false;
-            logger.error("MixinCoprocessor {} ({}) does not implement processingCouldTransform, which may lead to unnecessary transformation", getName(), getClass().getName());
+            logger.error("MixinCoprocessor {} ({}) does not implement couldTransform, which may lead to unnecessary transformation", getName(), getClass().getName());
         }
         return true;
     } 
