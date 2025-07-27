@@ -625,11 +625,10 @@ public final class MixinEnvironment implements ITokenProvider {
                     ? System.getProperty(this.property, this.defaultValue) : this.defaultValue;
         }
 
-        @SuppressWarnings("unchecked")
         <E extends Enum<E>> E getEnumValue(E defaultValue) {
             String value = System.getProperty(this.property, defaultValue.name());
             try {
-                return (E)Enum.valueOf(defaultValue.getDeclaringClass(), value.toUpperCase(Locale.ROOT));
+                return Enum.valueOf(defaultValue.getDeclaringClass(), value.toUpperCase(Locale.ROOT));
             } catch (IllegalArgumentException ex) {
                 return defaultValue;
             }
