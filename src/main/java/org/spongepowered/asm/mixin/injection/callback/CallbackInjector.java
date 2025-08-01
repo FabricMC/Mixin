@@ -216,8 +216,10 @@ public class CallbackInjector extends Injector {
 
             this.invoke.add().add(handlerArgs);
 
-            //If the handler doesn't captureArgs, the CallbackInfo(Returnable) will be the first LVT slot, otherwise it will be at the target's frameSize
-            int callbackInfoSlot = handlerArgs.length == 1 ? Bytecode.isStatic(handler) ? 0 : 1 : frameSize;
+            //If the handler doesn't captureArgs, the CallbackInfo(Returnable) will be the first LVT slot, otherwise
+            //If the handler is static, and the target is not, then CallbackInfo(Returnable) will be one less than the target's frameSize
+            //Else it will be at the target's frameSize
+            int callbackInfoSlot = handlerArgs.length == 1 ? Bytecode.isStatic(handler) ? 0 : 1 : Bytecode.isStatic(handler) && !target.isStatic ? (frameSize - 1) : frameSize;
             boolean seenCallbackInfoUse = false;
             for (AbstractInsnNode insn : handler.instructions) {
                 //Look for anywhere the CallbackInfo(Returnable) is loaded in the handler, it's unused if it is never loaded in
