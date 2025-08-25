@@ -343,6 +343,7 @@ project.sourceSets.each { set -> {
 
 compileModularityJava {
     inputs.files(modularityInputs)
+    options.javaModuleVersion = project.version as String
     doFirst {
         options.compilerArgs = [
             '--module-path', classpath.asPath,
