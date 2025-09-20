@@ -24,7 +24,6 @@
  */
 package org.spongepowered.asm.mixin.transformer;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
@@ -1389,8 +1388,8 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
      * @return new Config
      */
     static Config create(String configFile, MixinEnvironment outer, IMixinConfigSource source) {
-        IMixinService service = MixinService.getService();
         try {
+            IMixinService service = MixinService.getService();
             InputStream resource = service.getResourceAsStream(configFile);
             if (resource == null) {
                 throw new IllegalArgumentException(String.format("The specified resource '%s' was invalid or could not be read", configFile));
