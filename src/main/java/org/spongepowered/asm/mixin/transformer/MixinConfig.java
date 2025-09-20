@@ -1391,20 +1391,33 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
     static Config create(String configFile, MixinEnvironment outer, IMixinConfigSource source) {
         try {
             IMixinService service = MixinService.getService();
+            boolean closed = false;
             InputStream resource = service.getResourceAsStream(configFile);
             if (resource == null) {
                 throw new IllegalArgumentException(String.format("The specified resource '%s' was invalid or could not be read", configFile));
             }
             try {
-                MixinConfig config = new Gson().fromJson(new InputStreamReader(resource), MixinConfig.class);
-                if (config.onLoad(service, configFile, outer, source)) {
-                    return config.getHandle();
+                InputStreamReader reader = new InputStreamReader(resource);
+                try {
+                    MixinConfig config = new Gson().fromJson(reader, MixinConfig.class);
+                    if (config.onLoad(service, configFile, outer, source)) {
+                        return config.getHandle();
+                    }
+                } finally {
+                    try {
+                        reader.close();
+                    } catch (IOException ex) {
+                        service.getLogger("mixin").warn("Failed to close resource stream: {} {}", configFile, ex);
+                    }
+                    closed = true;
                 }
             } finally {
-                try {
-                    resource.close();
-                } catch (IOException ex) {
-                    service.getLogger("mixin").warn("Failed to close resource stream: {} {}", configFile, ex);
+                if (!closed) {
+                    try {
+                        resource.close();
+                    } catch (IOException ex) {
+                        service.getLogger("mixin").warn("Failed to close resource stream: {} {}", configFile, ex);
+                    }
                 }
             }
             return null;
