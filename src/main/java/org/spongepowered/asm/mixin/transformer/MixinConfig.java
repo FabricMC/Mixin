@@ -24,6 +24,7 @@
  */
 package org.spongepowered.asm.mixin.transformer;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
@@ -1394,9 +1395,17 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
             if (resource == null) {
                 throw new IllegalArgumentException(String.format("The specified resource '%s' was invalid or could not be read", configFile));
             }
-            MixinConfig config = new Gson().fromJson(new InputStreamReader(resource), MixinConfig.class);
-            if (config.onLoad(service, configFile, outer, source)) {
-                return config.getHandle();
+            try {
+                MixinConfig config = new Gson().fromJson(new InputStreamReader(resource), MixinConfig.class);
+                if (config.onLoad(service, configFile, outer, source)) {
+                    return config.getHandle();
+                }
+            } finally {
+                try {
+                    resource.close();
+                } catch (IOException ex) {
+                    service.getLogger("mixin").warn("Failed to close resource stream: {} {}", configFile, ex);
+                }
             }
             return null;
         } catch (IllegalArgumentException ex) {
