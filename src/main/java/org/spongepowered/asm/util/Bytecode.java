@@ -41,6 +41,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import org.objectweb.asm.util.CheckClassAdapter;
+import org.objectweb.asm.util.Printer;
 import org.objectweb.asm.util.TraceClassVisitor;
 import org.spongepowered.asm.util.asm.ASM;
 import org.spongepowered.asm.util.asm.MarkerNode;
@@ -464,7 +465,7 @@ public final class Bytecode {
         } else if (node instanceof InvokeDynamicInsnNode) {
             InvokeDynamicInsnNode idc = (InvokeDynamicInsnNode)node;
             out += String.format("[%s] %s%s { %s %s::%s%s }", Bytecode.getOpcodeName(node), idc.name, idc.desc,
-                    Bytecode.getOpcodeName(idc.bsm.getTag(), "H_GETFIELD", 1), idc.bsm.getOwner(), idc.bsm.getName(), idc.bsm.getDesc());
+                    Bytecode.getOpcodeName(idc.bsm.getTag(), Printer.HANDLE_TAG), idc.bsm.getOwner(), idc.bsm.getName(), idc.bsm.getDesc());
         } else if (node instanceof LineNumberNode) {
             LineNumberNode ln = (LineNumberNode)node;
             out += String.format("LINE=[%d] LABEL=[%s]", ln.line, ln.start.getLabel());
@@ -473,7 +474,7 @@ public final class Bytecode {
         } else if (node instanceof IntInsnNode) {
             out += (((IntInsnNode)node).operand);
         } else if (node instanceof FrameNode) {
-            out += String.format("[%s] ", Bytecode.getOpcodeName(((FrameNode)node).type, "H_INVOKEINTERFACE", -1));
+            out += String.format("[%s] ", getFrameTypeName((FrameNode) node));
         } else if (node instanceof TypeInsnNode) {
             out += String.format("[%s] %s", Bytecode.getOpcodeName(node), ((TypeInsnNode)node).desc);
         } else {
@@ -483,53 +484,56 @@ public final class Bytecode {
     }
     
     /**
-     * Uses reflection to find an approximate constant name match for the
-     * supplied node's opcode
+     * Finds a constant name match for the supplied node's opcode
      * 
      * @param node Node to query for opcode
-     * @return Approximate opcode name (approximate because some constants in
-     *      the {@link Opcodes} class have the same value as opcodes
+     * @return opcode name
      */
     public static String getOpcodeName(AbstractInsnNode node) {
         return node != null ? Bytecode.getOpcodeName(node.getOpcode()) : "";
     }
 
     /**
-     * Uses reflection to find an approximate constant name match for the
-     * supplied opcode
+     * Finds a constant name match for the supplied node's opcode
      * 
      * @param opcode Opcode to look up
-     * @return Approximate opcode name (approximate because some constants in
-     *      the {@link Opcodes} class have the same value as opcodes
+     * @return opcode name
      */
     public static String getOpcodeName(int opcode) {
-        return Bytecode.getOpcodeName(opcode, "UNINITIALIZED_THIS", 1);
+        return Bytecode.getOpcodeName(opcode, Printer.OPCODES);
     }
 
-    private static String getOpcodeName(int opcode, String start, int min) {
-        if (opcode >= min) {
-            boolean found = false;
-            
-            try {
-                for (java.lang.reflect.Field f : Opcodes.class.getDeclaredFields()) {
-                    if (!found && !f.getName().equals(start)) {
-                        continue;
-                    }
-                    found = true;
-                    if (f.getType() == Integer.TYPE && f.getInt(null) == opcode) {
-                        return f.getName();
-                    }
-                }
-            } catch (Exception ex) {
-                // derp
-            }
-        }        
-        
-        return opcode >= 0 ? String.valueOf(opcode) : "UNKNOWN";
+    private static String getOpcodeName(int opcode, String[] names) {
+        if (opcode < 0) {
+            return "UNKNOWN";
+        }
+        if (opcode < names.length) {
+            return names[opcode];
+        }
+        return String.valueOf(opcode);
+    }
+
+    private static String getFrameTypeName(FrameNode node) {
+        switch (node.type) {
+            case Opcodes.F_NEW:
+                return "F_NEW";
+            case Opcodes.F_FULL:
+                return "F_FULL";
+            case Opcodes.F_APPEND:
+                return "F_APPEND";
+            case Opcodes.F_CHOP:
+                return "F_CHOP";
+            case Opcodes.F_SAME:
+                return "F_SAME";
+            case Opcodes.F_SAME1:
+                return "F_SAME1";
+            default:
+                return "UNKNOWN";
+        }
     }
     
     /**
-     * Uses reflection to find a matching constant in the {@link Opcodes}
+     * Finds a matching constant in the {@link Opcodes}
      * interface for the specified opcode name. Supported formats are raw
      * numeric values, bare constant names (eg. <tt>ACONST_NULL</tt>) or
      * qualified names (eg. <tt>Opcodes.ACONST_NULL</tt>). Returns the value if
@@ -556,24 +560,14 @@ public final class Bytecode {
             return -1;
         }
         
-        return Bytecode.parseOpcodeName(opcodeName, "UNINITIALIZED_THIS", 1);
+        return Bytecode.parseOpcodeName(opcodeName, Printer.OPCODES);
     }
 
-    private static int parseOpcodeName(String opcodeName, String start, int min) {
-        boolean found = false;
-        
-        try {
-            for (java.lang.reflect.Field f : Opcodes.class.getDeclaredFields()) {
-                if (!found && !f.getName().equals(start)) {
-                    continue;
-                }
-                found = true;
-                if (f.getType() == Integer.TYPE && f.getName().equalsIgnoreCase(opcodeName)) {
-                    return f.getInt(null);
-                }
+    private static int parseOpcodeName(String name, String[] names) {
+        for (int i = 0; i < names.length; i++) {
+            if (name.equalsIgnoreCase(names[i])) {
+                return i;
             }
-        } catch (Exception ex) {
-            // well this is embarrassing
         }
         
         return -1;
