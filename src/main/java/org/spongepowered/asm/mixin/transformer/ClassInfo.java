@@ -2078,7 +2078,7 @@ public final class ClassInfo {
         className = className.replace('.', '/');
 
         ClassInfo info = ClassInfo.cache.get(className);
-        if (info == null) {
+        if (!ClassInfo.cache.containsKey(className)) {
             try {
                 if (className.startsWith("java/")) { // this would ideally check the platform class loader for other jdk classes, but needs extra api to do so
                     info = new ClassInfo(Class.forName(className.replace('/', '.'), false, ClassInfo.class.getClassLoader()));
