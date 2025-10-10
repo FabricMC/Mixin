@@ -544,7 +544,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
             }
         }
         
-        if (Bytecode.isVirtual(method)) {
+        if (this.getEnvironment().getOption(Option.DEBUG_VERIFY) && Bytecode.isVirtual(method)) {
             Method superMethod = this.targetClassInfo.findMethodInHierarchy(method, SearchType.SUPER_CLASSES_ONLY, Traversal.ALL, 0);
             if (superMethod != null && superMethod.isFinal()) {
                 throw new InvalidMixinException(this.mixin, String.format("%s%s in %s overrides a final method from %s",
