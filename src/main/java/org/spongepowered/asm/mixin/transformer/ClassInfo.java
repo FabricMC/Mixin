@@ -2290,4 +2290,13 @@ public final class ClassInfo {
         return type1;
     }
 
+    public static boolean isMixin(String className) {
+        ClassInfo cachedInfo = ClassInfo.fromCache(className);
+        if (cachedInfo == null) {
+            // Mixin infos are forcefully cached, so this isn't one
+            return false;
+        }
+        return cachedInfo.isMixin();
+    }
+
 }

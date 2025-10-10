@@ -638,8 +638,8 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
                 fieldRef.setName(field.getName());
             }
         } else {
-            ClassInfo fieldOwner = ClassInfo.forName(fieldRef.getOwner());
-            if (fieldOwner.isMixin()) {
+            if (ClassInfo.isMixin(fieldRef.getOwner())) {
+                ClassInfo fieldOwner = ClassInfo.forName(fieldRef.getOwner());
                 ClassInfo actualOwner = this.targetClassInfo.findCorrespondingType(fieldOwner);
                 fieldRef.setOwner(actualOwner != null ? actualOwner.getName() : this.getTarget().getClassRef());
             }
@@ -1011,11 +1011,8 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
             descriptorActivity.end();
             return desc;
         }
-        ClassInfo typeInfo = ClassInfo.forName(type);
-        if (typeInfo == null) {
-            throw new ClassMetadataNotFoundException(type.replace('/', '.'));
-        }
-        if (!typeInfo.isMixin() || typeInfo.isLoadable()) {
+        ClassInfo typeInfo;
+        if (!ClassInfo.isMixin(type) || (typeInfo = ClassInfo.forName(type)).isLoadable()) {
             descriptorActivity.end();
             return desc;
         }

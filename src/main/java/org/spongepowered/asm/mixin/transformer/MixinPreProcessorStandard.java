@@ -783,6 +783,10 @@ class MixinPreProcessorStandard {
     }
 
     protected void transformMemberReference(MemberRef ref) {
+        if (!ClassInfo.isMixin(ref.getOwner())) {
+            // No need to transform anything
+            return;
+        }
         IActivity activity = this.activities.begin("%s::%s:%s", ref.getOwner(), ref.getName(), ref.getDesc());
         Section metaTimer = this.profiler.begin("meta");
 

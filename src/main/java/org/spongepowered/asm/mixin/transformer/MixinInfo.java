@@ -426,9 +426,9 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
          */
         void readInnerClasses() {
             for (InnerClassNode inner : this.validationClassNode.innerClasses) {
-                ClassInfo innerClass = ClassInfo.forName(inner.name);
                 if ((inner.outerName != null && inner.outerName.equals(this.classInfo.getName()))
                         || inner.name.startsWith(this.validationClassNode.name + "$")) {
+                    ClassInfo innerClass = ClassInfo.forName(inner.name);
                     if (innerClass.isProbablyStatic() && innerClass.isSynthetic()) {
                         this.syntheticInnerClasses.add(inner.name);
                     } else if (!innerClass.isMixin()) {
