@@ -162,14 +162,21 @@ public class LocalVariableDiscriminator {
                     return lvt;
                 }
             }
-            
+
+            // Fallback: try to get parameter names from the method's local variable table
+            String[] paramNames = this.getParameterNames(target);
+
             Local[] lvt = new Local[this.baseArgIndex + Bytecode.getArgsSize(target.arguments)];
             if (!this.isStatic) {
                 lvt[0] = new Local("this", Type.getObjectType(target.classNode.name));
             }
             for (int local = this.baseArgIndex, arg = 0; local < lvt.length; local++) {
-                Type argType = target.arguments[arg++];
-                lvt[local] = new Local("arg" + local, argType);
+                Type argType = target.arguments[arg];
+                String paramName = paramNames != null && arg < paramNames.length && paramNames[arg] != null
+                    ? paramNames[arg]
+                    : "arg" + local;
+                lvt[local] = new Local(paramName, argType);
+                arg++;
                 if (argType.getSize() == 2) {
                     lvt[++local] = null;
                 }
@@ -187,6 +194,57 @@ public class LocalVariableDiscriminator {
                     this.locals[l].setOrdinal(ordinal.intValue());
                 }
             }
+        }
+
+        /**
+         * Attempts to extract parameter names from the target method's local variable table.
+         * This is used as a fallback when detailed LVT information is not available at a specific
+         * instruction, but we still want to use actual parameter names instead of generic "arg" names.
+         *
+         * @param target the injection target containing the method
+         * @return an array of parameter names, or null if no names are available
+         */
+        private String[] getParameterNames(Target target) {
+            // Try to get parameter names from the local variable table
+            if (target.method.localVariables != null && !target.method.localVariables.isEmpty()) {
+                String[] paramNames = new String[target.arguments.length];
+                int paramIndex = 0;
+                int localIndex = this.baseArgIndex;
+
+                // Iterate through parameters and find matching local variables
+                for (int arg = 0; arg < target.arguments.length && paramIndex < paramNames.length; arg++) {
+                    Type argType = target.arguments[arg];
+
+                    // Find the local variable at this index
+                    for (LocalVariableNode lvNode : target.method.localVariables) {
+                        if (lvNode.index == localIndex) {
+                            paramNames[paramIndex] = lvNode.name;
+                            break;
+                        }
+                    }
+
+                    paramIndex++;
+                    localIndex += argType.getSize();
+                }
+
+                // Check if we found at least some parameter names
+                for (String name : paramNames) {
+                    if (name != null) {
+                        return paramNames;
+                    }
+                }
+            }
+
+            // Try to get parameter names from the parameters field (Java 8+)
+            if (target.method.parameters != null && !target.method.parameters.isEmpty()) {
+                String[] paramNames = new String[Math.min(target.arguments.length, target.method.parameters.size())];
+                for (int i = 0; i < paramNames.length; i++) {
+                    paramNames[i] = target.method.parameters.get(i).name;
+                }
+                return paramNames;
+            }
+
+            return null;
         }
         
         public int getCandidateCount() {
