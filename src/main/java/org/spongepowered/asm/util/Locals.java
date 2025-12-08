@@ -271,6 +271,75 @@ public final class Locals {
     }
 
     /**
+     * Constructs the initial local variable frame for a method, containing only "this" (if non-static)
+     * and the method parameters with their actual names extracted from the LVT when available.
+     *
+     * @param method the method to construct locals for
+     * @param classNode the class containing the method
+     * @param fabricCompatibility the compatibility level to use
+     * @return an array of LocalVariableNodes representing the initial method frame
+     */
+    public static LocalVariableNode[] getInitialMethodLocals(MethodNode method, ClassNode classNode, int fabricCompatibility) {
+        boolean isStatic = (method.access & Opcodes.ACC_STATIC) != 0;
+        Type[] argTypes = Type.getArgumentTypes(method.desc);
+        int baseArgIndex = isStatic ? 0 : 1;
+        int frameSize = baseArgIndex + getArgsSize(argTypes);
+        LocalVariableNode[] frame = new LocalVariableNode[frameSize];
+
+        int local = 0;
+        int index = 0;
+
+        // Try to extract parameter names from LVT if compatibility level is high enough
+        String[] paramNames = null;
+        String thisName = "this";
+        if (fabricCompatibility >= org.spongepowered.asm.mixin.FabricUtil.COMPATIBILITY_0_17_0) {
+            paramNames = getParameterNames(method, isStatic);
+
+            // Try to fetch "this" parameter name from LVT if available (for non-static methods)
+            if (!isStatic && method.localVariables != null && !method.localVariables.isEmpty()) {
+                for (LocalVariableNode lvNode : method.localVariables) {
+                    if (lvNode.index == 0) {
+                        thisName = lvNode.name;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Initialise implicit "this" reference in non-static methods
+        if (!isStatic) {
+            frame[local++] = new LocalVariableNode(thisName, Type.getObjectType(classNode.name).toString(), null, null, null, 0);
+        }
+
+        // Initialise method arguments
+        for (int arg = 0; arg < argTypes.length; arg++) {
+            Type argType = argTypes[arg];
+            String paramName = (paramNames != null && arg < paramNames.length && paramNames[arg] != null)
+                    ? paramNames[arg]
+                    : "arg" + index;
+            frame[local] = new LocalVariableNode(paramName, argType.toString(), null, null, null, local);
+            local += argType.getSize();
+            index++;
+        }
+
+        return frame;
+    }
+
+    /**
+     * Helper method to calculate the total size in local variable slots for an array of argument types.
+     *
+     * @param argTypes the argument types
+     * @return the total size in slots
+     */
+    private static int getArgsSize(Type[] argTypes) {
+        int size = 0;
+        for (Type argType : argTypes) {
+            size += argType.getSize();
+        }
+        return size;
+    }
+
+    /**
      * Attempts to extract parameter names from the method's local variable table.
      * This is used as a fallback when detailed LVT information is not available at a specific
      * instruction, but we still want to use actual parameter names instead of generic "arg" names.
@@ -461,49 +530,16 @@ public final class Locals {
         }
         List<FrameData> frames = methodInfo.getFrames();
 
+        // Initialize the frame with "this" and method parameters
+        LocalVariableNode[] initialLocals = getInitialMethodLocals(method, classNode, fabricCompatibility);
         LocalVariableNode[] frame = new LocalVariableNode[method.maxLocals];
-        int local = 0, index = 0;
-        boolean isStatic = (method.access & Opcodes.ACC_STATIC) != 0;
+        System.arraycopy(initialLocals, 0, frame, 0, initialLocals.length);
 
-        // Try to extract parameter names from LVT if compatibility level is high enough
-        String[] paramNames = null;
-        String thisName = "this";
-        if (fabricCompatibility >= org.spongepowered.asm.mixin.FabricUtil.COMPATIBILITY_0_17_0) {
-            paramNames = getParameterNames(method, isStatic);
-
-            // Try to fetch "this" parameter name from LVT if available (for non-static methods)
-            if (!isStatic && method.localVariables != null && !method.localVariables.isEmpty()) {
-                for (LocalVariableNode lvNode : method.localVariables) {
-                    if (lvNode.index == 0) {
-                        thisName = lvNode.name;
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Initialise implicit "this" reference in non-static methods
-        if (!isStatic) {
-            frame[local++] = new LocalVariableNode(thisName, Type.getObjectType(classNode.name).toString(), null, null, null, 0);
-        }
-
-        // Initialise method arguments
-        Type[] argTypes = Type.getArgumentTypes(method.desc);
-        for (int arg = 0; arg < argTypes.length; arg++) {
-            Type argType = argTypes[arg];
-            String paramName = (paramNames != null && arg < paramNames.length && paramNames[arg] != null)
-                    ? paramNames[arg]
-                    : "arg" + index;
-            frame[local] = new LocalVariableNode(paramName, argType.toString(), null, null, null, local);
-            local += argType.getSize();
-            index++;
-        }
-        
-        final int initialFrameSize = local;
-        int frameSize = local;
+        final int initialFrameSize = initialLocals.length;
+        int frameSize = initialFrameSize;
         int frameIndex = -1;
-        int lastFrameSize = local;
-        int knownFrameSize = local;
+        int lastFrameSize = initialFrameSize;
+        int knownFrameSize = initialFrameSize;
         VarInsnNode storeInsn = null;
 
         for (Iterator<AbstractInsnNode> iter = method.instructions.iterator(); iter.hasNext();) {
