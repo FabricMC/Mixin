@@ -308,16 +308,16 @@ public final class Locals {
 
         // Initialise implicit "this" reference in non-static methods
         if (!isStatic) {
-            frame[local++] = new LocalVariableNode(thisName, Type.getObjectType(classNode.name).toString(), null, null, null, 0);
+            frame[local++] = new LocalVariableNode(thisName, Type.getObjectType(classNode.name).getDescriptor(), null, null, null, 0);
         }
 
         // Initialise method arguments
         for (int arg = 0; arg < argTypes.length; arg++) {
             Type argType = argTypes[arg];
-            String paramName = (paramNames != null && arg < paramNames.length && paramNames[arg] != null)
+            String paramName = (paramNames != null && paramNames[arg] != null)
                     ? paramNames[arg]
                     : "arg" + index;
-            frame[local] = new LocalVariableNode(paramName, argType.toString(), null, null, null, local);
+            frame[local] = new LocalVariableNode(paramName, argType.getDescriptor(), null, null, null, local);
             local += argType.getSize();
             index++;
         }
@@ -346,52 +346,45 @@ public final class Locals {
      *
      * @param method the method to extract parameter names from
      * @param isStatic whether the method is static (affects the starting local index)
-     * @return an array of parameter names, or null if no names are available
+     * @return an array of parameter names, with null entries where names are unavailable
      */
     private static String[] getParameterNames(MethodNode method, boolean isStatic) {
         Type[] argTypes = Type.getArgumentTypes(method.desc);
         if (argTypes.length == 0) {
-            return null;
+            return new String[0];
         }
 
-        // Try to get parameter names from the local variable table
+        // Always allocate array for all parameters
+        String[] paramNames = new String[argTypes.length];
+
+        // Build map of local variable index to parameter index
+        Map<Integer, Integer> indexToParam = new HashMap<>();
+        int localIndex = isStatic ? 0 : 1; // Skip "this" for non-static methods
+        for (int arg = 0; arg < argTypes.length; arg++) {
+            indexToParam.put(localIndex, arg);
+            localIndex += argTypes[arg].getSize();
+        }
+
+        // Single pass through local variable table to extract names
         if (method.localVariables != null && !method.localVariables.isEmpty()) {
-            String[] paramNames = new String[argTypes.length];
-            int localIndex = isStatic ? 0 : 1; // Skip "this" for non-static methods
-
-            // Iterate through parameters and find matching local variables
-            for (int arg = 0; arg < argTypes.length; arg++) {
-                Type argType = argTypes[arg];
-
-                // Find the local variable at this index
-                for (LocalVariableNode lvNode : method.localVariables) {
-                    if (lvNode.index == localIndex) {
-                        paramNames[arg] = lvNode.name;
-                        break;
-                    }
-                }
-
-                localIndex += argType.getSize();
-            }
-
-            // Check if we found at least some parameter names
-            for (String name : paramNames) {
-                if (name != null) {
-                    return paramNames;
+            for (LocalVariableNode lvNode : method.localVariables) {
+                Integer paramIndex = indexToParam.get(lvNode.index);
+                if (paramIndex != null) {
+                    paramNames[paramIndex] = lvNode.name;
                 }
             }
         }
 
-        // Try to get parameter names from the parameters field (Java 8+)
+        // Merge in names from parameters field where LVT didn't provide them
         if (method.parameters != null && !method.parameters.isEmpty()) {
-            String[] paramNames = new String[Math.min(argTypes.length, method.parameters.size())];
-            for (int i = 0; i < paramNames.length; i++) {
-                paramNames[i] = method.parameters.get(i).name;
+            for (int i = 0; i < Math.min(argTypes.length, method.parameters.size()); i++) {
+                if (paramNames[i] == null) {
+                    paramNames[i] = method.parameters.get(i).name;
+                }
             }
-            return paramNames;
         }
 
-        return null;
+        return paramNames;
     }
 
     /**
