@@ -593,7 +593,7 @@ class MixinPreProcessorStandard {
 
     protected void attachFields(MixinTargetContext context) {
         IActivity fieldActivity = this.activities.begin("?");
-        for (Iterator<FieldNode> iter = this.classNode.getFields().iterator(); iter.hasNext();) {
+        for (Iterator<FieldNode> iter = this.classNode.fields.iterator(); iter.hasNext();) {
             FieldNode mixinField = iter.next();
             fieldActivity.next("%s:%s", mixinField.name, mixinField.desc);
             AnnotationNode shadow = Annotations.getVisible(mixinField, Shadow.class);

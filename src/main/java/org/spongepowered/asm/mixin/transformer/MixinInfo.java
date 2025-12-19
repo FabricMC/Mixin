@@ -175,10 +175,6 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
             return MixinInfo.this;
         }
         
-        public List<FieldNode> getFields() {
-            return new ArrayList<FieldNode>(this.fields);
-        }
-        
         @Override
         public MethodVisitor visitMethod(final int access, final String name, final String desc, final String signature, final String[] exceptions) {
             MethodNode method = new MixinMethodNode(access, name, desc, signature, exceptions);
