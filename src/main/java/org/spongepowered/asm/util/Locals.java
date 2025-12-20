@@ -283,40 +283,27 @@ public final class Locals {
         boolean isStatic = (method.access & Opcodes.ACC_STATIC) != 0;
         Type[] argTypes = Type.getArgumentTypes(method.desc);
         int baseArgIndex = isStatic ? 0 : 1;
-        int frameSize = baseArgIndex + getArgsSize(argTypes);
-        LocalVariableNode[] frame = new LocalVariableNode[frameSize];
+        // Calculate initial frame size: accounts for "this" (if non-static) + sum of argument sizes (longs/doubles take 2 slots)
+        int initialFrameSize = baseArgIndex + getArgsSize(argTypes);
+        LocalVariableNode[] frame = new LocalVariableNode[initialFrameSize];
 
         int local = 0;
         int index = 0;
 
         // Try to extract parameter names from LVT if compatibility level is high enough
-        String[] paramNames = null;
-        String thisName = "this";
-        if (fabricCompatibility >= org.spongepowered.asm.mixin.FabricUtil.COMPATIBILITY_0_17_0) {
-            paramNames = getParameterNames(method, isStatic);
-
-            // Try to fetch "this" parameter name from LVT if available (for non-static methods)
-            if (!isStatic && method.localVariables != null && !method.localVariables.isEmpty()) {
-                for (LocalVariableNode lvNode : method.localVariables) {
-                    if (lvNode.index == 0) {
-                        thisName = lvNode.name;
-                        break;
-                    }
-                }
-            }
-        }
+        String[] paramNames = fabricCompatibility >= org.spongepowered.asm.mixin.FabricUtil.COMPATIBILITY_0_17_0
+                ? getParameterNames(method, isStatic)
+                : new String[argTypes.length];
 
         // Initialise implicit "this" reference in non-static methods
         if (!isStatic) {
-            frame[local++] = new LocalVariableNode(thisName, Type.getObjectType(classNode.name).getDescriptor(), null, null, null, 0);
+            frame[local++] = new LocalVariableNode("this", Type.getObjectType(classNode.name).getDescriptor(), null, null, null, 0);
         }
 
         // Initialise method arguments
         for (int arg = 0; arg < argTypes.length; arg++) {
             Type argType = argTypes[arg];
-            String paramName = (paramNames != null && paramNames[arg] != null)
-                    ? paramNames[arg]
-                    : "arg" + index;
+            String paramName = paramNames[arg] != null ? paramNames[arg] : "arg" + index;
             frame[local] = new LocalVariableNode(paramName, argType.getDescriptor(), null, null, null, local);
             local += argType.getSize();
             index++;
@@ -366,7 +353,7 @@ public final class Locals {
         }
 
         // Single pass through local variable table to extract names
-        if (method.localVariables != null && !method.localVariables.isEmpty()) {
+        if (method.localVariables != null) {
             for (LocalVariableNode lvNode : method.localVariables) {
                 Integer paramIndex = indexToParam.get(lvNode.index);
                 if (paramIndex != null) {
@@ -376,7 +363,7 @@ public final class Locals {
         }
 
         // Merge in names from parameters field where LVT didn't provide them
-        if (method.parameters != null && !method.parameters.isEmpty()) {
+        if (method.parameters != null) {
             for (int i = 0; i < Math.min(argTypes.length, method.parameters.size()); i++) {
                 if (paramNames[i] == null) {
                     paramNames[i] = method.parameters.get(i).name;

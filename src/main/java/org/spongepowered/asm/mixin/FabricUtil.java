@@ -57,7 +57,7 @@ public final class FabricUtil {
     /**
      * Fabric compatibility version 0.17.0
      */
-    public static final int COMPATIBILITY_0_17_0 = 17000;
+    public static final int COMPATIBILITY_0_17_0 = 17000; // 0.17.0+mixin.0.8.7
 
     /**
      * Latest compatibility version
