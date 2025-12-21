@@ -637,6 +637,8 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
             if (field != null && field.isRenamed() && field.getOriginalName().equals(fieldRef.getName()) && field.isStatic()) {
                 fieldRef.setName(field.getName());
             }
+        } else if (this.innerClasses.containsKey(fieldRef.getOwner())) {
+            fieldRef.setOwner(this.innerClasses.get(fieldRef.getOwner()));
         } else {
             if (ClassInfo.isMixin(fieldRef.getOwner())) {
                 ClassInfo fieldOwner = ClassInfo.forName(fieldRef.getOwner());
