@@ -946,7 +946,7 @@ public final class Bytecode {
             if (insn.getOpcode() == Opcodes.BIPUSH || insn.getOpcode() == Opcodes.SIPUSH) {
                 return Integer.valueOf(value);
             }
-            throw new IllegalArgumentException("IntInsnNode with invalid opcode " + insn.getOpcode() + " in getConstant");
+            return null;
         } else if (insn instanceof TypeInsnNode) {
             if (insn.getOpcode() < Opcodes.CHECKCAST) {
                 return null; // Don't treat NEW and ANEWARRAY as constants 
