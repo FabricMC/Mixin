@@ -157,8 +157,12 @@ public class LocalVariableDiscriminator {
                 }
             }
 
-            LocalVariableNode[] initialLocals = Locals.getInitialMethodLocals(target.method, target.classNode,
-                    org.spongepowered.asm.mixin.FabricUtil.getCompatibility(info));
+            int fabricCompatibility = org.spongepowered.asm.mixin.FabricUtil.getCompatibility(info);
+            // Before 0.17.0, the names of arg variables were inconsistent. With argsOnly = true, they were "arg" + lvIndex
+            // whereas for argsOnly = false, they were "arg" + paramIndex. We pick the latter always now which is the slightly
+            // saner option, but we need to pick the former here when backwards compat is needed.
+            boolean fallbackToLvIndex = fabricCompatibility < org.spongepowered.asm.mixin.FabricUtil.COMPATIBILITY_0_17_0;
+            LocalVariableNode[] initialLocals = Locals.getInitialMethodLocals(target.method, target.classNode, fabricCompatibility, fallbackToLvIndex);
 
             return getLocals(initialLocals);
         }

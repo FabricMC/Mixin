@@ -280,15 +280,26 @@ public final class Locals {
      * @return an array of LocalVariableNodes representing the initial method frame
      */
     public static LocalVariableNode[] getInitialMethodLocals(MethodNode method, ClassNode classNode, int fabricCompatibility) {
-        boolean isStatic = (method.access & Opcodes.ACC_STATIC) != 0;
+        return getInitialMethodLocals(method, classNode, fabricCompatibility, false);
+    }
+
+    /**
+     * Constructs the initial local variable frame for a method, containing only "this" (if non-static)
+     * and the method parameters with their actual names extracted from the LVT when available.
+     *
+     * @param method the method to construct locals for
+     * @param classNode the class containing the method
+     * @param fabricCompatibility the compatibility level to use
+     * @param fallbackToLvIndex whether the fallback names should use the LVT index of the variable (for backwards compatibility)
+     * @return an array of LocalVariableNodes representing the initial method frame
+     */
+    public static LocalVariableNode[] getInitialMethodLocals(MethodNode method, ClassNode classNode, int fabricCompatibility, boolean fallbackToLvIndex) {
+        boolean isStatic = Bytecode.isStatic(method);
         Type[] argTypes = Type.getArgumentTypes(method.desc);
-        int baseArgIndex = isStatic ? 0 : 1;
-        // Calculate initial frame size: accounts for "this" (if non-static) + sum of argument sizes (longs/doubles take 2 slots)
-        int initialFrameSize = baseArgIndex + getArgsSize(argTypes);
+        int initialFrameSize = Bytecode.getFirstNonArgLocalIndex(method);
         LocalVariableNode[] frame = new LocalVariableNode[initialFrameSize];
 
         int local = 0;
-        int index = 0;
 
         // Try to extract parameter names from LVT if compatibility level is high enough
         String[] paramNames = fabricCompatibility >= org.spongepowered.asm.mixin.FabricUtil.COMPATIBILITY_0_17_0
@@ -301,29 +312,21 @@ public final class Locals {
         }
 
         // Initialise method arguments
-        for (int arg = 0; arg < argTypes.length; arg++) {
-            Type argType = argTypes[arg];
-            String paramName = paramNames[arg] != null ? paramNames[arg] : "arg" + index;
+        for (int index = 0; index < argTypes.length; index++) {
+            Type argType = argTypes[index];
+            String paramName = paramNames[index];
+            if (paramName == null) {
+                if (fallbackToLvIndex) {
+                    paramName = "arg" + local;
+                } else {
+                    paramName = "arg" + index;
+                }
+            }
             frame[local] = new LocalVariableNode(paramName, argType.getDescriptor(), null, null, null, local);
             local += argType.getSize();
-            index++;
         }
 
         return frame;
-    }
-
-    /**
-     * Helper method to calculate the total size in local variable slots for an array of argument types.
-     *
-     * @param argTypes the argument types
-     * @return the total size in slots
-     */
-    private static int getArgsSize(Type[] argTypes) {
-        int size = 0;
-        for (Type argType : argTypes) {
-            size += argType.getSize();
-        }
-        return size;
     }
 
     /**
