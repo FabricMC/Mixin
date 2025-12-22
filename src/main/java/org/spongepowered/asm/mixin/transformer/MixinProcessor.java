@@ -226,7 +226,6 @@ class MixinProcessor {
         this.hotSwapper = hotSwapper;
         
         this.coprocessors.add(new MixinCoprocessorPassthrough());
-        this.coprocessors.add(new MixinCoprocessorSyntheticInner());
         this.coprocessors.add(new MixinCoprocessorAccessor(this.sessionId));
         this.coprocessors.add(nestHostCoprocessor);
         

@@ -35,11 +35,10 @@ import org.spongepowered.asm.service.MixinService;
  * mixins.
  * 
  * <p>Such tasks as {@link MixinCoprocessorAccessor making accessor mixins
- * loadable (and transforming the accessors therein)}, {@link
- * MixinCoprocessorSyntheticInner exposing synthetic inner classes to all
- * consumers} and {@link MixinCoprocessorNestHost applying nest member
- * attributes to nest hosts which may themselves not be mixin targets} are
- * handled by different coprocessors.</p>
+ * loadable (and transforming the accessors therein)}, and {@link
+ * MixinCoprocessorNestHost applying nest member attributes to nest hosts
+ * which may themselves not be mixin targets} are handled by different
+ * coprocessors.</p>
  * 
  * <p>These classes were previously encapsulated in a single companion class
  * called <tt>MixinPostProcessor</tt>, but the mixture of responsibilities of
