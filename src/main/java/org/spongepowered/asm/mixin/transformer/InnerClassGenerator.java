@@ -463,7 +463,7 @@ final class InnerClassGenerator implements IClassGenerator {
     }
 
     private static String innerClassCoordinate(MixinInfo owner, ClassInfo targetClass, String innerClassName) {
-        return String.format("%s:%s:%s", owner, innerClassName, targetClass.getName());
+        return String.format("%s:%s:%s", owner.getClassRef(), innerClassName, targetClass.getName());
     }
 
 }
