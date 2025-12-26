@@ -448,7 +448,9 @@ ext.excludePomDeps = [
     'junit',
     'mockito-core',
     'mixin-asm-debug-all',
-    'log4j-core'
+    'log4j-core',
+    'guava',
+    'gson'
 ]
 
 centralPortalPublishing.bundle('mixin') {
