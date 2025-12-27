@@ -201,11 +201,12 @@ class MixinPreProcessorStandard {
     }
 
     protected void prepareInnerClasses(Extensions extensions) {
-        InnerClassGenerator icg = extensions.<InnerClassGenerator>getGenerator(InnerClassGenerator.class);
-        for (String targetClassName : this.mixin.getDeclaredTargetClasses()) {
-            ClassInfo targetClassInfo = ClassInfo.forName(targetClassName);
-            for (String innerClass : this.mixin.getInnerClasses()) {
-                icg.registerInnerClass(this.mixin, targetClassInfo, innerClass);
+        if (this.mixin.hasInnerClasses()) {
+            InnerClassGenerator icg = extensions.<InnerClassGenerator>getGenerator(InnerClassGenerator.class);
+            for (ClassInfo targetClassInfo : this.mixin.getTargets()) {
+                for (String innerClass : this.mixin.getInnerClasses()) {
+                    icg.registerInnerClass(this.mixin, targetClassInfo, innerClass);
+                }
             }
         }
     }

@@ -1246,6 +1246,13 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
     }
     
     /**
+     * True if there are any user-defined inner classes for this mixin
+     */
+    boolean hasInnerClasses() {
+        return !this.getState().getInnerClasses().isEmpty();
+    }
+
+    /**
      * Get the user-defined inner classes for this mixin
      */
     Set<String> getInnerClasses() {
