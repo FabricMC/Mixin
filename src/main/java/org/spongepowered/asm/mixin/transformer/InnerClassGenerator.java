@@ -25,6 +25,7 @@
 package org.spongepowered.asm.mixin.transformer;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -426,7 +427,8 @@ final class InnerClassGenerator implements IClassGenerator {
         if (name.matches("^[0-9]+$")) {
             name = "Anonymous";
         }
-        return String.format("%s$%s$%s", targetClass, name, UUID.randomUUID().toString().replace("-", ""));
+        UUID uuid = UUID.nameUUIDFromBytes(originalName.getBytes(StandardCharsets.UTF_8));
+        return String.format("%s$%s$%s", targetClass, name, uuid.toString().replace("-", ""));
     }
 
     /**
