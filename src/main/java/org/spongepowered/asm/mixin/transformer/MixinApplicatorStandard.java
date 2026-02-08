@@ -27,6 +27,7 @@ package org.spongepowered.asm.mixin.transformer;
 import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.BiConsumer;
 
 import org.spongepowered.asm.logging.ILogger;
 import org.objectweb.asm.Label;
@@ -123,11 +124,6 @@ class MixinApplicatorStandard {
         INJECT_APPLY
 
     }
-    
-    /**
-     * Order collection to use for all passes except ApplicatorPass.INJECT
-     */
-    protected static final Set<Integer> ORDERS_NONE = ImmutableSet.<Integer>of(Integer.valueOf(0)); 
 
     /**
      * Log more things
@@ -228,32 +224,9 @@ class MixinApplicatorStandard {
             for (ApplicatorPass pass : ApplicatorPass.values()) {
                 activity.next("%s Applicator Phase", pass);
                 Section timer = this.profiler.begin("pass", pass.name().toLowerCase(Locale.ROOT));
-                IActivity applyActivity = this.activities.begin("Mixin");
-                
-                Set<Integer> orders = MixinApplicatorStandard.ORDERS_NONE;
-                if (pass == ApplicatorPass.INJECT_APPLY) {
-                    orders = new TreeSet<Integer>();
-                    for (MixinTargetContext context : mixinContexts) {
-                        context.getInjectorOrders(orders);
-                    }
-                }
-            
-                for (Integer injectorOrder : orders) {
-                    for (Iterator<MixinTargetContext> iter = mixinContexts.iterator(); iter.hasNext();) {
-                        current = iter.next();
-                        applyActivity.next(current.toString());
-                        try {
-                            this.applyMixin(current, pass, injectorOrder.intValue());
-                        } catch (InvalidMixinException ex) {
-                            if (current.isRequired()) {
-                                throw ex;
-                            }
-                            this.context.addSuppressed(ex);
-                            iter.remove(); // Do not process this mixin further
-                        }
-                    }
-                }
-                applyActivity.end();
+
+                this.runApplicatorPass(pass, mixinContexts);
+
                 timer.end();
             }
             
@@ -285,56 +258,86 @@ class MixinApplicatorStandard {
         this.context.processDebugTasks();
     }
 
-    /**
-     * Apply the mixin described by mixin to the supplied ClassNode
-     * 
-     * @param mixin Mixin to apply
-     */
-    protected final void applyMixin(MixinTargetContext mixin, ApplicatorPass pass, int injectorOrder) {
-        IActivity activity = this.activities.begin("Apply");
+    private void runApplicatorPass(ApplicatorPass pass, List<MixinTargetContext> mixinContexts) {
         switch (pass) {
             case MAIN:
-                activity.next("Apply Signature");
-                this.applySignature(mixin);
-                activity.next("Apply Interfaces");
-                this.applyInterfaces(mixin);
-                activity.next("Apply Attributess");
-                this.applyAttributes(mixin);
-                activity.next("Apply Annotations");
-                this.applyAnnotations(mixin);
-                activity.next("Apply Fields");
-                this.applyFields(mixin);
-                activity.next("Apply Methods");
-                this.applyMethods(mixin);
-                activity.next("Apply Initialisers");
-                this.applyInitialisers(mixin);
+                this.processMixins(mixinContexts, (activity, mixin) -> {
+                    activity.next("Apply Signature");
+                    this.applySignature(mixin);
+                    activity.next("Apply Interfaces");
+                    this.applyInterfaces(mixin);
+                    activity.next("Apply Attributess");
+                    this.applyAttributes(mixin);
+                    activity.next("Apply Annotations");
+                    this.applyAnnotations(mixin);
+                    activity.next("Apply Fields");
+                    this.applyFields(mixin);
+                    activity.next("Apply Methods");
+                    this.applyMethods(mixin);
+                    activity.next("Apply Initialisers");
+                    this.applyInitialisers(mixin);
+                });
                 break;
-                
+
             case INJECT_PREPARE:
-                activity.next("Prepare Injections");
-                this.prepareInjections(mixin);
+                this.processMixins(mixinContexts, (activity, mixin) -> {
+                    activity.next("Prepare Injections");
+                    this.prepareInjections(mixin);
+                });
                 break;
-                
+
             case ACCESSOR:
-                activity.next("Apply Accessors");
-                this.applyAccessors(mixin);
+                this.processMixins(mixinContexts, (activity, mixin) -> {
+                    activity.next("Apply Accessors");
+                    this.applyAccessors(mixin);
+                });
                 break;
-                
+
             case INJECT_PREINJECT:
-                activity.next("Apply Injections");
-                this.applyPreInjections(mixin);
+                this.processMixins(mixinContexts, (activity, mixin) -> {
+                    activity.next("Pre-Apply Injections");
+                    this.applyPreInjections(mixin);
+                });
                 break;
-                
+
             case INJECT_APPLY:
-                activity.next("Apply Injections");
-                this.applyInjections(mixin, injectorOrder);
+                Set<Integer> orders = new TreeSet<Integer>();
+                for (MixinTargetContext context : mixinContexts) {
+                    context.getInjectorOrders(orders);
+                }
+                for (int injectorOrder : orders) {
+                    this.processMixins(mixinContexts, (activity, mixin) -> {
+                        activity.next("Apply Injections");
+                        this.applyInjections(mixin, injectorOrder);
+                    });
+                }
                 break;
-                
+
             default:
                 // wat?
                 throw new IllegalStateException("Invalid pass specified " + pass);
         }
-        activity.end();
+    }
+
+    private void processMixins(List<MixinTargetContext> mixinContexts, BiConsumer<IActivity, MixinTargetContext> processor) throws InvalidMixinException {
+        IActivity applyActivity = this.activities.begin("Mixin");
+
+        for (Iterator<MixinTargetContext> iter = mixinContexts.iterator(); iter.hasNext();) {
+            MixinTargetContext current = iter.next();
+            applyActivity.next(current.toString());
+            try {
+                IActivity individualActivity = this.activities.begin("Apply");
+                processor.accept(individualActivity, current);
+                individualActivity.end();
+            } catch (InvalidMixinException ex) {
+                if (current.isRequired()) {
+                    throw ex;
+                }
+                this.context.addSuppressed(ex);
+                iter.remove(); // Do not process this mixin further
+            }
+        }
+        applyActivity.end();
     }
 
     protected void applySignature(MixinTargetContext mixin) {
