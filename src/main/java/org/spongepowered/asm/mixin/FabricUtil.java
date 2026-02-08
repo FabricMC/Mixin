@@ -26,7 +26,9 @@
 package org.spongepowered.asm.mixin;
 
 import org.spongepowered.asm.mixin.extensibility.IMixinConfig;
+import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import org.spongepowered.asm.mixin.injection.selectors.ISelectorContext;
+import org.spongepowered.asm.mixin.refmap.IMixinContext;
 
 public final class FabricUtil {
     public static final String KEY_MOD_ID = "fabric-modId";
@@ -60,9 +62,14 @@ public final class FabricUtil {
     public static final int COMPATIBILITY_0_17_0 = 17000; // 0.17.0+mixin.0.8.7
 
     /**
+     * Fabric compatibility version 0.17.1
+     */
+    public static final int COMPATIBILITY_0_17_1 = 17001; // 0.17.1+mixin.0.8.7
+
+    /**
      * Latest compatibility version
      */
-    public static final int COMPATIBILITY_LATEST = COMPATIBILITY_0_17_0;
+    public static final int COMPATIBILITY_LATEST = COMPATIBILITY_0_17_1;
 
     public static String getModId(IMixinConfig config) {
         return getModId(config, "(unknown)");
@@ -77,7 +84,15 @@ public final class FabricUtil {
     }
 
     public static int getCompatibility(ISelectorContext context) {
-        return getDecoration(getConfig(context), KEY_COMPATIBILITY, COMPATIBILITY_LATEST);
+        return getCompatibility(getConfig(context));
+    }
+
+    public static int getCompatibility(IMixinContext context) {
+        return getCompatibility(context.getMixin().getConfig());
+    }
+
+    private static int getCompatibility(IMixinConfig config) {
+        return getDecoration(config, KEY_COMPATIBILITY, COMPATIBILITY_LATEST);
     }
 
     private static IMixinConfig getConfig(ISelectorContext context) {

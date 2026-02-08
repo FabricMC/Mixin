@@ -25,16 +25,16 @@
 package org.spongepowered.asm.mixin.transformer;
 
 import java.util.Map.Entry;
+import java.util.function.Supplier;
 
 import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodNode;
 import org.spongepowered.asm.mixin.MixinEnvironment.Feature;
 import org.spongepowered.asm.mixin.injection.struct.InjectionInfo;
 import org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Field;
+import org.spongepowered.asm.mixin.transformer.struct.Clinit;
 import org.spongepowered.asm.mixin.transformer.throwables.InvalidInterfaceMixinException;
 import org.spongepowered.asm.util.Annotations;
-import org.spongepowered.asm.util.Constants;
 
 /**
  * Applicator for interface mixins, mainly just disables things which aren't
@@ -97,11 +97,13 @@ class MixinApplicatorInterface extends MixinApplicatorStandard {
     }
 
     @Override
-    protected void applyNormalMethod(MixinTargetContext mixin, MethodNode mixinMethod) {
+    protected void applyClinitLegacy(MixinTargetContext mixin) {
         //Skip merging static blocks, the only contents will be setting shadowed fields
-        if (!Constants.CLINIT.equals(mixinMethod.name)) {
-            super.applyNormalMethod(mixin, mixinMethod);
-        }
+    }
+
+    @Override
+    protected void applyClinit(MixinTargetContext mixin, Supplier<Clinit> clinit) {
+        //Skip merging static blocks, the only contents will be setting shadowed fields
     }
 
     /* (non-Javadoc)
