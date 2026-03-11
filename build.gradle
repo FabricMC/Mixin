@@ -236,6 +236,14 @@ dependencies {
     legacyImplementation "org.ow2.asm:asm-tree:$asmVersion"
     
     modularityCompileOnly 'org.apache.logging.log4j:log4j-core:2.11.2'
+    
+    testImplementation "org.junit.jupiter:junit-jupiter:5.7.1"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+tasks.test {
+    useJUnitPlatform()
+    jvmArgs "-XX:+EnableDynamicAgentLoading"
 }
 
 javadoc {
