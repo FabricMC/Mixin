@@ -26,6 +26,7 @@ package org.spongepowered.asm.mixin.transformer.struct;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
+import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import org.spongepowered.asm.mixin.injection.struct.InjectionNodes;
 import org.spongepowered.asm.mixin.injection.struct.Target;
 import org.spongepowered.asm.util.Bytecode;
@@ -34,23 +35,20 @@ import java.util.ListIterator;
 import java.util.Map;
 
 public class Clinit {
-    private final MethodNode clinit;
-    private final AbstractInsnNode finalReturn;
+    protected final MethodNode clinit;
+    protected final AbstractInsnNode finalReturn;
 
     public Clinit(MethodNode clinit, AbstractInsnNode finalReturn) {
         this.clinit = clinit;
         this.finalReturn = finalReturn;
     }
 
-    public void append(MethodNode mixinClinit) {
+    public void append(IMixinInfo mixinInfo, MethodNode mixinClinit) {
         prepareClinit(mixinClinit, null);
+
         Map<LabelNode, LabelNode> labels = Bytecode.cloneLabels(mixinClinit.instructions);
-        for (AbstractInsnNode insn : mixinClinit.instructions) {
-            if (insn.getOpcode() == Opcodes.RETURN) {
-                continue;
-            }
-            this.clinit.instructions.insertBefore(this.finalReturn, insn.clone(labels));
-        }
+        this.appendInsns(mixinInfo, mixinClinit, labels);
+        
         this.clinit.maxLocals = Math.max(this.clinit.maxLocals, mixinClinit.maxLocals);
         this.clinit.maxStack = Math.max(this.clinit.maxStack, mixinClinit.maxStack);
         for (TryCatchBlockNode tryCatch : mixinClinit.tryCatchBlocks) {
@@ -58,6 +56,15 @@ public class Clinit {
         }
         for (LocalVariableNode local : mixinClinit.localVariables) {
             this.clinit.localVariables.add(new LocalVariableNode(local.name, local.desc, local.signature, labels.get(local.start), labels.get(local.end), local.index));
+        }
+    }
+    
+    protected void appendInsns(IMixinInfo mixinInfo, MethodNode mixinClinit, Map<LabelNode, LabelNode> labels) {
+        for (AbstractInsnNode insn : mixinClinit.instructions) {
+            if (insn.getOpcode() == Opcodes.RETURN) {
+                continue;
+            }
+            this.clinit.instructions.insertBefore(this.finalReturn, insn.clone(labels));
         }
     }
 
@@ -68,7 +75,7 @@ public class Clinit {
     /**
      * Rewrites RETURN instructions to instead GOTO a final RETURN instruction, and returns said instruction.
      */
-    private static AbstractInsnNode prepareClinit(MethodNode clinit, Target target) {
+    protected static AbstractInsnNode prepareClinit(MethodNode clinit, Target target) {
         LabelNode endLabel = new LabelNode();
         AbstractInsnNode existingFinalReturn = null;
         for (ListIterator<AbstractInsnNode> iter = clinit.instructions.iterator(); iter.hasNext(); ) {

@@ -1085,6 +1085,13 @@ public final class ClassInfo {
     }
 
     /**
+     * Get whether this class has ACC_FINAL
+     */
+    public boolean isFinal() {
+        return (this.access & Opcodes.ACC_FINAL) != 0;
+    }
+
+    /**
      * Get whether this class is probably static (or is not an inner class)
      */
     public boolean isProbablyStatic() {
@@ -1103,6 +1110,14 @@ public final class ClassInfo {
      */
     public boolean isInterface() {
         return this.isInterface;
+    }
+
+    /**
+     * Get whether this is an enum or not
+     */
+    public boolean isEnum() {
+        // Match Class#isEnum
+        return (this.access & Opcodes.ACC_ENUM) != 0 && this.superName.equals("java/lang/Enum");
     }
 
     /**

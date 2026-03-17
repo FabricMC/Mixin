@@ -66,7 +66,7 @@ abstract class MixinObfuscationProcessor extends AbstractProcessor {
         this.mixins.onPassStarted();
         
         for (Element elem : roundEnv.getElementsAnnotatedWith(Mixin.class)) {
-            if (elem.getKind() == ElementKind.CLASS || elem.getKind() == ElementKind.INTERFACE) {
+            if (elem.getKind() == ElementKind.CLASS || elem.getKind() == ElementKind.INTERFACE || elem.getKind() == ElementKind.ENUM) {
                 this.mixins.registerMixin((TypeElement)elem);
             } else {
                 this.mixins.printMessage(MessageType.MIXIN_ON_INVALID_TYPE,

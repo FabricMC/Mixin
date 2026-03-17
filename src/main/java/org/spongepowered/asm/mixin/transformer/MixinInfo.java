@@ -46,16 +46,10 @@ import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.tree.InvokeDynamicInsnNode;
 import org.objectweb.asm.tree.MethodNode;
-import org.spongepowered.asm.mixin.Implements;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel;
 import org.spongepowered.asm.mixin.MixinEnvironment.Option;
 import org.spongepowered.asm.mixin.MixinEnvironment.Phase;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Pseudo;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfig;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import org.spongepowered.asm.mixin.injection.Surrogate;
@@ -108,7 +102,12 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
         /**
          * Type proxy
          */
-        PROXY
+        PROXY,
+
+        /**
+         * Enum extension mixin
+         */
+        ENUM_EXTENSION
         
     }
     
@@ -540,6 +539,9 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
 
         abstract MixinPreProcessorStandard createPreProcessor(MixinClassNode classNode);
 
+        void validateInnerClass(ClassNode innerClass) {
+        }
+
         /**
          * A standard mixin
          */
@@ -661,6 +663,50 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
             }
         }
 
+        static class EnumExtension extends SubType {
+
+            EnumExtension(MixinInfo info) {
+                super(info, "@Mixin", false);
+            }
+
+            @Override
+            void validateTarget(String targetName, ClassInfo targetInfo) {
+                if (!targetInfo.isEnum()) {
+                    throw new InvalidMixinException(this.mixin, this.annotationType + " target type mismatch: "
+                            + targetName + " is not an enum in " + this);
+                }
+                if (this.mixin.getClassInfo().isFinal() != targetInfo.isFinal()) {
+                    String us = this.mixin.getClassInfo().isFinal() ? "final" : "not final";
+                    String them = targetInfo.isFinal() ? "final" : "not final";
+                    throw new InvalidMixinException(
+                            this.mixin,
+                            String.format(
+                                    "%s target type mismatch: mixin is %s but target %s is %s",
+                                    this.annotationType, us, targetName, them
+                            )
+                    );
+                }
+            }
+
+            @Override
+            void validate(State state, List<ClassInfo> targetClasses) {
+                if (FabricUtil.getCompatibility(this.mixin.getConfig()) < FabricUtil.COMPATIBILITY_0_17_1) {
+                    throw new InvalidMixinException(this.mixin, "Enum extensions require a compatibility level of at least 0.17.1");
+                }
+                EnumExtensionUtils.checkForGotchas(this.mixin, state.getValidationClassNode());
+            }
+
+            @Override
+            MixinPreProcessorStandard createPreProcessor(MixinClassNode classNode) {
+                return new MixinPreProcessorEnumExtension(this.mixin, classNode);
+            }
+
+            @Override
+            void validateInnerClass(ClassNode innerClass) {
+                EnumExtensionUtils.checkForGotchas(this.mixin, innerClass);
+            }
+        }
+
         static SubType getTypeFor(MixinInfo mixin) {
             Variant variant = MixinInfo.getVariant(mixin.getClassInfo());
             switch (variant) {
@@ -670,6 +716,8 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
                     return new SubType.Interface(mixin);
                 case ACCESSOR:
                     return new SubType.Accessor(mixin);
+                case ENUM_EXTENSION:
+                    return new EnumExtension(mixin);
                 default:
                     throw new IllegalStateException("Unsupported Mixin variant " + variant + " for " + mixin);
             }
@@ -897,6 +945,10 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
         } finally {
             this.pendingState = null;
         }
+    }
+
+    void validateInnerClass(ClassNode innerClass) {
+        this.type.validateInnerClass(innerClass);
     }
 
     /**
@@ -1371,7 +1423,11 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
 //        if (ProxyInfo.isProxy(classInfo)) {
 //            return Variant.PROXY;
 //        }
-        
+
+        if (classInfo.isEnum()) {
+            return Variant.ENUM_EXTENSION;
+        }
+
         if (!classInfo.isInterface()) {
             return Variant.STANDARD;
         }

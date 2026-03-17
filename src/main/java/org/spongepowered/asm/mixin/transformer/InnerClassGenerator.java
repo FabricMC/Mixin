@@ -64,7 +64,7 @@ final class InnerClassGenerator implements IClassGenerator {
         /**
          * Mixin which provides this class
          */
-        private final IMixinInfo mixin;
+        private final MixinInfo mixin;
         
         /**
          * Target class info
@@ -101,7 +101,7 @@ final class InnerClassGenerator implements IClassGenerator {
          */
         private int loadCounter;
 
-        InnerClassInfo(IMixinInfo mixin, ClassInfo targetClass, ClassInfo nestHost, String originalName, String name, MixinInfo owner) {
+        InnerClassInfo(MixinInfo mixin, ClassInfo targetClass, ClassInfo nestHost, String originalName, String name, MixinInfo owner) {
             this.mixin = mixin;
             this.targetClassInfo = targetClass;
             this.originalName = originalName;
@@ -157,6 +157,9 @@ final class InnerClassGenerator implements IClassGenerator {
         
         void accept(final ClassVisitor classVisitor) throws ClassNotFoundException, IOException {
             ClassNode classNode = MixinService.getService().getBytecodeProvider().getClassNode(this.originalName);
+            if (this.loadCounter == 0) {
+                this.mixin.validateInnerClass(classNode);
+            }
             this.readInnerClasses(classNode);
             classNode.accept(classVisitor);
             this.loadCounter++;

@@ -230,10 +230,7 @@ class MixinApplicatorStandard {
         try {
             IActivity activity = this.activities.begin("PreApply Phase");
             IActivity preApplyActivity = this.activities.begin("Mixin");
-            for (MixinTargetContext context : mixinContexts) {
-                preApplyActivity.next(context.toString());
-                (current = context).preApply(this.targetName, this.targetClass);
-            }
+            this.preApply(preApplyActivity, mixinContexts);
             preApplyActivity.end();
             
             for (ApplicatorPass pass : ApplicatorPass.values()) {
@@ -273,6 +270,13 @@ class MixinApplicatorStandard {
         this.context.processDebugTasks();
     }
 
+    protected void preApply(IActivity activity, List<MixinTargetContext> mixins) throws Exception {
+        for (MixinTargetContext context : mixins) {
+            activity.next(context.toString());
+            context.preApply(this.targetName, this.targetClass);
+        }
+    }
+    
     private void runApplicatorPass(ApplicatorPass pass, List<MixinTargetContext> mixinContexts) {
         switch (pass) {
             case MAIN:
@@ -463,21 +467,25 @@ class MixinApplicatorStandard {
 
     protected void mergeNewFields(MixinTargetContext mixin) {
         for (FieldNode field : mixin.getFields()) {
-            FieldNode target = this.findTargetField(field);
-            if (target == null) {
-                // This is just a local field, so add it
-                this.targetClass.fields.add(field);
-                mixin.fieldMerged(field);
+            mergeNormalField(mixin, field, this.targetClass.fields.size());
+        }
+    }
 
-                if (field.signature != null) {
-                    if (this.mergeSignatures) {
-                        SignatureVisitor sv = mixin.getSignature().getRemapper();
-                        new SignatureReader(field.signature).accept(sv);
-                        field.signature = sv.toString();
-                    } else {
-                        field.signature = null;
-                    }
-                }
+    protected void mergeNormalField(MixinTargetContext mixin, FieldNode field, int index) {
+        FieldNode target = this.findTargetField(field);
+        if (target != null) {
+            return;
+        }
+        this.targetClass.fields.add(index, field);
+        mixin.fieldMerged(field);
+
+        if (field.signature != null) {
+            if (this.mergeSignatures) {
+                SignatureVisitor sv = mixin.getSignature().getRemapper();
+                new SignatureReader(field.signature).accept(sv);
+                field.signature = sv.toString();
+            } else {
+                field.signature = null;
             }
         }
     }
@@ -774,7 +782,7 @@ class MixinApplicatorStandard {
         }
     }
 
-    private Clinit prepareOrCreateClinit() {
+    protected Clinit prepareOrCreateClinit() {
         MethodNode clinit = Bytecode.findMethod(this.targetClass, Constants.CLINIT, "()V");
         if (clinit != null) {
             return Clinit.prepare(this.context.getTargetMethod(clinit));
@@ -791,7 +799,7 @@ class MixinApplicatorStandard {
         if (mixinClinit == null) {
             return;
         }
-        clinit.get().append(mixinClinit);
+        clinit.get().append(mixin.getMixin(), mixinClinit);
     }
 
     /**

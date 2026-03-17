@@ -1409,4 +1409,24 @@ public final class Bytecode {
         return destination;
     }
 
+    public static boolean isEnumValuesArray(FieldNode field, ClassNode enumClass) {
+        return Bytecode.hasFlag(field, Opcodes.ACC_STATIC | Opcodes.ACC_SYNTHETIC) && field.desc.equals("[L" + enumClass.name + ';');
+    }
+
+    public static boolean isEnumConstant(FieldNode field, ClassNode enumClass) {
+        return Bytecode.hasFlag(field, Opcodes.ACC_STATIC | Opcodes.ACC_ENUM) && field.desc.equals('L' + enumClass.name + ';');
+    }
+
+    public static AbstractInsnNode loadIntConstant(int intValue) {
+        if (-1 <= intValue && intValue <= 5) {
+            return new InsnNode(Opcodes.ICONST_0 + intValue);
+        } else if (Byte.MIN_VALUE <= intValue && intValue <= Byte.MAX_VALUE) {
+            return new IntInsnNode(Opcodes.BIPUSH, intValue);
+        } else if (Short.MIN_VALUE <= intValue && intValue <= Short.MAX_VALUE) {
+            return new IntInsnNode(Opcodes.SIPUSH, intValue);
+        } else {
+            return new LdcInsnNode(intValue);
+        }
+    }
+
 }
