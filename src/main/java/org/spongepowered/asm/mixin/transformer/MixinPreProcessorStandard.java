@@ -677,9 +677,6 @@ class MixinPreProcessorStandard {
                 mixinField.name = field.renameTo(target.name);
             }
             
-            // Shadow fields get stripped from the mixin class
-            iter.remove();
-            
             if (isShadow) {
                 boolean isFinal = field.isDecoratedFinal();
                 if (this.verboseLogging && Bytecode.hasFlag(target, Opcodes.ACC_FINAL) != isFinal) {
@@ -689,6 +686,8 @@ class MixinPreProcessorStandard {
                     MixinPreProcessorStandard.logger.warn(message, this.mixin, mixinField.name);
                 }
 
+                // Shadow fields get stripped from the mixin class
+                iter.remove();
                 context.addShadowField(mixinField, field);
             }
         }
