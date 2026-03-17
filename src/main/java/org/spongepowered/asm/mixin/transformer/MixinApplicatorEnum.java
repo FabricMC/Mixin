@@ -261,6 +261,14 @@ class MixinApplicatorEnum extends MixinApplicatorStandard {
     }
 
     private void applyEnumFields(EnumInfo extension, MixinTargetContext mixin) {
+        // Remove existing stub constants
+        this.targetClass.fields.removeAll(
+                extension.getConstants().stream()
+                        .map(this::findTargetField)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet())
+        );
+
         List<FieldNode> targetFields = this.targetClass.fields;
         int insertionIndex = this.insertionPoint == null ? 0 : targetFields.lastIndexOf(this.insertionPoint) + 1;
 

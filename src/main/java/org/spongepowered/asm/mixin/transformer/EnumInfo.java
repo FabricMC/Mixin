@@ -37,6 +37,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 final class EnumInfo implements Comparable<EnumInfo> {
+    // Attached by build-time frameworks like class-tweaker, we remove these entries in favour of our own
+    private static final String STUB_ENUM_CONSTANT_ATTRIBUTE = "org.spongepowered.asm.mixin.StubEnumConstant";
+
     private final ClassContext enumClass;
     private final ClassContext targetClass;
     private final String description;
@@ -74,7 +77,7 @@ final class EnumInfo implements Comparable<EnumInfo> {
     }
 
     /**
-     * Returns the fields whose type is the type of the enum
+     * Returns the fields whose type is the type of the enum, excluding stub constants
      */
     public List<FieldNode> getSelfTypedFields() {
         return this.selfTypedFields;
@@ -154,7 +157,7 @@ final class EnumInfo implements Comparable<EnumInfo> {
         String selfDesc = 'L' + this.targetClass.getClassRef() + ';';
         List<FieldNode> result = new ArrayList<>();
         for (FieldNode field : this.enumClass.getClassNode().fields) {
-            if (field.desc.equals(selfDesc)) {
+            if (field.desc.equals(selfDesc) && !isStubEnumConstant(field)) {
                 result.add(field);
             }
         }
@@ -185,6 +188,10 @@ final class EnumInfo implements Comparable<EnumInfo> {
             }
         }
         return false;
+    }
+
+    private static boolean isStubEnumConstant(FieldNode field) {
+        return field.attrs != null && field.attrs.stream().anyMatch(attr -> attr.type.equals(STUB_ENUM_CONSTANT_ATTRIBUTE));
     }
 
     private static AssumptionViolatedException assumptionViolated(String template, Object... args) {
