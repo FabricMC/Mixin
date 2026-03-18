@@ -35,13 +35,7 @@ import org.spongepowered.asm.logging.ILogger;
 import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel;
 import org.spongepowered.asm.mixin.MixinEnvironment.Phase;
 import org.spongepowered.asm.mixin.transformer.IMixinTransformerFactory;
-import org.spongepowered.asm.service.IClassBytecodeProvider;
-import org.spongepowered.asm.service.IClassProvider;
-import org.spongepowered.asm.service.IClassTracker;
-import org.spongepowered.asm.service.IMixinAuditTrail;
-import org.spongepowered.asm.service.IMixinInternal;
-import org.spongepowered.asm.service.ITransformerProvider;
-import org.spongepowered.asm.service.MixinServiceAbstract;
+import org.spongepowered.asm.service.*;
 import org.spongepowered.asm.util.IConsumer;
 
 import com.google.common.collect.ImmutableList;
@@ -264,6 +258,14 @@ public class MixinServiceModLauncher extends MixinServiceAbstract {
             this.auditTrail = new ModLauncherAuditTrail();
         }
         return this.auditTrail;
+    }
+
+    /* (non-Javadoc)
+     * @see org.spongepowered.asm.service.IMixinService#getFeatureValidator()
+     */
+    @Override
+    public IFeatureValidator getFeatureValidator() {
+        return IFeatureValidator.ALLOW_ALL;
     }
 
     /**

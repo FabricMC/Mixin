@@ -129,6 +129,12 @@ public interface IMixinService {
      * functionality.</b>
      */
     public abstract IMixinAuditTrail getAuditTrail();
+
+    /**
+     * Return the feature validator for this service. <b>This component is required
+     * and services must not return null.</b>
+     */
+    public abstract IFeatureValidator getFeatureValidator();
     
     /**
      * Get additional platform agents for this service 
