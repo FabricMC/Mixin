@@ -24,6 +24,7 @@
  */
 package org.spongepowered.asm.mixin.transformer;
 
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.spongepowered.asm.mixin.Shadow;
@@ -32,6 +33,7 @@ import org.spongepowered.asm.mixin.transformer.MixinInfo.MixinClassNode;
 import org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException;
 import org.spongepowered.asm.util.Annotations;
 import org.spongepowered.asm.util.Bytecode;
+import org.spongepowered.asm.util.Constants;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -43,6 +45,16 @@ class MixinPreProcessorEnumExtension extends MixinPreProcessorStandard {
 
     MixinPreProcessorEnumExtension(MixinInfo mixin, MixinClassNode classNode) {
         super(mixin, classNode);
+    }
+
+    @Override
+    protected void prepareShadow(MixinInfo.MixinMethodNode mixinMethod, ClassInfo.Method method) {
+        if (Constants.CTOR.equals(mixinMethod.name) && !Bytecode.hasFlag(mixinMethod, Opcodes.ACC_SYNTHETIC)) {
+            // In enum extensions, constructors are always implicitly @Shadow s (except synthetic ones which will be
+            // merged and so don't need to match anything).
+            Annotations.setVisible(mixinMethod, Shadow.class);
+        }
+        super.prepareShadow(mixinMethod, method);
     }
 
     @Override
