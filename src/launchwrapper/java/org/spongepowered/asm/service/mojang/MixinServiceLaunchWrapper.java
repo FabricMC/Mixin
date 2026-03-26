@@ -301,6 +301,14 @@ public class MixinServiceLaunchWrapper extends MixinServiceAbstract implements I
     }
 
     /* (non-Javadoc)
+     * @see org.spongepowered.asm.service.IMixinService#getAdviceProvider()
+     */
+    @Override
+    public IAdviceProvider getAdviceProvider() {
+        return IAdviceProvider.GENERIC;
+    }
+
+    /* (non-Javadoc)
      * @see org.spongepowered.asm.service.IClassProvider#findClass(
      *      java.lang.String)
      */

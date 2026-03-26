@@ -268,6 +268,14 @@ public class MixinServiceModLauncher extends MixinServiceAbstract {
         return IFeatureValidator.ALLOW_ALL;
     }
 
+    /* (non-Javadoc)
+     * @see org.spongepowered.asm.service.IMixinService#getAdviceProvider()
+     */
+    @Override
+    public IAdviceProvider getAdviceProvider() {
+        return IAdviceProvider.GENERIC;
+    }
+
     /**
      * Get (or create) the transformation handler
      */

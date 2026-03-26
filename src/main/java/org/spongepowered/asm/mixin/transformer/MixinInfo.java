@@ -695,7 +695,8 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
             @Override
             void validate(State state, List<ClassInfo> targetClasses) {
                 if (FabricUtil.getCompatibility(this.mixin.getConfig()) < FabricUtil.COMPATIBILITY_0_17_1) {
-                    throw new InvalidMixinException(this.mixin, "Enum extensions require a compatibility level of at least 0.17.1");
+                    String advice = MixinService.getService().getAdviceProvider().higherCompatibilityNeeded(FabricUtil.COMPATIBILITY_0_17_1, "0.17.1");
+                    throw new InvalidMixinException(this.mixin, "Enum extensions are not supported at the current compatibility version. " + advice);
                 }
                 EnumExtensionUtils.checkForGotchas(this.mixin, state.getValidationClassNode());
             }
