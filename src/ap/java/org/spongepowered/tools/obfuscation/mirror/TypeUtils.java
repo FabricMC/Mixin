@@ -24,17 +24,11 @@
  */
 package org.spongepowered.tools.obfuscation.mirror;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.Name;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.TypeParameterElement;
-import javax.lang.model.element.VariableElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.IntersectionType;
@@ -255,11 +249,11 @@ public abstract class TypeUtils {
             ExecutableElement method = (ExecutableElement)element;
             StringBuilder desc = new StringBuilder().append("(");
             boolean extra = false;
-            for (VariableElement arg : method.getParameters()) {
+            for (TypeName arg : TypeUtils.getAllParameterTypes(method)) {
                 if (extra) {
                     desc.append(',');
                 }
-                desc.append(TypeUtils.getTypeName(arg.asType()));
+                desc.append(arg.name);
                 extra = true;
             }
             desc.append(')').append(TypeUtils.getTypeName(method.getReturnType()));
@@ -351,8 +345,8 @@ public abstract class TypeUtils {
         
         StringBuilder signature = new StringBuilder();
         
-        for (VariableElement var : method.getParameters()) {
-            signature.append(TypeUtils.getInternalName(var));
+        for (TypeName var : TypeUtils.getAllParameterTypes(method)) {
+            signature.append(var.descriptor);
         }
         
         String returnType = TypeUtils.getInternalName(method.getReturnType());
@@ -607,6 +601,35 @@ public abstract class TypeUtils {
         }
         
         return Visibility.PACKAGE;
+    }
+
+    private static List<TypeName> getAllParameterTypes(ExecutableElement element) {
+        List<TypeName> result = new ArrayList<>();
+
+        if (element.getKind() == ElementKind.CONSTRUCTOR && element.getEnclosingElement().getKind() == ElementKind.ENUM) {
+            // Account for the preceding String and int parameters
+            result.add(new TypeName("java.lang.String", "Ljava/lang/String;"));
+            result.add(new TypeName("int", "I"));
+        }
+
+        for (VariableElement param : element.getParameters()) {
+            result.add(new TypeName(param.asType()));
+        }
+        return result;
+    }
+
+    private static class TypeName {
+        final String name;
+        final String descriptor;
+
+        public TypeName(String name, String descriptor) {
+            this.name = name;
+            this.descriptor = descriptor;
+        }
+
+        public TypeName(TypeMirror type) {
+            this(TypeUtils.getTypeName(type), TypeUtils.getInternalName(type));
+        }
     }
     
 }

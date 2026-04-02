@@ -455,6 +455,9 @@ final class TargetClassContext extends ClassContext implements ITargetClassConte
     }
 
     private MixinApplicatorStandard createApplicator() {
+        if (this.classInfo.isEnum()) {
+            return new MixinApplicatorEnum(this);
+        }
         if (this.classInfo.isInterface()) {
             return new MixinApplicatorInterface(this);
         }

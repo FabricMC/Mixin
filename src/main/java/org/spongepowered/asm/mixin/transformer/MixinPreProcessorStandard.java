@@ -220,6 +220,15 @@ class MixinPreProcessorStandard {
         if (shadowAnnotation == null) {
             return;
         }
+
+        if (Constants.CTOR.equals(mixinMethod.name)) {
+            for (String disallowedKey : new String[] {"prefix", "aliases"}) {
+                if (Annotations.getValue(shadowAnnotation, disallowedKey) != null) {
+                    throw new InvalidMixinException(this.mixin, String.format("@Shadow constructor %s.%s declares %s. This is not allowed.",
+                            this.mixin, mixinMethod, disallowedKey));
+                }
+            }
+        }
         
         String prefix = Annotations.<String>getValue(shadowAnnotation, "prefix", Shadow.class);
         if (mixinMethod.name.startsWith(prefix)) {
@@ -433,17 +442,17 @@ class MixinPreProcessorStandard {
             target = context.findRemappedMethod(mixinMethod);
             if (target == null) {
                 throw new InvalidMixinException(this.mixin,
-                        String.format("%s method %s in %s was not located in the target class %s. %s%s", type, mixinMethod.name, this.mixin,
+                        String.format("%s method %s%s in %s was not located in the target class %s. %s%s", type, mixinMethod.name, mixinMethod.desc, this.mixin,
                                 context.getTarget(), context.getReferenceMapper().getStatus(),
                                 MixinPreProcessorStandard.getDynamicInfo(mixinMethod)));
             }
             mixinMethod.name = method.renameTo(target.name);
         }
         
-        if (Constants.CTOR.equals(target.name)) {
+        if (Constants.CTOR.equals(target.name) && !Constants.CTOR.equals(mixinMethod.name)) {
             throw new InvalidMixinException(this.mixin, String.format("Nice try! %s in %s cannot alias a constructor", mixinMethod.name, this.mixin));
         }
-        
+
         if (!Bytecode.compareFlags(mixinMethod, target, Opcodes.ACC_STATIC)) {
             throw new InvalidMixinException(this.mixin, String.format("STATIC modifier of %s method %s in %s does not match the target", type,
                     mixinMethod.name, this.mixin));
@@ -463,6 +472,11 @@ class MixinPreProcessorStandard {
     }
 
     private void conformVisibility(MixinTargetContext context, MixinMethodNode mixinMethod, SpecialMethod type, MethodNode target) {
+        if (Constants.CTOR.equals(mixinMethod.name)) {
+            // No need to change invocation opcodes
+            return;
+        }
+
         Visibility visTarget = Bytecode.getVisibility(target);
         Visibility visMethod = Bytecode.getVisibility(mixinMethod);
         if (visMethod.ordinal() >= visTarget.ordinal()) {
@@ -489,7 +503,7 @@ class MixinPreProcessorStandard {
     }
 
     protected Method getSpecialMethod(MixinMethodNode mixinMethod, SpecialMethod type) {
-        Method method = this.mixin.getClassInfo().findMethod(mixinMethod, ClassInfo.INCLUDE_ALL);
+        Method method = this.mixin.getClassInfo().findMethod(mixinMethod, ClassInfo.INCLUDE_ALL | ClassInfo.INCLUDE_INITIALISERS);
         this.checkMethodNotUnique(method, type);
         return method;
     }
@@ -593,7 +607,7 @@ class MixinPreProcessorStandard {
 
     protected void attachFields(MixinTargetContext context) {
         IActivity fieldActivity = this.activities.begin("?");
-        for (Iterator<FieldNode> iter = this.classNode.getFields().iterator(); iter.hasNext();) {
+        for (Iterator<FieldNode> iter = this.classNode.fields.iterator(); iter.hasNext();) {
             FieldNode mixinField = iter.next();
             fieldActivity.next("%s:%s", mixinField.name, mixinField.desc);
             AnnotationNode shadow = Annotations.getVisible(mixinField, Shadow.class);
@@ -677,9 +691,6 @@ class MixinPreProcessorStandard {
                 mixinField.name = field.renameTo(target.name);
             }
             
-            // Shadow fields get stripped from the mixin class
-            iter.remove();
-            
             if (isShadow) {
                 boolean isFinal = field.isDecoratedFinal();
                 if (this.verboseLogging && Bytecode.hasFlag(target, Opcodes.ACC_FINAL) != isFinal) {
@@ -689,6 +700,8 @@ class MixinPreProcessorStandard {
                     MixinPreProcessorStandard.logger.warn(message, this.mixin, mixinField.name);
                 }
 
+                // Shadow fields get stripped from the mixin class
+                iter.remove();
                 context.addShadowField(mixinField, field);
             }
         }

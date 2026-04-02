@@ -27,6 +27,7 @@ package org.spongepowered.tools.obfuscation;
 import java.util.Locale;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 
@@ -131,7 +132,12 @@ class AnnotatedMixinElementHandlerShadow extends AnnotatedMixinElementHandler {
         public AnnotatedElementShadowMethod(ExecutableElement element, AnnotationHandle annotation, boolean shouldRemap) {
             super(element, annotation, shouldRemap, Type.METHOD);
         }
-        
+
+        @Override
+        public boolean shouldRemap() {
+            return super.shouldRemap() && this.element.getKind() != ElementKind.CONSTRUCTOR;
+        }
+
         @Override
         public MappingMethod getMapping(TypeHandle owner, String name, String desc) {
             return owner.getMappingMethod(name, desc);

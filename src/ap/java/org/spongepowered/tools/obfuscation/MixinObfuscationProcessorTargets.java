@@ -107,7 +107,7 @@ public class MixinObfuscationProcessorTargets extends MixinObfuscationProcessor 
             
             if (elem.getKind() == ElementKind.FIELD) {
                 this.mixins.registerShadow((TypeElement)parent, (VariableElement)elem, shadow);
-            } else if (elem.getKind() == ElementKind.METHOD) {
+            } else if (elem.getKind() == ElementKind.METHOD || elem.getKind() == ElementKind.CONSTRUCTOR) {
                 this.mixins.registerShadow((TypeElement)parent, (ExecutableElement)elem, shadow);
             } else {
                 this.mixins.printMessage(MessageType.SHADOW_ON_INVALID_ELEMENT, "Element is not a method or field",  elem);
