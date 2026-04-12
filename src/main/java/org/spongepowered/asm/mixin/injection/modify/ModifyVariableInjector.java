@@ -32,6 +32,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.VarInsnNode;
+import org.spongepowered.asm.mixin.FabricUtil;
 import org.spongepowered.asm.mixin.injection.InjectionPoint;
 import org.spongepowered.asm.mixin.injection.InjectionPoint.RestrictTargetLevel;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -168,7 +169,11 @@ public class ModifyVariableInjector extends Injector {
      * @return Key for storing/retrieving the injector context decoration
      */
     protected String getTargetNodeKey(Target target, InjectionNode node) {
-        return String.format("localcontext(%s,%s,#%s)", this.returnType, this.discriminator.isArgsOnly() ? "argsOnly" : "fullFrame", node.getId());
+        return String.format(
+                "localcontext(%s,%s,#%s,%s)",
+                this.returnType, this.discriminator.isArgsOnly() ? "argsOnly" : "fullFrame", node.getId(),
+                FabricUtil.getCompatibility(this.info)
+        );
     }
     
     @Override
