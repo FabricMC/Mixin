@@ -60,7 +60,6 @@ import org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException;
 import org.spongepowered.asm.mixin.transformer.throwables.MixinReloadException;
 import org.spongepowered.asm.mixin.transformer.throwables.MixinTargetAlreadyLoadedException;
 import org.spongepowered.asm.service.IClassTracker;
-import org.spongepowered.asm.service.IFeatureValidator;
 import org.spongepowered.asm.service.IMixinService;
 import org.spongepowered.asm.service.MixinService;
 import org.spongepowered.asm.util.Annotations;
@@ -678,18 +677,6 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
                 }
 
                 MixinService.getService().getFeatureValidator().validateEnumExtension(this.mixin, targetInfo);
-
-                if (this.mixin.getClassInfo().isFinal() != targetInfo.isFinal()) {
-                    String us = this.mixin.getClassInfo().isFinal() ? "final" : "not final";
-                    String them = targetInfo.isFinal() ? "final" : "not final";
-                    throw new InvalidMixinException(
-                            this.mixin,
-                            String.format(
-                                    "%s target type mismatch: mixin is %s but target %s is %s",
-                                    this.annotationType, us, targetName, them
-                            )
-                    );
-                }
             }
 
             @Override

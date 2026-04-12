@@ -176,21 +176,33 @@ class MixinApplicatorEnum extends MixinApplicatorStandard {
     }
 
     private void permitEnumSubclasses(List<MixinTargetContext> mixins) {
-        if (this.targetClass.permittedSubclasses == null || this.targetClass.permittedSubclasses.isEmpty()) {
-            // Not sealed in the first place
+        boolean isSealed;
+        if (Bytecode.hasFlag(this.targetClass, Opcodes.ACC_FINAL)) {
+            isSealed = false;
+        } else if (this.targetClass.permittedSubclasses != null && !this.targetClass.permittedSubclasses.isEmpty()) {
+            isSealed = true;
+        } else {
+            // Is neither final nor sealed, so allows arbitrary subclasses already
             return;
         }
         for (MixinTargetContext mixin : mixins) {
-            if (!mixin.getClassInfo().isEnum()) {
-                // Not an enum extension
+            if (!mixin.getClassInfo().isEnum() || mixin.getClassInfo().isFinal()) {
+                // Not a subclassable enum extension
                 continue;
             }
-            for (Map.Entry<String, String> names : mixin.getInnerClasses().entrySet()) {
-                ClassInfo innerClass = ClassInfo.forName(names.getKey());
-                if (innerClass.getSuperName().equals(mixin.getClassRef())) {
-                    // This is an enum subclass
-                    this.targetClass.permittedSubclasses.add(names.getValue());
+            if (isSealed) {
+                // Permit the specific subclasses we have
+                for (Map.Entry<String, String> names : mixin.getInnerClasses().entrySet()) {
+                    ClassInfo innerClass = ClassInfo.forName(names.getKey());
+                    if (innerClass.getSuperName().equals(mixin.getClassRef())) {
+                        // This is an enum subclass
+                        this.targetClass.permittedSubclasses.add(names.getValue());
+                    }
                 }
+            } else {
+                // Simply make the target non-final
+                this.targetClass.access &= ~Opcodes.ACC_FINAL;
+                return;
             }
         }
     }
