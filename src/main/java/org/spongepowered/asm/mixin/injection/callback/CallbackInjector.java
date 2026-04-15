@@ -216,8 +216,11 @@ public class CallbackInjector extends Injector {
 
             this.invoke.add().add(handlerArgs);
 
-            //If the handler doesn't captureArgs, the CallbackInfo(Returnable) will be the first LVT slot, otherwise it will be at the target's frameSize
-            int callbackInfoSlot = handlerArgs.length == 1 ? Bytecode.isStatic(handler) ? 0 : 1 : frameSize;
+            int callbackInfoSlot = Bytecode.isStatic(handler) ? 0 : 1;
+            // It'll be the first arg if no params are captured, or will come after the target's params otherwise
+            if (handlerArgs.length != 1) {
+                callbackInfoSlot += Bytecode.getArgsSize(this.target.arguments);
+            }
             boolean seenCallbackInfoUse = false;
             for (AbstractInsnNode insn : handler.instructions) {
                 //Look for anywhere the CallbackInfo(Returnable) is loaded in the handler, it's unused if it is never loaded in
