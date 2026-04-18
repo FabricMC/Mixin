@@ -292,6 +292,10 @@ class MixinApplicatorEnum extends MixinApplicatorStandard {
 
     @Override
     protected Clinit prepareOrCreateClinit() {
+        if (this.targetInfo == null) {
+            // No enum extensions to handle, use standard logic
+            return super.prepareOrCreateClinit();
+        }
         return new EnumClinit();
     }
     
