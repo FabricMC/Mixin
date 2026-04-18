@@ -1,0 +1,24 @@
+name: Test
+on: [push, pull_request]
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [21-jdk]
+    runs-on: ubuntu-24.04
+    container:
+      image: eclipse-temurin:${{ matrix.java }}
+      options: --user root
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: Mixin
+      - run: ./gradlew stagingProguardJar --stacktrace
+        working-directory: Mixin
+      - uses: actions/checkout@v4
+        with:
+          repository: LlamaLad7/MixinTests
+          path: MixinTests
+      - run: ./gradlew check -PfabricMixinDir=../Mixin --stacktrace
+        working-directory: MixinTests
