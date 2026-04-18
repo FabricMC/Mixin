@@ -133,4 +133,12 @@ public interface IMixinTransformer {
      */
     public abstract IExtensionRegistry getExtensions();
 
+    /**
+     * Notify Mixin that a class load was requested for a given class. Used for deadlock avoidance.
+     * Must be called *before* acquiring the class's class loading lock.
+     * @param name Class being loaded (. separated)
+     */
+    public default void notifyClassLoadAttempt(String name) {
+    }
+
 }
