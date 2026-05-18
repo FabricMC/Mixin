@@ -481,7 +481,9 @@ class MixinApplicatorStandard {
      * @param method Method to merge
      */
     protected void mergeMethod(MixinTargetContext mixin, MethodNode method) {
-        boolean isOverwrite = Annotations.getVisible(method, Overwrite.class) != null;
+        AnnotationNode overwrite = Annotations.getVisible(method, Overwrite.class);
+        boolean isOverwrite = overwrite != null;
+        boolean isOptionalOverwrite = Annotations.<Boolean>getValue(overwrite, "optional", Boolean.FALSE);
         MethodNode target = this.findTargetMethod(method);
         
         if (target != null) {
@@ -504,7 +506,7 @@ class MixinApplicatorStandard {
                 
                 this.targetClass.methods.remove(target);
             }
-        } else if (isOverwrite) {
+        } else if (isOverwrite && !isOptionalOverwrite) {
             throw new InvalidMixinException(mixin, String.format("Overwrite target \"%s\" was not located in target class %s",
                     method.name, mixin.getTargetClassRef()));
         }
