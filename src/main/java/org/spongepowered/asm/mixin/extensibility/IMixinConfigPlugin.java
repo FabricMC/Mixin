@@ -51,7 +51,8 @@ public interface IMixinConfigPlugin {
      * 
      * @param mixinPackage The mixin root package from the config
      */
-    public abstract void onLoad(String mixinPackage);
+    default void onLoad(String mixinPackage) {
+    }
 
     /**
      * Called only if the "referenceMap" key in the config is <b>not</b> set.
@@ -61,8 +62,10 @@ public interface IMixinConfigPlugin {
      * 
      * @return Path to the refmap resource or null to revert to the default
      */
-    public abstract String getRefMapperConfig();
-    
+    default String getRefMapperConfig() {
+        return null;
+    }
+
     /**
      * Called during mixin intialisation, allows this plugin to control whether
      * a specific will be applied to the specified target. Returning false will
@@ -74,7 +77,9 @@ public interface IMixinConfigPlugin {
      * @return True to allow the mixin to be applied, or false to remove it from
      *      target's mixin set
      */
-    public abstract boolean shouldApplyMixin(String targetClassName, String mixinClassName);
+    default boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        return true;
+    }
 
     /**
      * Called after all configurations are initialised, this allows this plugin
@@ -88,8 +93,9 @@ public interface IMixinConfigPlugin {
      * @param otherTargets Target class set incorporating targets from all other
      *      configs, read-only
      */
-    public abstract void acceptTargets(Set<String> myTargets, Set<String> otherTargets);
-    
+    default void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {
+    }
+
     /**
      * After mixins specified in the configuration have been processed, this
      * method is called to allow the plugin to add any additional mixins to
@@ -98,7 +104,9 @@ public interface IMixinConfigPlugin {
      * 
      * @return additional mixins to apply
      */
-    public abstract List<String> getMixins();
+    default List<String> getMixins() {
+        return null;
+    }
 
     /**
      * Called immediately <b>before</b> a mixin is applied to a target class,
@@ -109,7 +117,8 @@ public interface IMixinConfigPlugin {
      * @param mixinClassName Name of the mixin class
      * @param mixinInfo Information about this mixin
      */
-    public abstract void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo);
+    default void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+    }
 
     /**
      * Called immediately <b>after</b> a mixin is applied to a target class,
@@ -120,6 +129,7 @@ public interface IMixinConfigPlugin {
      * @param mixinClassName Name of the mixin class
      * @param mixinInfo Information about this mixin
      */
-    public abstract void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo);
+    default void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+    }
 
 }
