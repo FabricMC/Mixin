@@ -74,7 +74,7 @@ public @interface Shadow {
      * be stripped from the start of the method name <em>as long as the method
      * name actually starts with the prefix</em>! This has important
      * repercussions since if the annotation value does not match the method
-     * prefix then <em>no renaming will take place</em> likey resulting in a
+     * prefix then <em>no renaming will take place</em> likely resulting in a
      * failure state indicated by an {@link InvalidMixinException} at run
      * time.</p>
      * 

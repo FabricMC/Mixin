@@ -68,7 +68,7 @@ public abstract class ObfuscationUtil {
     }
     
     /**
-     * Unmap (inverse of map) a descriptor using the supplied rempper
+     * Unmap (inverse of map) a descriptor using the supplied remapper
      * 
      * @param desc descriptor to unmap
      * @param remapper remapper to use
