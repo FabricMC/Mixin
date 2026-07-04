@@ -56,7 +56,7 @@ import org.spongepowered.tools.obfuscation.mirror.TypeHandle;
 import org.spongepowered.tools.obfuscation.struct.InjectorRemap;
 
 /**
- * A module for {@link AnnotatedMixin} whic handles injectors
+ * A module for {@link AnnotatedMixin} which handles injectors
  */
 class AnnotatedMixinElementHandlerInjector extends AnnotatedMixinElementHandler {
 

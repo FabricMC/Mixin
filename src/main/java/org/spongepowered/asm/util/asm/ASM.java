@@ -135,14 +135,14 @@ public final class ASM {
     }
     
     /**
-     * Get the maximum supported major class versior
+     * Get the maximum supported major class version
      */
     public static int getMaxSupportedClassVersionMajor() {
         return ASM.maxClassMajorVersion;
     }
     
     /**
-     * Get the maximum supported minor class versior
+     * Get the maximum supported minor class version
      */
     public static int getMaxSupportedClassVersionMinor() {
         return ASM.maxClassMinorVersion;

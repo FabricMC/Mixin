@@ -779,7 +779,7 @@ final class AnnotatedMixins implements IMixinAnnotationProcessor, ITokenProvider
         }
         
         // Ok someone is trolling if there are more than 10 '$' symbols in a
-        // name! 10 is an arbitary number, we could do more but the loop below
+        // name! 10 is an arbitrary number, we could do more but the loop below
         // is expensive and something horrible is probably happening if there
         // are that many '$' signs. We can also skip here if occurs < 2 because
         // we already tested that case above when we replaced "all"

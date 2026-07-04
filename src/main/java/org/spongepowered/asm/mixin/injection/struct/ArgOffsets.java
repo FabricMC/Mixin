@@ -132,7 +132,7 @@ public class ArgOffsets implements IChainedDecoration<ArgOffsets> {
     }
     
     /**
-     * Compute the argument index for the start of the window (offet 0)
+     * Compute the argument index for the start of the window (offset 0)
      * 
      * @return the offset index for the start of the window (inclusive)
      */

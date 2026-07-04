@@ -110,7 +110,7 @@ public class CallbackInjector extends Injector {
         final int extraArgs;
 
         /**
-         * True if the injector is set to capture locals and we acutally <b>can
+         * True if the injector is set to capture locals and we actually <b>can
          * </b> capture the locals (have sufficient info etc.)
          */
         final boolean canCaptureLocals;
