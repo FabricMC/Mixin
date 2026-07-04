@@ -34,7 +34,7 @@ import org.spongepowered.asm.mixin.MixinEnvironment.Phase;
 import org.spongepowered.asm.util.ReEntranceLock;
 
 /**
- * Mixin Service interface. Mixin services connect the mixin subsytem to the
+ * Mixin Service interface. Mixin services connect the mixin subsystem to the
  * underlying environment. It is something of a god interface at present because
  * it contains all of the current functionality accessors for calling into
  * launchwrapper. In the future once support for modlauncher is added, it is

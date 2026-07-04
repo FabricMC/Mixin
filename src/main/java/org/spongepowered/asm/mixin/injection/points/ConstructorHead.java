@@ -118,7 +118,7 @@ public class ConstructorHead extends MethodHead {
     private final Enforce enforce;
     
     /**
-     * True to warn when enfored selection fails 
+     * True to warn when enforced selection fails
      */
     private final boolean verbose;
 

@@ -95,7 +95,7 @@ public interface IMessagerEx extends Messager {
 
         /**
          * The AP was unable to determine the accessor name either from the
-         * annotation or using the inflector on the annoated method name 
+         * annotation or using the inflector on the annotated method name
          */
         ACCESSOR_NAME_UNRESOLVED(Kind.WARNING),
  
@@ -129,7 +129,7 @@ public interface IMessagerEx extends Messager {
         /** Mapping conflict encountered on shadow method */
         SHADOW_MAPPING_CONFLICT(Kind.ERROR),
         
-        /** Injector-annotated method encounterd in an interface */
+        /** Injector-annotated method encountered in an interface */
         INJECTOR_IN_INTERFACE(Kind.ERROR),
         
         /** Injector annotation encountered on element which is not a method */

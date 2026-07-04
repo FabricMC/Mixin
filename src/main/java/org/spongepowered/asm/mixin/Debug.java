@@ -30,7 +30,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Anotation used to decorate items you might wish to examine after mixin
+ * Annotation used to decorate items you might wish to examine after mixin
  * application.
  */
 @Target({ ElementType.TYPE, ElementType.METHOD })

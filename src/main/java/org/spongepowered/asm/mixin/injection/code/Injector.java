@@ -754,7 +754,7 @@ public abstract class Injector {
     
     /**
      * Returns whether the <tt>from</tt> type can be coerced to the <tt>to</tt>
-     * type. This is effectively a superclass check: the check suceeds if <tt>
+     * type. This is effectively a superclass check: the check succeeds if <tt>
      * to</tt> is a subclass of <tt>from</tt>.
      * 
      * @param from type to coerce from

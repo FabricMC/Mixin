@@ -79,7 +79,7 @@ public @interface Desc {
 
     /**
      * The owner of the member to match. The "owner" is the class which declares
-     * the member <b>or, ocasionally</b> the type of class upon which a virtual
+     * the member <b>or, occasionally</b> the type of class upon which a virtual
      * call is being made. For example if a class <tt>SuperType</tt> defines a
      * method <tt>doSomething</tt>, usually <tt>owner</tt> will be
      * <tt>SuperType</tt>. However note that where a method retrieves a

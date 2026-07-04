@@ -37,7 +37,7 @@ import org.objectweb.asm.tree.ClassNode;
  * indirectly from the transformer, the same precautions as for writing class
  * transformers should be taken. Implementors should take care to not reference
  * any game classes, and avoid referencing other classes in their own mod except
- * those specificially designed to be available at early startup, such as
+ * those specifically designed to be available at early startup, such as
  * coremod classes or other standalone bootstrap objects.</p>
  * 
  * <p>Instances of plugins are created by specifying the "plugin" key in the

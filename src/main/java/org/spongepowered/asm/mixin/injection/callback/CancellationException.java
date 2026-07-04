@@ -25,7 +25,7 @@
 package org.spongepowered.asm.mixin.injection.callback;
 
 /**
- * Exception thrown when a consumer attemtps to call <tt>cancel()</tt> on a
+ * Exception thrown when a consumer attempts to call <tt>cancel()</tt> on a
  * callback not marked as <tt>cancellable</tt>.
  */
 public class CancellationException extends RuntimeException {

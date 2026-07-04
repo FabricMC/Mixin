@@ -189,7 +189,7 @@ public class DynamicSelectorDesc implements ITargetSelectorDynamic, ITargetSelec
     }
 
     /**
-     * Parser/resolver error mesage, only stored if the descriptor is invalid so
+     * Parser/resolver error message, only stored if the descriptor is invalid so
      * we can emit it when {@link #validate} is called
      */
     private final InvalidSelectorException parseException;

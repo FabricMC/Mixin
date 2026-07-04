@@ -202,7 +202,7 @@ public final class Extensions implements IExtensionRegistry {
 
     /**
      * @param generatorClass generator class or interface to look up
-     * @param <T> genenerator class for duck typing
+     * @param <T> generator class for duck typing
      * @return generator
      */
     @SuppressWarnings("unchecked")

@@ -62,7 +62,7 @@ public interface IAnnotationHandle {
     /**
      * Get an annotation value as an ASM {@link Type}. This is special-cased
      * because the different APIs return class literals in different ways. Under
-     * ASM we will receieve {@link Type} instances, but at compile time we will
+     * ASM we will receive {@link Type} instances, but at compile time we will
      * get {@link TypeMirror}s instead. This overload is provided so that
      * subclasses have to marshal everything into {@link Type} for consistency.
      * 
@@ -74,7 +74,7 @@ public interface IAnnotationHandle {
     /**
      * Retrieve an annotation key as a list of Types. This is special-cased
      * because the different APIs return class literals in different ways. Under
-     * ASM we will receieve {@link Type} instances, but at compile time we will
+     * ASM we will receive {@link Type} instances, but at compile time we will
      * get {@link TypeMirror}s instead. This overload is provided so that
      * subclasses have to marshal everything into {@link Type} for consistency.
      * 

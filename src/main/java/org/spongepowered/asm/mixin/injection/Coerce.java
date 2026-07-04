@@ -46,7 +46,7 @@ import java.lang.annotation.Target;
  * type for types represented internally as integers, for example booleans and
  * shorts. However adding a surrogate for these cases is overkill when the type
  * is known for certain by the injector. Since the bytecode for all types stored
- * as integer interally will be valid, we can force the local type to any
+ * as integer internally will be valid, we can force the local type to any
  * covariant type as long as we know this in advance.</p>
  * 
  * <p>This annotation allows a covariant type parameter to be marked, and thus
