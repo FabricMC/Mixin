@@ -160,7 +160,7 @@ public abstract class ObfuscationEnvironment implements IObfuscationEnvironment 
             }
             
             if (successCount < 1) {
-                this.ap.printMessage(Kind.ERROR, "No valid input files for " + this.type + " could be read, processing may not be sucessful.");
+                this.ap.printMessage(Kind.ERROR, "No valid input files for " + this.type + " could be read, processing may not be successful.");
                 this.mappingProvider.clear();
             }
         }
