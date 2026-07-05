@@ -51,7 +51,7 @@ public interface IMixinConfigPlugin {
      * 
      * @param mixinPackage The mixin root package from the config
      */
-    default void onLoad(String mixinPackage) {
+    public default void onLoad(String mixinPackage) {
     }
 
     /**
@@ -62,7 +62,7 @@ public interface IMixinConfigPlugin {
      * 
      * @return Path to the refmap resource or null to revert to the default
      */
-    default String getRefMapperConfig() {
+    public default String getRefMapperConfig() {
         return null;
     }
 
@@ -77,7 +77,7 @@ public interface IMixinConfigPlugin {
      * @return True to allow the mixin to be applied, or false to remove it from
      *      target's mixin set
      */
-    default boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+    public default boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         return true;
     }
 
@@ -93,7 +93,7 @@ public interface IMixinConfigPlugin {
      * @param otherTargets Target class set incorporating targets from all other
      *      configs, read-only
      */
-    default void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {
+    public default void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {
     }
 
     /**
@@ -104,7 +104,7 @@ public interface IMixinConfigPlugin {
      * 
      * @return additional mixins to apply
      */
-    default List<String> getMixins() {
+    public default List<String> getMixins() {
         return null;
     }
 
@@ -117,7 +117,7 @@ public interface IMixinConfigPlugin {
      * @param mixinClassName Name of the mixin class
      * @param mixinInfo Information about this mixin
      */
-    default void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+    public default void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
     }
 
     /**
@@ -129,7 +129,7 @@ public interface IMixinConfigPlugin {
      * @param mixinClassName Name of the mixin class
      * @param mixinInfo Information about this mixin
      */
-    default void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+    public default void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
     }
 
 }
