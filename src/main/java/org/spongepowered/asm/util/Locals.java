@@ -1130,7 +1130,7 @@ public final class Locals {
      }
     
     /**
-     * Compute the size required to accomodate the entries described by the
+     * Compute the size required to accommodate the entries described by the
      * supplied frame node
      * 
      * @param frameNode frame node with locals to compute

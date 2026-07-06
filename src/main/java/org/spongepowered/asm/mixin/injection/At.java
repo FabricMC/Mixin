@@ -105,7 +105,7 @@ public @interface At {
      * {@link BeforeStringInvoke INVOKE_STRING},
      * {@link JumpInsnPoint JUMP} and
      * {@link BeforeConstant CONSTANT}.
-     * See the javadoc for each type for more details on the scheme used by each
+     * See the Javadoc for each type for more details on the scheme used by each
      * injection point.</p>
      * 
      * @return Injection point specifier or fully-qualified class name
@@ -126,7 +126,7 @@ public @interface At {
     /**
      * Shift type for returned opcodes. For example use {@link At.Shift#AFTER
      * AFTER} with an INVOKE InjectionPoint to move the returned opcodes to
-     * <i>after</i> the invoation. Use {@link At.Shift#BY BY} in conjunction
+     * <i>after</i> the invocation. Use {@link At.Shift#BY BY} in conjunction
      * with the {@link #by} parameter to shift by an arbitrary number of
      * opcodes. 
      * 
@@ -185,7 +185,7 @@ public @interface At {
     public int ordinal() default -1;
     
     /**
-     * Target opcode for FIELD and JUMP InjectionPoints. See the javadoc for the
+     * Target opcode for FIELD and JUMP InjectionPoints. See the Javadoc for the
      * relevant injection point for more details.
      * 
      * @return Bytecode opcode for supported InjectionPoints
@@ -217,7 +217,7 @@ public @interface At {
      * constructor calls, field initialisers and code from initialiser blocks,
      * and of course the code from the original "constructor".
      * 
-     * <p>This means that unlike targetting a regular method, where it's often
+     * <p>This means that unlike targeting a regular method, where it's often
      * possible to derive a reasonable injection point from the Java source, in
      * a constructor such assumptions can be dangerous. For example the <tt>HEAD
      * </tt> of a regular method will always mean "before the first
@@ -231,7 +231,7 @@ public @interface At {
      * fully-uninitialised state (prior to the delegate constructor call).</p>
      * 
      * <p>Because of this, by default certain injectors restrict usage to only
-     * <tt>RETURN</tt> opcodes when targetting a constructor, in order to ensure
+     * <tt>RETURN</tt> opcodes when targeting a constructor, in order to ensure
      * that the consumers are properly aware of the potential pitfalls. Whilst
      * it was previously necessary to create a custom injection point in order 
      * to bypass this restriction, setting this option to <tt>true</tt> will

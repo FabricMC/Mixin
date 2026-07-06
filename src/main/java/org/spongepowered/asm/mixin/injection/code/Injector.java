@@ -361,7 +361,7 @@ public abstract class Injector {
      * 
      * @param target Target to check
      * @param exactMatch True if static must match, false to only check if an
-     *      instance handler is targetting a static method
+     *      instance handler is targeting a static method
      */
     protected final void checkTargetModifiers(Target target, boolean exactMatch) {
         if (exactMatch && target.isStatic != this.isStatic) {
@@ -388,7 +388,7 @@ public abstract class Injector {
             Constructor ctor = (Constructor)target;
 
             if (targetLevel == RestrictTargetLevel.METHODS_ONLY) {
-                throw new InvalidInjectionException(this.info, String.format("Found %s targetting a constructor in injector %s",
+                throw new InvalidInjectionException(this.info, String.format("Found %s targeting a constructor in injector %s",
                         this.annotationType, this));
             }
             
@@ -401,7 +401,7 @@ public abstract class Injector {
             int targetIndex = ctor.indexOf(node.getCurrentTarget());
             if (targetIndex <= superCallIndex) {
                 if (targetLevel == RestrictTargetLevel.CONSTRUCTORS_AFTER_DELEGATE) {
-                    throw new InvalidInjectionException(this.info, String.format("Found %s targetting a constructor before %s() in injector %s",
+                    throw new InvalidInjectionException(this.info, String.format("Found %s targeting a constructor before %s() in injector %s",
                             this.annotationType, superCall, this));
                 }
                 

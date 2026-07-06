@@ -150,7 +150,7 @@ public class ConstructorHead extends MethodHead {
         if (this.enforce == Enforce.POST_DELEGATE) {
             if (postDelegate == null) {
                 if (this.verbose) {
-                    this.logger.warn("@At(\"{}\") on {}{} targetting {} failed for enforce=POST_DELEGATE because no delegate was found",
+                    this.logger.warn("@At(\"{}\") on {}{} targeting {} failed for enforce=POST_DELEGATE because no delegate was found",
                             this.getAtCode(), this.method.name, this.method.desc, xinsns);
                 }
                 return false;

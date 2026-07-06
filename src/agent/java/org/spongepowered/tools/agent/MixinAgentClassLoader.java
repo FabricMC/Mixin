@@ -77,7 +77,7 @@ class MixinAgentClassLoader extends ClassLoader {
     /**
      * Registers the bytecode for a class targeted by a mixin
      *
-     * @param name Name of the target clas
+     * @param name Name of the target class
      * @param classNode ASM tree node of the target class
      */
     void addTargetClass(String name, ClassNode classNode) {

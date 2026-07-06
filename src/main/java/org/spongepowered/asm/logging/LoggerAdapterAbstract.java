@@ -50,7 +50,7 @@ public abstract class LoggerAdapterAbstract implements ILogger {
         /**
          * Create a new formatted message
          * 
-         * @param message Message patterm
+         * @param message Message pattern
          * @param params Message parameters
          */
         public FormattedMessage(String message, Object... params) {

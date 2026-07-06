@@ -66,7 +66,7 @@ public final class MethodSlice {
          * traverse the slice.
          * 
          * <p>Note that this doesn't handle changes in the underlying InsnList
-         * which occur after instatiation, care should be taken not to modify
+         * which occur after instantiation, care should be taken not to modify
          * the list via other means whilst this iterator is in use.</p>
          */
         static class SliceIterator implements ListIterator<AbstractInsnNode> {

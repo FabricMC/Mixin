@@ -215,7 +215,7 @@ class MethodMapper {
      * 
      * @param name method name
      * @param desc method descriptor
-     * @param increment true to incrememnt the id if it already exists
+     * @param increment true to increment the id if it already exists
      * @return unique identifier
      */
     private static String getMethodUID(String name, String desc, boolean increment) {

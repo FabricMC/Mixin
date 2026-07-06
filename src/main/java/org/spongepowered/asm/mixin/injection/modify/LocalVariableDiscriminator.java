@@ -407,7 +407,7 @@ public class LocalVariableDiscriminator {
      * Parse a local variable discriminator from the supplied annotation
      * 
      * @param annotation annotation to parse
-     * @return discriminator configured using values from the annoation
+     * @return discriminator configured using values from the annotation
      */
     public static LocalVariableDiscriminator parse(AnnotationNode annotation) {
         boolean argsOnly = Annotations.<Boolean>getValue(annotation, "argsOnly", Boolean.FALSE).booleanValue();

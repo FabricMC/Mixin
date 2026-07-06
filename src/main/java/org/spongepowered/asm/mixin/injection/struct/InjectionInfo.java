@@ -486,7 +486,7 @@ public abstract class InjectionInfo extends SpecialMethodInfo implements ISliceC
             ex.prepend(this.activities);
             throw ex;
         } catch (Exception ex) {
-            throw new InvalidMixinException(this.mixin, "Unexpecteded " + ex.getClass().getSimpleName() + " preparing "
+            throw new InvalidMixinException(this.mixin, "Unexpected " + ex.getClass().getSimpleName() + " preparing "
                     + this.getElementDescription(), ex, this.activities);
         }
     }

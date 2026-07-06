@@ -37,7 +37,7 @@ import org.spongepowered.asm.service.ILegacyClassTransformer;
 public interface IMixinTransformer {
 
     /**
-     * Force-load all classes targetted by mixins but not yet applied
+     * Force-load all classes targeted by mixins but not yet applied
      * 
      * @param environment current environment
      */

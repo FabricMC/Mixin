@@ -57,7 +57,7 @@ import org.spongepowered.asm.util.ConstraintParser.Constraint;
  * <h3>Basic usage</h3>
  * 
  * <p>The simplest usage of <tt>&#064;Inject</tt> captures no context from the
- * target scope. This is particularly useful if the injector is targetting
+ * target scope. This is particularly useful if the injector is targeting
  * multiple methods with different signatures. In this case only the 
  * {@link CallbackInfo} (or {@link CallbackInfoReturnable} as appropriate) is
  * required.</p>

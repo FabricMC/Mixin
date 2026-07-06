@@ -567,7 +567,7 @@ class MixinPreProcessorStandard {
                 try {
                     // will throw exception if bridge methods are incompatible
                     Bytecode.compareBridgeMethods(target, mixinMethod);
-                    MixinPreProcessorStandard.logger.debug("Discarding sythetic bridge method {} in {} because existing method in {} is compatible",
+                    MixinPreProcessorStandard.logger.debug("Discarding synthetic bridge method {} in {} because existing method in {} is compatible",
                             type, mixinMethod.name, this.mixin, context.getTarget());
                     return true;
                 } catch (SyntheticBridgeException ex) {

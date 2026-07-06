@@ -61,11 +61,11 @@ public @interface Mixin {
     /**
      * Since specifying targets in {@link #value} requires that the classes be
      * publicly visible, this property is provided to allow package-private,
-     * anonymous innner, and private inner, or unavailable ({@link Pseudo
+     * anonymous inner, and private inner, or unavailable ({@link Pseudo
      * &#64;Pseudo} classes to be referenced. Referencing an otherwise public
      * class using this property is an error condition and will raise a warning
      * at runtime or an error if {@link MixinEnvironment.Option#DEBUG_STRICT
-     * strict checks} are enabled. It is completely fine to specify both publi
+     * strict checks} are enabled. It is completely fine to specify both public
      * and private targets for the same mixin however.
      * 
      * <p>Note that unlike class literals specified in {@link #value}, imports
@@ -78,7 +78,7 @@ public @interface Mixin {
     public String[] targets() default { };
 
     /**
-     * Priority for the mixin, relative to other mixins targetting the same
+     * Priority for the mixin, relative to other mixins targeting the same
      * classes. By default mixins inherit their priority from the parent
      * configuration that contains them, setting this value allows the priority
      * to be overridden on a per-mixin basis.
@@ -90,7 +90,7 @@ public @interface Mixin {
      * by injector because of first-come-first-served versus implied ordering of
      * injectors such as inject-at-HEAD.</p>
      * 
-     * @return the mixin priority (relative to other mixins targetting the same
+     * @return the mixin priority (relative to other mixins targeting the same
      *      class)
      */
     public int priority() default 1000;

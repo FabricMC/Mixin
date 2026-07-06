@@ -302,7 +302,7 @@ public class MixinPlatformAgentFMLLegacy extends MixinPlatformAgentAbstract impl
     @Override
     public void inject() {
         if (this.coreModWrapper != null && this.checkForCoInitialisation()) {
-            MixinPlatformAgentAbstract.logger.debug("FML agent is co-initiralising coremod instance {} for {}", this.coreModWrapper, this.handle);
+            MixinPlatformAgentAbstract.logger.debug("FML agent is co-initialising coremod instance {} for {}", this.coreModWrapper, this.handle);
             this.coreModWrapper.injectIntoClassLoader(Launch.classLoader);
         }
     }

@@ -144,7 +144,7 @@ public final class ArgsClassGenerator implements IClassGenerator {
     /**
      * Ctor
      * 
-     * @param registry sythetic class registry
+     * @param registry synthetic class registry
      */
     public ArgsClassGenerator(IConsumer<ISyntheticClassInfo> registry) {
         this.registry = registry;

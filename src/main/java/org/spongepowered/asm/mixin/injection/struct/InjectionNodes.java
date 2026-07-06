@@ -33,7 +33,7 @@ import org.spongepowered.asm.util.Bytecode;
 
 /**
  * Used to keep track of instruction nodes in a {@link Target} method which are
- * targetted by various types of injector. This collection is populated during
+ * targeted by various types of injector. This collection is populated during
  * the first injector pass and allows injectors to keep track of their targets
  * even when the target method is being manipulated by other injectors.
  */
@@ -45,7 +45,7 @@ public class InjectionNodes extends ArrayList<InjectionNodes.InjectionNode> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * A node targetted by one or more injectors. Using this wrapper allows
+     * A node targeted by one or more injectors. Using this wrapper allows
      * injectors to be aware of when their target node is removed or replace by
      * another injector. It also allows injectors to decorate certain nodes with
      * custom metadata to allow arbitration between injectors to take place.
@@ -63,7 +63,7 @@ public class InjectionNodes extends ArrayList<InjectionNodes.InjectionNode> {
         private final int id;
         
         /**
-         * The original node targetted
+         * The original node targeted
          */
         private final AbstractInsnNode originalTarget;
         

@@ -47,7 +47,7 @@ public @interface MixinMerged {
     public String mixin();
     
     /**
-     * Prioriy of the mixin which merged this method, used to allow mixins with
+     * Priority of the mixin which merged this method, used to allow mixins with
      * higher priority to overwrite methods already overwritten by those with a
      * lower priority.
      * 

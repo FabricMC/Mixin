@@ -40,7 +40,7 @@ import org.spongepowered.asm.service.MixinService;
 
 /**
  * Bootstraps the mixin subsystem. This class acts as a bridge between the mixin
- * subsystem and the tweaker or coremod which is boostrapping it. Without this
+ * subsystem and the tweaker or coremod which is bootstrapping it. Without this
  * class, a coremod may cause classload of MixinEnvironment in the
  * LaunchClassLoader before we have a chance to exclude it. By placing the main
  * bootstrap logic here we avoid the need for consumers to add the classloader

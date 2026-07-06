@@ -83,7 +83,7 @@ import com.google.common.collect.BiMap;
  * class <em>during</em> a mixin application. This is a single-use object which
  * acts as both a handle information we need when applying the mixin (such as
  * the actual mixin ClassNode and the target ClassNode) and a gateway to
- * context-sensitive operations such as re-targetting method and field accesses
+ * context-sensitive operations such as re-targeting method and field accesses
  * in the mixin to the appropriate members in the target class hierarchy. 
  */
 public class MixinTargetContext extends ClassContext implements IMixinContext {
@@ -453,7 +453,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
     /**
      * Get whether overwrite annotations are required for methods in this mixin
      * 
-     * @return true if overwrite methods must be annoated with {@link Overwrite}
+     * @return true if overwrite methods must be annotated with {@link Overwrite}
      */
     public boolean requireOverwriteAnnotations() {
         return this.mixin.getParent().requireOverwriteAnnotations();
@@ -517,7 +517,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
             ex.prepend(this.activities);
             throw ex;
         } catch (Exception ex) {
-            throw new InvalidMixinException(this, "Unexpecteded " + ex.getClass().getSimpleName() + " whilst transforming the mixin class:", ex,
+            throw new InvalidMixinException(this, "Unexpected " + ex.getClass().getSimpleName() + " whilst transforming the mixin class:", ex,
                     this.activities);
         }
     }
@@ -581,7 +581,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
      * and dynamic bindings.
      * 
      * @param method Method being processed
-     * @param iter Insn interator
+     * @param iter Insn iterator
      * @param methodRef Method reference to transform
      */
     private void transformMethodRef(MethodNode method, Iterator<AbstractInsnNode> iter, MemberRef methodRef) {
@@ -614,7 +614,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
      * targets.
      * 
      * @param method Method being processed
-     * @param iter Insn interator
+     * @param iter Insn iterator
      * @param fieldRef Field Reference to transform
      */
     private void transformFieldRef(MethodNode method, Iterator<AbstractInsnNode> iter, MemberRef fieldRef) {
@@ -691,7 +691,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
      * class for this context.
      * 
      * @param method Method being processed
-     * @param iter Insn interator
+     * @param iter Insn iterator
      * @param typeInsn Insn to transform
      * @param lastNode Last insn in the method
      */
@@ -722,7 +722,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
      * processed.
      * 
      * @param method Method being processed
-     * @param iter Insn interator
+     * @param iter Insn iterator
      * @param ldcInsn Insn to transform
      */
     private void transformConstantNode(MethodNode method, Iterator<AbstractInsnNode> iter, LdcInsnNode ldcInsn) {
@@ -733,7 +733,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
      * Transforms a invoke dynamic instruction in the method being processed.
      *
      * @param method Method being processed
-     * @param iter Insn interator
+     * @param iter Insn iterator
      * @param dynInsn Insn to transform
      */
     private void transformInvokeDynamicNode(MethodNode method, Iterator<AbstractInsnNode> iter, InvokeDynamicInsnNode dynInsn) {
@@ -749,8 +749,8 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
      * Transforms a constant in the constant pool.
      *
      * @param method Method being processed
-     * @param iter Insn interator
-     * @param constant Consatnt pool entry
+     * @param iter Insn iterator
+     * @param constant Constant pool entry
      * @return Transformed constant
      */
     private Object transformConstant(MethodNode method, Iterator<AbstractInsnNode> iter, Object constant) {
@@ -774,7 +774,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
      * processed.
      *
      * @param method Method being processed
-     * @param iter Insn interator
+     * @param iter Insn iterator
      * @param handle Handle to transform
      */
     private Handle transformHandle(MethodNode method, Iterator<AbstractInsnNode> iter, Handle handle) {
@@ -820,8 +820,8 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
     /**
      * Handle "imaginary super" invocations, these are invocations in
      * non-derived mixins for accessing methods known to exist in a supermixin
-     * which is not directly inherited by this mixix. The method can only call
-     * its <b>own</b> super-implmentation and the methd must also be tagged with
+     * which is not directly inherited by this mixin. The method can only call
+     * its <b>own</b> super-implementation and the method must also be tagged with
      * {@link SoftOverride} to indicate that the method must exist in a super
      * class.
      * 
@@ -1258,7 +1258,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
     }
 
     /**
-     * Get whether to propogate the source file attribute from a mixin onto the
+     * Get whether to propagate the source file attribute from a mixin onto the
      * target class
      * 
      * @return true if the sourcefile property should be set on the target class
@@ -1340,7 +1340,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
             ex.prepend(this.activities);
             throw ex;
         } catch (Exception ex) {
-            throw new InvalidMixinException(this, "Unexpecteded " + ex.getClass().getSimpleName() + " whilst transforming the mixin class:", ex,
+            throw new InvalidMixinException(this, "Unexpected " + ex.getClass().getSimpleName() + " whilst transforming the mixin class:", ex,
                     this.activities);
         }
     }
@@ -1404,7 +1404,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
             ex.prepend(this.activities);
             throw ex;
         } catch (Exception ex) {
-            throw new InvalidMixinException(this, "Unexpecteded " + ex.getClass().getSimpleName() + " whilst transforming the mixin class:", ex,
+            throw new InvalidMixinException(this, "Unexpected " + ex.getClass().getSimpleName() + " whilst transforming the mixin class:", ex,
                     this.activities);
         }
     }
@@ -1442,7 +1442,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
             ex.prepend(this.activities);
             throw ex;
         } catch (Exception ex) {
-            throw new InvalidMixinException(this, "Unexpecteded " + ex.getClass().getSimpleName() + " whilst transforming the mixin class:", ex,
+            throw new InvalidMixinException(this, "Unexpected " + ex.getClass().getSimpleName() + " whilst transforming the mixin class:", ex,
                     this.activities);
         }
     }
@@ -1483,7 +1483,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
             ex.prepend(this.activities);
             throw ex;
         } catch (Exception ex) {
-            throw new InvalidMixinException(this, "Unexpecteded " + ex.getClass().getSimpleName() + " whilst transforming the mixin class:", ex,
+            throw new InvalidMixinException(this, "Unexpected " + ex.getClass().getSimpleName() + " whilst transforming the mixin class:", ex,
                     this.activities);
         }
     }
@@ -1524,7 +1524,7 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
             ex.prepend(this.activities);
             throw ex;
         } catch (Exception ex) {
-            throw new InvalidMixinException(this, "Unexpecteded " + ex.getClass().getSimpleName() + " whilst transforming the mixin class:", ex,
+            throw new InvalidMixinException(this, "Unexpected " + ex.getClass().getSimpleName() + " whilst transforming the mixin class:", ex,
                     this.activities);
         }
         

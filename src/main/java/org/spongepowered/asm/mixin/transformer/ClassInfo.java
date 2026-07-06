@@ -1549,7 +1549,7 @@ public final class ClassInfo {
     }
 
     /**
-     * Walks up this class's hierarchy to find the first class targetted by the
+     * Walks up this class's hierarchy to find the first class targeted by the
      * specified mixin. This is used during mixin application to translate a
      * mixin reference to a "real class" reference <em>in the context of <b>this
      * </b> class</em>.
@@ -1616,12 +1616,12 @@ public final class ClassInfo {
     }
 
     /**
-     * Find out whether this (non-mixin) class has a mixin targetting
+     * Find out whether this (non-mixin) class has a mixin targeting
      * <em>any</em> of its superclasses. This method always returns false for
      * mixin classes.
      *
      * @return true if and only if one or more classes in this class's hierarchy
-     *      are targetted by a mixin
+     *      are targeted by a mixin
      */
     public boolean hasMixinTargetInHierarchy() {
         if (this.isMixin) {

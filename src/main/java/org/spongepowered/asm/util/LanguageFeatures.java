@@ -109,7 +109,7 @@ public final class LanguageFeatures {
     }
 
     /**
-     * Sacn for features at the class level
+     * Scan for features at the class level
      */
     private static int scanClassFeatures(ClassNode classNode) {
         int features = 0;

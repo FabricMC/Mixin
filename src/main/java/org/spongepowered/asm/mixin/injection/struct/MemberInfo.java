@@ -50,7 +50,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 
 /**
- * <p>Struct which defines an <b>Explcit Target selector</b>,  See
+ * <p>Struct which defines an <b>Explicit Target selector</b>,  See
  * {@link ITargetSelector} for other supported selector types. This struct is
  * also used as a general-purpose information bundle about a member (method or
  * field) parsed from a String token in another annotation, this is used where
@@ -204,7 +204,7 @@ import com.google.common.base.Strings;
  *     target="_top">quantifiers in regular expressions</a>, though more
  *     limited. In particular:
  *     <ul>
- *       <li><b>No quantifer</b> is equivalent to the regex <tt>?</tt>
+ *       <li><b>No quantifier</b> is equivalent to the regex <tt>?</tt>
  *         quantifier, in that undecorated selectors can match <tt>{0,1}</tt>,
  *         this is for backward compatibility reasons. Likewise <tt>?</tt> is
  *         not supported since it's implied. To require exactly one match use
@@ -523,7 +523,7 @@ public final class MemberInfo implements ITargetSelectorRemappable, ITargetSelec
     }
     
     /**
-     * Get the return type for this MemberInfo, if the decriptor is present,
+     * Get the return type for this MemberInfo, if the descriptor is present,
      * returns null if the descriptor is absent or if this MemberInfo represents
      * a field
      */

@@ -35,7 +35,7 @@ public interface ISyntheticClassInfo {
 
     /**
      * Get the mixin which incepted this synthetic class (if more than one mixin
-     * is resposible, returns the first)
+     * is responsible, returns the first)
      */
     public abstract IMixinInfo getMixin();
 

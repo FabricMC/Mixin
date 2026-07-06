@@ -31,7 +31,7 @@ import org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException;
 
 /**
  * Thrown when an injector fails a state check, for example if an injector
- * handler signature is invalid, an invalid opcode is targetted, etc.
+ * handler signature is invalid, an invalid opcode is targeted, etc.
  */
 public class InvalidInjectionException extends InvalidMixinException {
 

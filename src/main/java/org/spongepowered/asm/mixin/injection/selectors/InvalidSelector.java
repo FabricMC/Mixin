@@ -25,7 +25,7 @@
 package org.spongepowered.asm.mixin.injection.selectors;
 
 /**
- * Since the contract of {@link TargetSelector#parse} prohibits returing <tt>
+ * Since the contract of {@link TargetSelector#parse} prohibits returning <tt>
  * null</tt>, instances of this selector are returned when supplied arguments
  * are unparseable in order to throw exceptions only during validation.
  */

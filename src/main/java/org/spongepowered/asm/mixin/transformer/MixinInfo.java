@@ -1002,11 +1002,11 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
     }
 
     /**
-     * Check whether this mixin should apply to the specified taret
+     * Check whether this mixin should apply to the specified target
      *
      * @param ignorePlugin true to ignore the config plugin
      * @param targetName target class name
-     * @return true if the mixin should be a pplied
+     * @return true if the mixin should be applied
      */
     private boolean shouldApplyMixin(boolean ignorePlugin, String targetName) {
         Section pluginTimer = this.profiler.begin("plugin");

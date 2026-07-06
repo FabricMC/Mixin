@@ -437,7 +437,7 @@ public class CallbackInjector extends Injector {
         InjectionNode injectionNode = injectorTarget.addInjectionNode(node);
         
         if (this.cancellable && injectorTarget.getTarget() instanceof Constructor) {
-            throw new InvalidInjectionException(this.info, String.format("Found cancellable @Inject targetting a constructor in injector %s", this));
+            throw new InvalidInjectionException(this.info, String.format("Found cancellable @Inject targeting a constructor in injector %s", this));
         }
 
         for (InjectionPoint ip : nominators) {

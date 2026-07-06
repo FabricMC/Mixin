@@ -29,7 +29,7 @@ import javax.lang.model.type.TypeMirror;
 import org.spongepowered.tools.obfuscation.mirror.TypeHandle;
 
 /**
- * Manager object which cann supply {@link TypeHandle} instances
+ * Manager object which can supply {@link TypeHandle} instances
  */
 public interface ITypeHandleProvider {
 
