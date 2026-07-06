@@ -38,7 +38,7 @@ import org.spongepowered.asm.mixin.Shadow;
  * <tt>abstract</tt>.
  * 
  * <p>The target field for an accessor can be specified as part of the decorated
- * method name (eg. <tt>setFoo</tt> or <tt>getFoo</tt> to provide accessors for
+ * method name (e.g. <tt>setFoo</tt> or <tt>getFoo</tt> to provide accessors for
  * a target field <tt>foo</tt>) or specified in the annotation value.</p>
  *
  * <p>Accessors provide a simple way of gaining access to internal class members
@@ -68,7 +68,7 @@ public @interface Accessor {
      * followed by a capital letter, then the prefix is stripped and the
      * remainder of the method name is used as the target field name.
      *
-     * <p>However sometimes it maye be desirable to name an accessor method
+     * <p>However sometimes it may be desirable to name an accessor method
      * differently to the target field name. In this case you may specify the
      * field using its name.</p>
      *

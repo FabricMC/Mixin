@@ -116,7 +116,7 @@ public class BeforeFieldAccess extends BeforeInvoke {
     private final int opcode;
     
     /**
-     * Array opcode (base, eg. IALOAD, IASTORE) - will be translated to target
+     * Array opcode (base, e.g. IALOAD, IASTORE) - will be translated to target
      * type by individual searches
      */
     private final int arrOpcode;

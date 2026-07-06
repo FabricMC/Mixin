@@ -41,7 +41,7 @@ import org.spongepowered.asm.mixin.injection.points.*;
  * InjectionInfo} object before being passed to the {@link InjectionPoint} for
  * parsing. All values are optional apart from {@link #value}, which specifies
  * the type of {@link InjectionPoint} to use. All other parameters depend on the
- * InjectionPoint chosen, and the javadoc for each {@link InjectionPoint} class
+ * InjectionPoint chosen, and the Javadoc for each {@link InjectionPoint} class
  * should be consulted for the meaning of the argument to that particular class.
  * A general description of each parameter is provided below. 
  */
@@ -79,7 +79,7 @@ public @interface At {
     /**
      * The identifier for this injection point, can be retrieved via the
      * {@link CallbackInfo#getId} accessor. If specified, the ID is appended to
-     * the value specified in the outer annotation. Eg. specifying "foo" for this
+     * the value specified in the outer annotation. E.g. specifying "foo" for this
      * attribute and "bar" for the <tt>Inject.{@link Inject#id}</tt> attribute
      * will result in a combined id of <tt>"bar:foo"</tt>. Note that if no id
      * is specified for the outer injector, the name of the calling method is

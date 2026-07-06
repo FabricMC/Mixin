@@ -103,8 +103,8 @@ public class AfterInvoke extends BeforeInvoke {
      * <tt>I2C</tt>, <tt>I2S</tt>, <tt>CHECKCAST</tt>, <tt>INSTANCEOF</tt></p>
      */
     public static final int[] DEFAULT_SKIP = new int[] {
-        // Opcodes which may appear if the targetted method is part of an
-        // expression eg. int foo = 2 + this.bar();
+        // Opcodes which may appear if the targeted method is part of an
+        // expression e.g. int foo = 2 + this.bar();
         Opcodes.DUP, Opcodes.IADD, Opcodes.LADD, Opcodes.FADD, Opcodes.DADD,
         Opcodes.ISUB, Opcodes.LSUB, Opcodes.FSUB, Opcodes.DSUB, Opcodes.IMUL, 
         Opcodes.LMUL, Opcodes.FMUL, Opcodes.DMUL, Opcodes.IDIV, Opcodes.LDIV, 
@@ -114,8 +114,8 @@ public class AfterInvoke extends BeforeInvoke {
         Opcodes.LUSHR, Opcodes.IAND, Opcodes.LAND, Opcodes.IOR, Opcodes.LOR, 
         Opcodes.IXOR, Opcodes.LXOR, Opcodes.IINC,
         
-        // Opcodes which may appear if the targetted method is cast before
-        // assignment eg. int foo = (int)this.getFloat();
+        // Opcodes which may appear if the targeted method is cast before
+        // assignment e.g. int foo = (int)this.getFloat();
         Opcodes.I2L, Opcodes.I2F, Opcodes.I2D, Opcodes.L2I, Opcodes.L2F,
         Opcodes.L2D, Opcodes.F2I, Opcodes.F2L, Opcodes.F2D, Opcodes.D2I,
         Opcodes.D2L, Opcodes.D2F, Opcodes.I2B, Opcodes.I2C, Opcodes.I2S,

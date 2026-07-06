@@ -194,7 +194,7 @@ public class AccessorInfo extends SpecialMethodInfo {
          * @param methodName Name of the accessor method
          * @param toMemberCase True if the first character of the name should be
          *      conditionally converted to lowercase. If the name is all
-         *      uppercase (eg. if the NAME_IS_A_CONSTANT) the first character
+         *      uppercase (e.g. if the NAME_IS_A_CONSTANT) the first character
          *      will not be lowercased, regardless of the state of this argument
          * @return Parsed AccessorName struct or null if the name is not a valid
          *      accessor name
@@ -470,7 +470,7 @@ public class AccessorInfo extends SpecialMethodInfo {
     /**
      * First pass, locate the target field in the class. This is done after all
      * other mixins are applied so that mixin-added fields and methods can be
-     * targetted. 
+     * targeted.
      */
     public void locate() {
         this.targetField = this.findTargetField();

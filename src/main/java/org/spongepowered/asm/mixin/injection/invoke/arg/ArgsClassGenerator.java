@@ -126,7 +126,7 @@ public final class ArgsClassGenerator implements IClassGenerator {
     private final IConsumer<ISyntheticClassInfo> registry;
 
     /**
-     * The next subclass number, classes generated in sequence eg.
+     * The next subclass number, classes generated in sequence e.g.
      * <tt>Args$1</tt>, <tt>Args$2</tt>, etc. 
      */
     private int nextIndex = 1;
@@ -305,7 +305,7 @@ public final class ArgsClassGenerator implements IClassGenerator {
     }
 
     /**
-     * Generate the getter method for each arguments. These getters are not
+     * Generate the getter method for each argument. These getters are not
      * available from consumer code, but instead are called by the injector to
      * retrieve each argument in turn for passing to the method invocation being
      * modified.
@@ -388,7 +388,7 @@ public final class ArgsClassGenerator implements IClassGenerator {
             set.visitJumpInsn(Opcodes.IF_ICMPEQ, labels[index]);
         }
         
-        // No argument was matched, so we throw an out of bounds exception
+        // No argument was matched, so we throw an out-of-bounds exception
         ArgsClassGenerator.throwAIOOBE(set, 1);
         
         // For each arg we do a CHECKCAST to ensure the supplied type is

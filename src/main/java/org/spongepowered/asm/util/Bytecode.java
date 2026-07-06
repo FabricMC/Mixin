@@ -535,8 +535,8 @@ public final class Bytecode {
     /**
      * Finds a matching constant in the {@link Opcodes}
      * interface for the specified opcode name. Supported formats are raw
-     * numeric values, bare constant names (eg. <tt>ACONST_NULL</tt>) or
-     * qualified names (eg. <tt>Opcodes.ACONST_NULL</tt>). Returns the value if
+     * numeric values, bare constant names (e.g. <tt>ACONST_NULL</tt>) or
+     * qualified names (e.g. <tt>Opcodes.ACONST_NULL</tt>). Returns the value if
      * found or -1 if not matched. Note that no validation is performed on
      * numeric opcode values.
      * 
@@ -639,7 +639,7 @@ public final class Bytecode {
     }
 
     /**
-     * Get the size of the specified args array in local variable terms (eg.
+     * Get the size of the specified args array in local variable terms (e.g.
      * doubles and longs take two spaces)
      * 
      * @param args Method argument types as array
@@ -650,7 +650,7 @@ public final class Bytecode {
     }
     
     /**
-     * Get the size of the specified args array in local variable terms (eg.
+     * Get the size of the specified args array in local variable terms (e.g.
      * doubles and longs take two spaces) using startIndex (inclusive) and
      * endIndex (exclusive) to determine which arguments to process.
      * 
@@ -915,7 +915,7 @@ public final class Bytecode {
     }
 
     /**
-     * Gets whether the supplied instruction is a constant instruction (eg. 
+     * Gets whether the supplied instruction is a constant instruction (e.g.
      * <tt>ICONST_1</tt>)
      * 
      * @param insn instruction to check

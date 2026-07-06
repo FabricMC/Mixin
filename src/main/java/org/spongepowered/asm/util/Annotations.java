@@ -250,7 +250,7 @@ public final class Annotations {
     }
     
     /**
-     * Set a invisible annotation of the specified class on the supplied method
+     * Set an invisible annotation of the specified class on the supplied method
      * node
      *
      * @param method Target method

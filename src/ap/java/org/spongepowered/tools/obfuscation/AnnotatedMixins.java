@@ -138,7 +138,7 @@ final class AnnotatedMixins implements IMixinAnnotationProcessor, ITokenProvider
 
     /**
      * Properties file used to specify options when AP options cannot be
-     * configured via the build script (eg. when using AP with MCP)
+     * configured via the build script (e.g. when using AP with MCP)
      */
     private Properties properties;
 
@@ -778,7 +778,7 @@ final class AnnotatedMixins implements IMixinAnnotationProcessor, ITokenProvider
             }
         }
         
-        // Ok someone is trolling if there are more than 10 '$' symbols in a
+        // OK someone is trolling if there are more than 10 '$' symbols in a
         // name! 10 is an arbitrary number, we could do more but the loop below
         // is expensive and something horrible is probably happening if there
         // are that many '$' signs. We can also skip here if occurs < 2 because

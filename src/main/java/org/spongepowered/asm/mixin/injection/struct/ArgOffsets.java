@@ -31,7 +31,7 @@ import org.objectweb.asm.Type;
  * results in a call to a method with the same arguments as the original
  * (replaced) call but offset by some fixed amount. Since ModifyArg and
  * ModifyArgs always assume the method args are on the top of the stack (which
- * they must be), this results in locating the original method args as as a
+ * they must be), this results in locating the original method args as a
  * contiguous "window" of arguments somewhere in the middle of the args as they
  * exist at application time.
  * 
