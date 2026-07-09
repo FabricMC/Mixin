@@ -89,7 +89,7 @@ class PluginHandle {
      *
      * @see #findLegacyApply(Class, String)
      */
-    private Method mdPreApply, mdPostApply;
+    private final Method mdPreApply, mdPostApply;
 
     PluginHandle(MixinConfig parent, IMixinService service, String pluginClassName) {
         IMixinConfigPlugin plugin = null;
