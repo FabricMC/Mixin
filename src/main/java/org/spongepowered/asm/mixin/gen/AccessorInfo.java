@@ -289,6 +289,12 @@ public class AccessorInfo extends SpecialMethodInfo {
      * method body 
      */
     protected AccessorGenerator generator;
+
+    /**
+     * Minimum required class version for the accessor. Used to determine whether to emit INVOKEVIRTUAL or INVOKESPECIAL
+     * for private method calls, matching javac. See <a href="https://openjdk.org/jeps/181">JEP 181</a>.
+     */
+    protected final int minRequiredClassVersion;
     
     public AccessorInfo(MixinTargetContext mixin, MethodNode method) {
         this(mixin, method, Accessor.class);
@@ -305,6 +311,7 @@ public class AccessorInfo extends SpecialMethodInfo {
         this.targetFieldType = this.initTargetFieldType();
         this.target = this.initTarget();
         this.annotation.visit("target", this.target.toString());
+        this.minRequiredClassVersion = mixin.getMinRequiredClassVersion();
     }
 
     protected AccessorType initType() {
