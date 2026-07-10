@@ -366,7 +366,7 @@ public final class MixinEnvironment implements ITokenProvider {
         /**
          * When using <tt>mixin.env.refMapRemappingFile</tt>, this setting
          * overrides the default source environment (searge). However note that
-         * the specified environment type must exist in the orignal refmap.
+         * the specified environment type must exist in the original refmap.
          */
         REFMAP_REMAP_SOURCE_ENV(Option.ENVIRONMENT, Inherit.INDEPENDENT, "refMapRemappingEnv", "searge"),
         

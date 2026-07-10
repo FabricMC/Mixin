@@ -36,7 +36,7 @@ import org.spongepowered.tools.obfuscation.mirror.AnnotationHandle;
  * generally want to raise an error if <tt>remap=true</tt> but we don't find
  * a mapping for the injector. However it may be the case that remap is true
  * because some of the &#064;At's need remapping. This state struct is used to
- * log the original error, but supress it if any &#064;At annotations are
+ * log the original error, but suppress it if any &#064;At annotations are
  * remapped in the process. When {@link #dispatchPendingMessages} is called at
  * the end, if no &#064;At's have been remapped then we dispatch the error as
  * planned. 

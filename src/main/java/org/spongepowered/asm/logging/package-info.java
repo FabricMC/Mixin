@@ -24,7 +24,7 @@
  */
 
 /**
- * Centrallised logging so that all logging can be delegated to a logging
+ * Centralised logging so that all logging can be delegated to a logging
  * adapter supplied by the mixin service
  */
 package org.spongepowered.asm.logging;

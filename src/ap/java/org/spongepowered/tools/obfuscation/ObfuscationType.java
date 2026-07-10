@@ -109,7 +109,7 @@ public final class ObfuscationType {
     }
     
     /**
-     * Get whether this is ithe default obfuscation environment
+     * Get whether this is the default obfuscation environment
      */
     public boolean isDefault() {
         String defaultEnv = this.options.getOption(SupportedOptions.DEFAULT_OBFUSCATION_ENV, ObfuscationType.DEFAULT_TYPE).toLowerCase(Locale.ROOT);

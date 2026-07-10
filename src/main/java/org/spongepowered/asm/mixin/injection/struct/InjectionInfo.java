@@ -80,7 +80,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * Contructs information about an injection from an {@link Inject} annotation
+ * Constructs information about an injection from an {@link Inject} annotation
  * and allows the injection to be processed.
  */
 public abstract class InjectionInfo extends SpecialMethodInfo implements ISliceContext {

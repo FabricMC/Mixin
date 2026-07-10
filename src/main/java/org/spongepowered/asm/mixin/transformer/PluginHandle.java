@@ -226,7 +226,7 @@ class PluginHandle {
     }
 
     private String apiError(String message) {
-        return String.format("Companion plugin attempted to use a deprected API in [%s] plugin [%s]: %s",
+        return String.format("Companion plugin attempted to use a deprecated API in [%s] plugin [%s]: %s",
                 this.parent, this.plugin.getClass().getName(), message);
     }
 

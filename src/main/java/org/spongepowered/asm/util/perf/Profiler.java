@@ -90,7 +90,7 @@ public final class Profiler {
         protected boolean invalidated;
         
         /**
-         * Auxilliary info for this section, used for context
+         * Auxiliary info for this section, used for context
          */
         private String info;
         
@@ -165,7 +165,7 @@ public final class Profiler {
         }
         
         /**
-         * Set the auxilliary info for this section
+         * Set the auxiliary info for this section
          * 
          * @param info aux info
          */
@@ -174,7 +174,7 @@ public final class Profiler {
         }
         
         /**
-         * Get the auxilliary info for this section
+         * Get the auxiliary info for this section
          */
         public String getInfo() {
             return this.info;
@@ -368,7 +368,7 @@ public final class Profiler {
         private int cursor = 0;
         
         /**
-         * Historical time slicess (times recorded by calls to {@link #mark}) 
+         * Historical time slices (times recorded by calls to {@link #mark})
          */
         private long[] times = new long[0];
         

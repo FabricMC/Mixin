@@ -204,7 +204,7 @@ public interface IMixinService {
      * and that the same adapter is returned for every call to this method with
      * the same name.</p>
      * 
-     * <p>This methood <em>must not return <tt>null</tt></em>.</p>
+     * <p>This method <em>must not return <tt>null</tt></em>.</p>
      * 
      * <p>Implementations should be thread-safe since loggers may be requested
      * by threads other than the main application thread.</p>

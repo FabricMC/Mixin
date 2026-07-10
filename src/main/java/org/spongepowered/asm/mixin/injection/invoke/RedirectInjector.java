@@ -356,7 +356,7 @@ public class RedirectInjector extends InvokeInjector {
             }
         }
         
-        throw new InvalidInjectionException(this.info, String.format("%s annotation on is targetting an invalid insn in %s in %s",
+        throw new InvalidInjectionException(this.info, String.format("%s annotation on is targeting an invalid insn in %s in %s",
                 this.annotationType, target, this));
     }
 
@@ -438,7 +438,7 @@ public class RedirectInjector extends InvokeInjector {
     private void injectAtArrayField(RedirectedFieldData field, int fuzz, int opcode) {
         Type elementType = field.type.getElementType();
         if (field.opcode != Opcodes.GETSTATIC && field.opcode != Opcodes.GETFIELD) {
-            throw new InvalidInjectionException(this.info, String.format("Unspported opcode %s for array access %s",
+            throw new InvalidInjectionException(this.info, String.format("Unsupported opcode %s for array access %s",
                     Bytecode.getOpcodeName(field.opcode), this.info));
         } else if (this.returnType.getSort() != Type.VOID) {
             if (opcode != Opcodes.ARRAYLENGTH) {
@@ -541,7 +541,7 @@ public class RedirectInjector extends InvokeInjector {
         } else if (field.isSetter) {
             invoke = this.injectAtPutField(field, insns);
         } else {
-            throw new InvalidInjectionException(this.info, String.format("Unspported opcode %s for %s",
+            throw new InvalidInjectionException(this.info, String.format("Unsupported opcode %s for %s",
                     Bytecode.getOpcodeName(field.opcode), this.info));
         }
         

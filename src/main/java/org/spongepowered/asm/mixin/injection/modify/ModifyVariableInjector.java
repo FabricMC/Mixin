@@ -202,7 +202,7 @@ public class ModifyVariableInjector extends Injector {
                     this.annotationType, this.info));
         }
         
-        // If the context is being reused (because two identical injectors are targetting this node)
+        // If the context is being reused (because two identical injectors are targeting this node)
         // then the insns SHOULD have been drained by the previous insertBefore. If the list hasn't
         // been cleared for some reason then something probably went wrong during the previous inject
         if (context.insns.size() > 0) {

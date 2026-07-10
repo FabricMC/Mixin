@@ -138,7 +138,7 @@ public final class TargetMap extends HashMap<TypeReference, Set<TypeReference>> 
      * Get mixin classes which target the specified class
      * 
      * @param target Target class
-     * @return Collection of mixins registered as targetting the specified class
+     * @return Collection of mixins registered as targeting the specified class
      */
     Collection<TypeReference> getMixinsTargeting(TypeHandle target) {
         return this.getMixinsTargeting(target.getReference());
@@ -148,7 +148,7 @@ public final class TargetMap extends HashMap<TypeReference, Set<TypeReference>> 
      * Get mixin classes which target the specified class
      * 
      * @param target Target class
-     * @return Collection of mixins registered as targetting the specified class
+     * @return Collection of mixins registered as targeting the specified class
      */
     Collection<TypeReference> getMixinsTargeting(TypeReference target) {
         return Collections.<TypeReference>unmodifiableCollection(this.getMixinsFor(target));
@@ -158,7 +158,7 @@ public final class TargetMap extends HashMap<TypeReference, Set<TypeReference>> 
      * Get mixin set for specified class
      * 
      * @param target Target class
-     * @return Set of mixins registered as targetting the specified class
+     * @return Set of mixins registered as targeting the specified class
      */
     private Set<TypeReference> getMixinsFor(TypeReference target) {
         Set<TypeReference> mixins = this.get(target);
@@ -221,7 +221,7 @@ public final class TargetMap extends HashMap<TypeReference, Set<TypeReference>> 
     }
     
     /**
-     * Attemp to deserialise a TargetMap from the specified file
+     * Attempt to deserialise a TargetMap from the specified file
      * 
      * @param sessionFile File to read
      * @return deserialised map or null if deserialisation failed

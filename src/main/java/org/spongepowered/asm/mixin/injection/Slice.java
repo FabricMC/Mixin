@@ -151,7 +151,7 @@ public @interface Slice {
      * 
      * <p>This value defaults to an empty string, the empty string is used as a
      * default identifier throughout the injection subsystem, and any {@link At}
-     * which doesn't specify a slice explicitly will use this identifer.
+     * which doesn't specify a slice explicitly will use this identifier.
      * Specifying <tt>id</tt> or <tt>slice</tt> for injectors which only support
      * a single slice is ignored internally, so you may use this field to give a
      * descriptive name to the slice if you wish.</p>

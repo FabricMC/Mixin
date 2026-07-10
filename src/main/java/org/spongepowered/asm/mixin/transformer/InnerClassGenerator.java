@@ -323,7 +323,7 @@ final class InnerClassGenerator implements IClassGenerator {
     /**
      * Ctor
      * 
-     * @param registry sythetic class registry
+     * @param registry synthetic class registry
      */
     public InnerClassGenerator(IConsumer<ISyntheticClassInfo> registry, MixinCoprocessorNestHost nestHostCoprocessor) {
         this.registry = registry;

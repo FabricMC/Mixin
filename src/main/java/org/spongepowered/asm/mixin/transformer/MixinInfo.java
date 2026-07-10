@@ -643,7 +643,7 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
             void validateTarget(String targetName, ClassInfo targetInfo) {
                 boolean targetIsInterface = targetInfo.isInterface();
                 if (targetIsInterface && !MixinEnvironment.getCompatibilityLevel().supports(LanguageFeatures.METHODS_IN_INTERFACES)) {
-                    throw new InvalidMixinException(this.mixin, "Accessor mixin targetting an interface is not supported in current enviromnment");
+                    throw new InvalidMixinException(this.mixin, "Accessor mixin targeting an interface is not supported in current enviromnment");
                 }
             }
             
@@ -984,7 +984,7 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
 
     /**
      * Combine the public and private mixin targets from the supplied annotation
-     * and return them as an interable collection
+     * and return them as an iterable collection
      *
      * @param mixin mixin annotation
      * @return target list

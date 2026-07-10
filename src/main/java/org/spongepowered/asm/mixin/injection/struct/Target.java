@@ -399,7 +399,7 @@ public class Target implements Comparable<Target>, Iterable<AbstractInsnNode> {
     }
 
     /**
-     * Set the maxlocals for this target to the specified value, the specfied
+     * Set the maxlocals for this target to the specified value, the specified
      * value must be higher than the original max locals
      * 
      * @param maxLocals max locals value to set
@@ -421,7 +421,7 @@ public class Target implements Comparable<Target>, Iterable<AbstractInsnNode> {
 
     /**
      * Set the max stack size for this target to the specified value, the
-     * specfied value must be higher than the original max stack
+     * specified value must be higher than the original max stack
      * 
      * @param maxStack max stack value to set
      */

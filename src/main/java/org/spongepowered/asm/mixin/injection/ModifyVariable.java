@@ -71,7 +71,7 @@ import org.spongepowered.asm.util.ConstraintParser.Constraint;
  * 
  * <h4>Implicit mode</h4>
  * 
- * <p>If no values for the capture discrimiators are specified, the injector
+ * <p>If no values for the capture discriminators are specified, the injector
  * operates in <em>implicit</em> mode. If exactly one variable of the capture
  * type exists in the target LVT, then capture will succeed. However, if more
  * than one variable of the required type is encountered in the LVT then an

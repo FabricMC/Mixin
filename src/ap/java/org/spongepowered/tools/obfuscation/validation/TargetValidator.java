@@ -96,7 +96,7 @@ public class TargetValidator extends MixinValidator {
         
         for (TypeHandle target : targets) {
             if (target != null && target.isNotInterface()) {
-                this.messager.printMessage(MessageType.TARGET_VALIDATOR, "Targetted type '" + target + " of " + mixin + " is not an interface",
+                this.messager.printMessage(MessageType.TARGET_VALIDATOR, "Targeted type '" + target + " of " + mixin + " is not an interface",
                         mixin);
             }
         }

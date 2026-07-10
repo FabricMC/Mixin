@@ -1168,7 +1168,7 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
     }
 
     /**
-     * Get whether to propogate the source file attribute from a mixin onto the
+     * Get whether to propagate the source file attribute from a mixin onto the
      * target class
      */
     public boolean shouldSetSourceFile() {

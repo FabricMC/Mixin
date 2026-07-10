@@ -97,7 +97,7 @@ public class ModifyConstantInjector extends RedirectInjector {
             return;
         }
         
-        throw new InvalidInjectionException(this.info, String.format("%s annotation is targetting an invalid insn in %s in %s",
+        throw new InvalidInjectionException(this.info, String.format("%s annotation is targeting an invalid insn in %s in %s",
                 this.annotationType, target, this));
     }
     

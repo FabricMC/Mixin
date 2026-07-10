@@ -57,7 +57,7 @@ public abstract class ObfuscationUtil {
     private ObfuscationUtil() {}
     
     /**
-     * Map a descriptor using the supplied rempper
+     * Map a descriptor using the supplied remapper
      * 
      * @param desc descriptor to remap
      * @param remapper remapper to use
