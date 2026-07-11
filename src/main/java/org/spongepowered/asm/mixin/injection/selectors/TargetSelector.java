@@ -496,13 +496,13 @@ public final class TargetSelector {
                 .limit(selector.getMaxMatchCount())
                 .collect(Collectors.toList());
 
+        for (Map.Entry<ElementNode<TNode>, MatchResult> match : matches) {
+            candidates.add(match.getKey());
+        }
+
         if (matches.size() < selector.getMinMatchCount()) {
             throw new SelectorConstraintException(selector, String.format("%s did not match the required number of targets (required=%d, matched=%d)",
                     selector, selector.getMinMatchCount(), matches.size()));
-        }
-
-        for (Map.Entry<ElementNode<TNode>, MatchResult> match : matches) {
-            candidates.add(match.getKey());
         }
 
         return matches.stream().filter(entry -> entry.getValue().isExactMatch()).findFirst().map(Map.Entry::getKey).orElse(null);
