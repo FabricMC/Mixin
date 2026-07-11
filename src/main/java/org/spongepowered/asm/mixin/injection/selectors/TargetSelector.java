@@ -46,6 +46,8 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Utility class for parsing selectors
@@ -477,36 +479,23 @@ public final class TargetSelector {
 
     private static <TNode> ElementNode<TNode> runSelector(ITargetSelector selector, Iterable<ElementNode<TNode>> nodes,
             List<ElementNode<TNode>> candidates) {
-        List<ElementNode<TNode>> matches = new ArrayList<>();
-        List<ElementNode<TNode>> exactMatches = new ArrayList<>();
+        List<Map.Entry<ElementNode<TNode>, MatchResult>> matches = StreamSupport.stream(nodes.spliterator(), false)
+                .map(element -> new AbstractMap.SimpleImmutableEntry<>(element, selector.match(element)))
+                .filter(entry -> entry.getValue().isMatch())
+                .sorted(Comparator.<Map.Entry<ElementNode<TNode>, MatchResult>, Boolean>comparing(entry -> entry.getValue().isExactMatch()).reversed())
+                .limit(selector.getMaxMatchCount())
+                .collect(Collectors.toList());
 
-        for (ElementNode<TNode> node : nodes) {
-            MatchResult match = selector.match(node);
-            if (match.isMatch()) {
-                if (match.isExactMatch()) {
-                    exactMatches.add(node);
-                } else {
-                    matches.add(node);
-                }
-            }
-        }
-
-        int matchCount = exactMatches.size() + matches.size();
-
-        if (matchCount < selector.getMinMatchCount()) {
+        if (matches.size() < selector.getMinMatchCount()) {
             throw new SelectorConstraintException(selector, String.format("%s did not match the required number of targets (required=%d, matched=%d)",
-                    selector, selector.getMinMatchCount(), matchCount));
+                    selector, selector.getMinMatchCount(), matches.size()));
         }
 
-        int addedCount;
-        for (addedCount = 0; addedCount < exactMatches.size() && addedCount < selector.getMaxMatchCount(); addedCount++) {
-            candidates.add(exactMatches.get(addedCount));
-        }
-        for (; addedCount < exactMatches.size() + matches.size() && addedCount < selector.getMaxMatchCount(); addedCount++) {
-            candidates.add(matches.get(addedCount - exactMatches.size()));
+        for (Map.Entry<ElementNode<TNode>, MatchResult> match : matches) {
+            candidates.add(match.getKey());
         }
 
-        return exactMatches.isEmpty() ? null : exactMatches.get(0);
+        return matches.isEmpty() || !matches.get(0).getValue().isExactMatch() ? null : matches.get(0).getKey();
     }
 
 }
