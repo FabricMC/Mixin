@@ -34,7 +34,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.spongepowered.asm.mixin.MixinEnvironment.Option;
@@ -273,7 +272,7 @@ public class AccessorInfo extends SpecialMethodInfo {
      * Computed information about the target field or method, name and
      * descriptor
      */
-    protected ITargetSelector target;
+    protected final ITargetSelector target;
     
     /**
      * For accessors, stores the discovered target field
@@ -482,8 +481,8 @@ public class AccessorInfo extends SpecialMethodInfo {
             if (this.target instanceof MemberInfo) {
                 MemberInfo targetInfo = (MemberInfo) this.target;
                 if (!targetInfo.getName().equals(targetFieldName)) {
-                    this.target = new MemberInfo(targetFieldName, targetInfo.getOwner(), targetInfo.getDesc());
-                    Annotations.setValue(this.annotation, "target", this.target.toString());
+                    MemberInfo targetUpdated = new MemberInfo(targetFieldName, targetInfo.getOwner(), targetInfo.getDesc());
+                    Annotations.setValue(this.annotation, "target", targetUpdated.toString());
                 }
             }
         }
