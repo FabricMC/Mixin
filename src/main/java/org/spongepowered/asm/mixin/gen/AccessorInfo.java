@@ -473,8 +473,6 @@ public class AccessorInfo extends SpecialMethodInfo {
      */
     public void locate() {
         this.targetField = this.findTargetField();
-
-        // Update the target annotation so that the apply and merges checks can run correctly.
         this.annotation.visit("target", this.targetField.name + ":" + this.targetField.desc);
     }
 
