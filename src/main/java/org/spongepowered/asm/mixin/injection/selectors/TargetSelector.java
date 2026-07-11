@@ -27,6 +27,7 @@ package org.spongepowered.asm.mixin.injection.selectors;
 import com.google.common.base.Strings;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
+import org.spongepowered.asm.mixin.FabricUtil;
 import org.spongepowered.asm.mixin.injection.selectors.ITargetSelectorDynamic.SelectorAnnotation;
 import org.spongepowered.asm.mixin.injection.selectors.ITargetSelectorDynamic.SelectorId;
 import org.spongepowered.asm.mixin.injection.selectors.dynamic.DynamicSelectorDesc;
@@ -47,6 +48,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
@@ -479,10 +481,15 @@ public final class TargetSelector {
 
     private static <TNode> ElementNode<TNode> runSelector(ITargetSelector selector, Iterable<ElementNode<TNode>> nodes,
             List<ElementNode<TNode>> candidates) {
-        List<Map.Entry<ElementNode<TNode>, MatchResult>> matches = StreamSupport.stream(nodes.spliterator(), false)
+        Stream<AbstractMap.SimpleImmutableEntry<ElementNode<TNode>, MatchResult>> stream = StreamSupport.stream(nodes.spliterator(), false)
                 .map(element -> new AbstractMap.SimpleImmutableEntry<>(element, selector.match(element)))
-                .filter(entry -> entry.getValue().isMatch())
-                .sorted(Comparator.<Map.Entry<ElementNode<TNode>, MatchResult>, Boolean>comparing(entry -> entry.getValue().isExactMatch()).reversed())
+                .filter(entry -> entry.getValue().isMatch());
+
+        if (FabricUtil.getCompatibility(mixin) >= FabricUtil.COMPATIBILITY_0_17_4) {
+            stream = stream.sorted(Comparator.<Map.Entry<ElementNode<TNode>, MatchResult>, Boolean>comparing(entry -> entry.getValue().isExactMatch()).reversed());
+        }
+
+        List<Map.Entry<ElementNode<TNode>, MatchResult>> matches = stream
                 .limit(selector.getMaxMatchCount())
                 .collect(Collectors.toList());
 
@@ -495,7 +502,7 @@ public final class TargetSelector {
             candidates.add(match.getKey());
         }
 
-        return matches.isEmpty() || !matches.get(0).getValue().isExactMatch() ? null : matches.get(0).getKey();
+        return matches.stream().filter(entry -> entry.getValue().isExactMatch()).findFirst().map(Map.Entry::getKey).orElse(null);
     }
 
 }
