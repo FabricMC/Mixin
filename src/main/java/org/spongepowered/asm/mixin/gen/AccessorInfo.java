@@ -304,7 +304,6 @@ public class AccessorInfo extends SpecialMethodInfo {
         this.type = this.initType();
         this.targetFieldType = this.initTargetFieldType();
         this.target = this.initTarget();
-        this.annotation.visit("target", this.target.toString());
     }
 
     protected AccessorType initType() {
@@ -475,17 +474,8 @@ public class AccessorInfo extends SpecialMethodInfo {
     public void locate() {
         this.targetField = this.findTargetField();
 
-        // Update the target annotation if the actual target name differs so that the apply and merges checks can run correctly.
-        if (this.target != null && this.targetField != null) {
-            String targetFieldName = this.targetField.name;
-            if (this.target instanceof MemberInfo) {
-                MemberInfo targetInfo = (MemberInfo) this.target;
-                if (!targetInfo.getName().equals(targetFieldName)) {
-                    MemberInfo targetUpdated = new MemberInfo(targetFieldName, targetInfo.getOwner(), targetInfo.getDesc());
-                    Annotations.setValue(this.annotation, "target", targetUpdated.toString());
-                }
-            }
-        }
+        // Update the target annotation so that the apply and merges checks can run correctly.
+        this.annotation.visit("target", this.targetField.name + ":" + this.targetField.desc);
     }
 
     /**
