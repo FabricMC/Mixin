@@ -506,7 +506,7 @@ public class AccessorInfo extends SpecialMethodInfo {
      * @return best match
      */
     protected <TNode> TNode findTarget(List<ElementNode<TNode>> nodes) {
-        Result<TNode> result = TargetSelector.<TNode>run(this.target.configure(Configure.ORPHAN), nodes);
+        Result<TNode> result = TargetSelector.<TNode>run(this.mixin, this.target.configure(Configure.ORPHAN), nodes);
 
         try {
             return result.getSingleResult(true);

@@ -33,6 +33,7 @@ import org.spongepowered.asm.mixin.injection.selectors.ITargetSelectorDynamic.Se
 import org.spongepowered.asm.mixin.injection.selectors.dynamic.DynamicSelectorDesc;
 import org.spongepowered.asm.mixin.injection.selectors.throwables.SelectorConstraintException;
 import org.spongepowered.asm.mixin.injection.struct.MemberInfo;
+import org.spongepowered.asm.mixin.refmap.IMixinContext;
 import org.spongepowered.asm.mixin.throwables.MixinError;
 import org.spongepowered.asm.mixin.throwables.MixinException;
 import org.spongepowered.asm.util.Annotations;
@@ -445,32 +446,34 @@ public final class TargetSelector {
     
     /**
      * Run query on supplied target nodes
-     * 
+     *
+     * @param mixin context
      * @param selector Target selector
      * @param nodes Node collection to enumerate
      * @param <TNode> Node type
      * @return query result
      */
-    public static <TNode> Result<TNode> run(ITargetSelector selector, Iterable<ElementNode<TNode>> nodes) {
+    public static <TNode> Result<TNode> run(IMixinContext mixin, ITargetSelector selector, Iterable<ElementNode<TNode>> nodes) {
         List<ElementNode<TNode>> candidates = new ArrayList<ElementNode<TNode>>();
-        ElementNode<TNode> exactMatch = TargetSelector.runSelector(selector, nodes, candidates);
+        ElementNode<TNode> exactMatch = TargetSelector.runSelector(mixin, selector, nodes, candidates);
         return new Result<TNode>(exactMatch, candidates);
     }
     
     /**
      * Run query on supplied target nodes
-     * 
+     *
+     * @param mixin context
      * @param selector Target selector
      * @param nodes Node collection to enumerate
      * @param <TNode> Node type
      * @return query result
      */
-    public static <TNode> Result<TNode> run(Iterable<ITargetSelector> selector, Iterable<ElementNode<TNode>> nodes) {
+    public static <TNode> Result<TNode> run(IMixinContext mixin, Iterable<ITargetSelector> selector, Iterable<ElementNode<TNode>> nodes) {
         ElementNode<TNode> exactMatch = null;
         List<ElementNode<TNode>> candidates = new ArrayList<ElementNode<TNode>>();
         
         for (ITargetSelector target : selector) {
-            ElementNode<TNode> selectorExactMatch = TargetSelector.runSelector(target, nodes, candidates);
+            ElementNode<TNode> selectorExactMatch = TargetSelector.runSelector(mixin, target, nodes, candidates);
             if (exactMatch == null) {
                 exactMatch = selectorExactMatch;
             }
@@ -479,7 +482,7 @@ public final class TargetSelector {
         return new Result<TNode>(exactMatch, candidates);
     }
 
-    private static <TNode> ElementNode<TNode> runSelector(ITargetSelector selector, Iterable<ElementNode<TNode>> nodes,
+    private static <TNode> ElementNode<TNode> runSelector(IMixinContext mixin, ITargetSelector selector, Iterable<ElementNode<TNode>> nodes,
             List<ElementNode<TNode>> candidates) {
         Stream<AbstractMap.SimpleImmutableEntry<ElementNode<TNode>, MatchResult>> stream = StreamSupport.stream(nodes.spliterator(), false)
                 .map(element -> new AbstractMap.SimpleImmutableEntry<>(element, selector.match(element)))
