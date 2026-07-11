@@ -31,6 +31,7 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.spongepowered.asm.mixin.transformer.MixinTargetContext;
 import org.spongepowered.asm.util.Bytecode;
 
 /**
@@ -53,18 +54,11 @@ public class AccessorGeneratorMethodProxy extends AccessorGenerator {
      */
     protected final Type returnType;
 
-    /**
-     * Minimum required class version for the accessor. Used to determine whether to emit INVOKEVIRTUAL or INVOKESPECIAL
-     * for private method calls, matching javac. See <a href="https://openjdk.org/jeps/181">JEP 181</a>.
-     */
-    protected final int minRequiredClassVersion;
-
     public AccessorGeneratorMethodProxy(AccessorInfo info) {
         super(info, Bytecode.isStatic(info.getTargetMethod()));
         this.targetMethod = info.getTargetMethod();
         this.argTypes = info.getArgTypes();
         this.returnType = info.getReturnType();
-        this.minRequiredClassVersion = info.minRequiredClassVersion;
         this.checkModifiers();
     }
     
@@ -73,7 +67,6 @@ public class AccessorGeneratorMethodProxy extends AccessorGenerator {
         this.targetMethod = info.getTargetMethod();
         this.argTypes = info.getArgTypes();
         this.returnType = info.getReturnType();
-        this.minRequiredClassVersion = info.minRequiredClassVersion;
     }
 
     @Override
@@ -87,7 +80,11 @@ public class AccessorGeneratorMethodProxy extends AccessorGenerator {
         boolean isInterface = Bytecode.hasFlag(this.info.getClassNode(), Opcodes.ACC_INTERFACE);
         boolean isPrivate = Bytecode.hasFlag(this.targetMethod, Opcodes.ACC_PRIVATE);
         int opcode = this.targetIsStatic ? Opcodes.INVOKESTATIC : isInterface ? Opcodes.INVOKEINTERFACE : (
-                isPrivate && minRequiredClassVersion < MixinEnvironment.CompatibilityLevel.JAVA_11.getClassVersion() ? Opcodes.INVOKESPECIAL : Opcodes.INVOKEVIRTUAL
+                // This cast to MixinTargetContext is safe.
+                // This is because `getMixin()` is final, and returns AnnotatedMethodInfo.context.
+                // This field is set in the constructor, and the `super` ctor call in SpecialMethodInfo
+                // (which AccessorInfo is) passes a MixinTargetContext, strictly, from its ctor argument type.
+                isPrivate && ((MixinTargetContext) info.getMixin()).getMinRequiredClassVersion() < MixinEnvironment.CompatibilityLevel.JAVA_11.getClassVersion() ? Opcodes.INVOKESPECIAL : Opcodes.INVOKEVIRTUAL
         );
         method.instructions.add(new MethodInsnNode(opcode, this.info.getClassNode().name, this.targetMethod.name, this.targetMethod.desc, isInterface));
         method.instructions.add(new InsnNode(this.returnType.getOpcode(Opcodes.IRETURN)));
