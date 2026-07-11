@@ -24,23 +24,7 @@
  */
 package org.spongepowered.asm.mixin.injection.selectors;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.tools.Diagnostic.Kind;
-
+import com.google.common.base.Strings;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.spongepowered.asm.mixin.injection.selectors.ITargetSelectorDynamic.SelectorAnnotation;
@@ -54,7 +38,14 @@ import org.spongepowered.asm.util.Annotations;
 import org.spongepowered.asm.util.asm.IAnnotationHandle;
 import org.spongepowered.asm.util.logging.MessageRouter;
 
-import com.google.common.base.Strings;
+import javax.tools.Diagnostic.Kind;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utility class for parsing selectors
@@ -486,31 +477,36 @@ public final class TargetSelector {
 
     private static <TNode> ElementNode<TNode> runSelector(ITargetSelector selector, Iterable<ElementNode<TNode>> nodes,
             List<ElementNode<TNode>> candidates) {
-        int matchCount = 0;
-        ElementNode<TNode> exactMatch = null;
-        for (Iterator<ElementNode<TNode>> iterator = nodes.iterator(); iterator.hasNext();) {
-            ElementNode<TNode> element = iterator.next();
-            MatchResult match = selector.match(element);
+        List<ElementNode<TNode>> matches = new ArrayList<>();
+        List<ElementNode<TNode>> exactMatches = new ArrayList<>();
+
+        for (ElementNode<TNode> node : nodes) {
+            MatchResult match = selector.match(node);
             if (match.isMatch()) {
-                matchCount++;
-                if (matchCount > selector.getMaxMatchCount()) {
-                    break;
-                }
-                if (!candidates.contains(element)) {
-                    candidates.add(element);
-                }
-                if (exactMatch == null && match.isExactMatch()) {
-                    exactMatch = element;
+                if (match.isExactMatch()) {
+                    exactMatches.add(node);
+                } else {
+                    matches.add(node);
                 }
             }
         }
-        
+
+        int matchCount = exactMatches.size() + matches.size();
+
         if (matchCount < selector.getMinMatchCount()) {
             throw new SelectorConstraintException(selector, String.format("%s did not match the required number of targets (required=%d, matched=%d)",
                     selector, selector.getMinMatchCount(), matchCount));
         }
 
-        return exactMatch;
+        int addedCount;
+        for (addedCount = 0; addedCount < exactMatches.size() && addedCount < selector.getMaxMatchCount(); addedCount++) {
+            candidates.add(exactMatches.get(addedCount));
+        }
+        for (; addedCount < exactMatches.size() + matches.size() && addedCount < selector.getMaxMatchCount(); addedCount++) {
+            candidates.add(matches.get(addedCount - exactMatches.size()));
+        }
+
+        return exactMatches.isEmpty() ? null : exactMatches.get(0);
     }
 
 }
