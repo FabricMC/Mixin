@@ -304,7 +304,6 @@ public class AccessorInfo extends SpecialMethodInfo {
         this.type = this.initType();
         this.targetFieldType = this.initTargetFieldType();
         this.target = this.initTarget();
-        this.annotation.visit("target", this.target.toString());
     }
 
     protected AccessorType initType() {
@@ -474,6 +473,7 @@ public class AccessorInfo extends SpecialMethodInfo {
      */
     public void locate() {
         this.targetField = this.findTargetField();
+        this.annotation.visit("target", this.targetField.name +  ':' + this.targetField.desc);
     }
 
     /**
