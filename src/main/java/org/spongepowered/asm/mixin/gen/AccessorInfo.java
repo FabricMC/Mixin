@@ -473,7 +473,7 @@ public class AccessorInfo extends SpecialMethodInfo {
      */
     public void locate() {
         this.targetField = this.findTargetField();
-        this.annotation.visit("target", this.targetField.name + ":" + this.targetField.desc);
+        this.annotation.visit("target", this.targetField.name);
     }
 
     /**
