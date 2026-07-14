@@ -140,8 +140,6 @@ public class TargetSelectors implements Iterable<TargetSelectors.SelectedMethod>
      * Selected targets
      */
     private final List<SelectedMethod> targets = new ArrayList<SelectedMethod>();
-    
-    private boolean doPermissivePass;
 
     public TargetSelectors(ISelectorContext context, ClassNode classNode) {
         this.context = context;
@@ -191,15 +189,6 @@ public class TargetSelectors implements Iterable<TargetSelectors.SelectedMethod>
         this.targets.remove(target);
     }
 
-    public boolean isPermissivePassEnabled() {
-        return this.doPermissivePass;
-    }
-
-    public TargetSelectors setPermissivePass(boolean enabled) {
-        this.doPermissivePass = enabled;
-        return this;
-    }
-
     /**
      * Find methods in the target class which match the parsed selectors
      */
@@ -213,37 +202,24 @@ public class TargetSelectors implements Iterable<TargetSelectors.SelectedMethod>
      * targets and store them in the {@link #targets} collection.
      */
     private void findRootTargets() {
-        int passes = this.doPermissivePass ? 2 : 1;
-        
         for (ITargetSelector selector : this.selectors) {
             selector = selector.configure(Configure.SELECT_MEMBER);
             
             int matchCount = 0;
             int maxCount = selector.getMaxMatchCount();
-            
-            // Second pass ignores descriptor
-            ITargetSelector permissiveSelector = selector.configure(Configure.PERMISSIVE);
-            int selectorPasses = (permissiveSelector == selector) ? 1 : passes;
 
-            scan: for (int pass = 0; pass < selectorPasses && matchCount < 1; pass++) {
-                ITargetSelector passSelector = pass == 0 ? selector : permissiveSelector;
-                for (MethodNode target : this.targetClassNode.methods) {
-                    if (passSelector.match(ElementNode.of(this.targetClassNode, target)).isExactMatch()) {
-                        matchCount++;
+            for (MethodNode target : this.targetClassNode.methods) {
+                if (selector.match(ElementNode.of(this.targetClassNode, target)).isExactMatch()) {
+                    matchCount++;
 
-                        boolean isMixinMethod = Annotations.getVisible(target, MixinMerged.class) != null;
-                        if (maxCount <= 1 || ((this.isStatic || !Bytecode.isStatic(target)) && target != this.method && !isMixinMethod)) {
-                            this.checkTarget(target);
-                            this.targets.add(new SelectedMethod(passSelector, target));
-                        }
-
-                        if (matchCount >= maxCount) {
-                            break scan;
-                        }
+                    boolean isMixinMethod = Annotations.getVisible(target, MixinMerged.class) != null;
+                    if (maxCount <= 1 || ((this.isStatic || !Bytecode.isStatic(target)) && target != this.method && !isMixinMethod)) {
+                        this.checkTarget(target);
+                        this.targets.add(new SelectedMethod(selector, target));
                     }
                 }
             }
-            
+
             if (matchCount < selector.getMinMatchCount()) {
                 throw new InvalidInjectionException(this.context, new SelectorConstraintException(selector, String.format(
                         "Injection validation failed: %s for %s did not match the required number of targets (required=%d, matched=%d). %s%s",

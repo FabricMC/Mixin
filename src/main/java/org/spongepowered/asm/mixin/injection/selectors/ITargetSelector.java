@@ -135,13 +135,7 @@ public interface ITargetSelector {
          * Where supported, changes the descriptor to the specified value.
          */
         TRANSFORM(1),
-        
-        /**
-         * Where supported, changes the descriptor to match all target
-         * descriptors, retaining other properties
-         */
-        PERMISSIVE(0),
-        
+
         /**
          * Where supported, removes the min and max limits for the selector,
          * allowing it to return as many or as few matches as required.

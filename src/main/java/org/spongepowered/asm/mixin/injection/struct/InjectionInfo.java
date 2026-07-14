@@ -350,11 +350,6 @@ public abstract class InjectionInfo extends SpecialMethodInfo implements ISliceC
 
         this.activities.clear();
         try {
-            // When remapping refmap is enabled this implies we are in a development environment. In
-            // certain circumstances including the descriptor for the method may actually fail, so we
-            // will do a second "permissive" pass without the descriptor if this happens.
-            this.targets.setPermissivePass(this.mixin.getOption(Option.REFMAP_REMAP));
-            
             IActivity activity = this.activities.begin("Read Injection Points");
             this.readInjectionPoints();
             activity.next("Parse Requirements");

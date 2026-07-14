@@ -798,8 +798,6 @@ public final class MemberInfo implements ITargetSelectorRemappable, ITargetSelec
                 return this.move(null);
             case TRANSFORM:
                 return this.transform(Strings.emptyToNull(args[0]));
-            case PERMISSIVE:
-                return this.transform(null);
             case CLEAR_LIMITS:
                 if (this.matches.getMin() != 0 || this.matches.getMax() < Integer.MAX_VALUE) {
                     return new MemberInfo(this.name, this.owner, this.desc, Quantifier.ANY, this.tail);
