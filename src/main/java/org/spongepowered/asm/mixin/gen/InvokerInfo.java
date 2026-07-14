@@ -101,7 +101,7 @@ class InvokerInfo extends AccessorInfo {
     @Override
     public void locate() {
         this.targetMethod = this.findTargetMethod();
-        this.annotation.visit("target", this.targetMethod.name);
+        this.annotation.visit("target", this.targetMethod.name + this.targetMethod.desc);
     }
 
     private MethodNode findTargetMethod() {
