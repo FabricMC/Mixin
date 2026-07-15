@@ -43,6 +43,8 @@ import org.objectweb.asm.tree.*;
 import org.objectweb.asm.util.CheckClassAdapter;
 import org.objectweb.asm.util.Printer;
 import org.objectweb.asm.util.TraceClassVisitor;
+import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.spongepowered.asm.mixin.transformer.MixinTargetContext;
 import org.spongepowered.asm.util.asm.ASM;
 import org.spongepowered.asm.util.asm.MarkerNode;
 import org.spongepowered.asm.util.throwables.SyntheticBridgeException;
@@ -1427,6 +1429,30 @@ public final class Bytecode {
         } else {
             return new LdcInsnNode(intValue);
         }
+    }
+
+    /**
+     * Generates a method instruction for invoking the provided method, in the provided class. The opcode used matches
+     * the behavior of javac for the class version of the provided {@code context}.
+     * @param target class of the method to be invoked
+     * @param method method to invoke
+     * @param context context for the mixin causing this instruction
+     * @return method instruction with the proper opcode
+     */
+    public static MethodInsnNode invokeMethod(ClassNode target, MethodNode method, MixinTargetContext context) {
+        boolean isPrivate = Bytecode.hasFlag(method, Opcodes.ACC_PRIVATE);
+        boolean isInterface = Bytecode.hasFlag(target, Opcodes.ACC_INTERFACE);
+        boolean isStatic = Bytecode.hasFlag(method, Opcodes.ACC_STATIC);
+
+        // With JEP 181, javac now emits INVOKEINTERFACE for interface private methods, and INVOKEVIRTUAL for class private methods
+        MixinEnvironment.CompatibilityLevel requiredCompatLevel = MixinEnvironment.CompatibilityLevel.forClassVersion(context.getMinRequiredClassVersion());
+        boolean supportsNestMateAccess = requiredCompatLevel.supports(LanguageFeatures.NESTING);
+
+        int invokeOpcode = isStatic ? Opcodes.INVOKESTATIC :
+                isPrivate && !supportsNestMateAccess ? Opcodes.INVOKESPECIAL :
+                isInterface ? Opcodes.INVOKEINTERFACE :
+                Opcodes.INVOKEVIRTUAL;
+        return new MethodInsnNode(invokeOpcode, target.name, method.name, method.desc, isInterface);
     }
 
 }

@@ -116,7 +116,7 @@ public class AnnotatedMethodInfo implements IInjectionPointContext {
      * @return the target context
      */
     @Override
-    public final IMixinContext getMixin() {
+    public IMixinContext getMixin() {
         return this.context;
     }
 
