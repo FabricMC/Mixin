@@ -76,9 +76,28 @@ import org.spongepowered.asm.service.MixinService;
  */
 @AtCode("INVOKE")
 public class BeforeInvoke extends InjectionPoint {
-
+    
+    /**
+     * Member search type, the <tt>PERMISSIVE</tt> search is only used when
+     * refmap remapping is enabled.
+     */
+    @Deprecated
+    public enum SearchType {
+        
+        STRICT,
+        PERMISSIVE
+        
+    }
 
     protected final ITargetSelector target;
+    
+    /**
+     * This option enables a fallback "permissive" search to occur if initial
+     * search fails <b>if and only if the {@link Option#REFMAP_REMAP} option is
+     * enabled and the context mixin's parent config has a valid refmap</b>.
+     */
+    @Deprecated
+    protected final boolean allowPermissive;
 
     /**
      * This strategy can be used to identify a particular invocation if the same
@@ -121,6 +140,7 @@ public class BeforeInvoke extends InjectionPoint {
         this.className = this.getClassName();
         this.context = data.getContext();
         this.mixin = data.getMixin();
+        this.allowPermissive = false;
     }
 
     private String getClassName() {
@@ -147,10 +167,10 @@ public class BeforeInvoke extends InjectionPoint {
     @Override
     public boolean find(String desc, InsnList insns, Collection<AbstractInsnNode> nodes) {
         this.log("{}->{} is searching for an injection point in method with descriptor {}", this.context, this.className, desc);
-        return this.find(desc, insns, nodes, this.target);
+        return this.find(desc, insns, nodes, this.target, SearchType.STRICT);
     }
 
-    protected boolean find(String desc, InsnList insns, Collection<AbstractInsnNode> nodes, ITargetSelector selector) {
+    protected boolean find(String desc, InsnList insns, Collection<AbstractInsnNode> nodes, ITargetSelector selector, SearchType searchType) {
         if (selector == null) {
             return false;
         }
