@@ -140,7 +140,6 @@ public interface ITargetSelector {
          * Where supported, changes the descriptor to match all target
          * descriptors, retaining other properties
          */
-        @Deprecated
         PERMISSIVE(0),
         
         /**

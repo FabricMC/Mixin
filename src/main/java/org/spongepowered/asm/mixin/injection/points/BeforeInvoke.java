@@ -80,6 +80,7 @@ public class BeforeInvoke extends InjectionPoint {
     /**
      * Member search type, the <tt>PERMISSIVE</tt> search is only used when
      * refmap remapping is enabled.
+     * @deprecated Permissive search is no longer possible
      */
     @Deprecated
     public enum SearchType {
@@ -95,9 +96,10 @@ public class BeforeInvoke extends InjectionPoint {
      * This option enables a fallback "permissive" search to occur if initial
      * search fails <b>if and only if the {@link Option#REFMAP_REMAP} option is
      * enabled and the context mixin's parent config has a valid refmap</b>.
+     * @deprecated Permissive matching is now always disabled
      */
     @Deprecated
-    protected final boolean allowPermissive;
+    protected final boolean allowPermissive = false;
 
     /**
      * This strategy can be used to identify a particular invocation if the same
@@ -140,7 +142,6 @@ public class BeforeInvoke extends InjectionPoint {
         this.className = this.getClassName();
         this.context = data.getContext();
         this.mixin = data.getMixin();
-        this.allowPermissive = false;
     }
 
     private String getClassName() {
