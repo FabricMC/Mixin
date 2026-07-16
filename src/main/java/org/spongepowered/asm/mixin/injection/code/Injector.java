@@ -445,12 +445,7 @@ public abstract class Injector {
      * @return injected insn node
      */
     protected AbstractInsnNode invokeHandler(InsnList insns, MethodNode handler) {
-        boolean isPrivate = Bytecode.hasFlag(handler, Opcodes.ACC_PRIVATE);
-        boolean isSynthetic = Bytecode.hasFlag(handler, Opcodes.ACC_SYNTHETIC);
-        int invokeOpcode = this.isStatic ? Opcodes.INVOKESTATIC :
-                           this.isInterface ? (isSynthetic && isPrivate ? Opcodes.INVOKESPECIAL : Opcodes.INVOKEINTERFACE) :
-                           isPrivate ? Opcodes.INVOKESPECIAL : Opcodes.INVOKEVIRTUAL;
-        MethodInsnNode insn = new MethodInsnNode(invokeOpcode, this.classNode.name, handler.name, handler.desc, isInterface);
+        MethodInsnNode insn = Bytecode.invokeMethod(this.classNode, handler, this.info.getMixin());
         insns.add(insn);
         this.info.addCallbackInvocation(handler);
         return insn;

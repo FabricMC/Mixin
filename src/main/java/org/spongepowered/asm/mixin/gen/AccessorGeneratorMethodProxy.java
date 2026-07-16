@@ -27,7 +27,6 @@ package org.spongepowered.asm.mixin.gen;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.InsnNode;
-import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 import org.spongepowered.asm.util.Bytecode;
@@ -75,10 +74,7 @@ public class AccessorGeneratorMethodProxy extends AccessorGenerator {
             method.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
         }
         Bytecode.loadArgs(this.argTypes, method.instructions, this.info.isStatic ? 0 : 1);
-        boolean isInterface = Bytecode.hasFlag(this.info.getClassNode(), Opcodes.ACC_INTERFACE);
-        boolean isPrivate = Bytecode.hasFlag(this.targetMethod, Opcodes.ACC_PRIVATE);
-        int opcode = this.targetIsStatic ? Opcodes.INVOKESTATIC : isInterface ? Opcodes.INVOKEINTERFACE : (isPrivate ? Opcodes.INVOKESPECIAL : Opcodes.INVOKEVIRTUAL);
-        method.instructions.add(new MethodInsnNode(opcode, this.info.getClassNode().name, this.targetMethod.name, this.targetMethod.desc, isInterface));
+        method.instructions.add(Bytecode.invokeMethod(this.info.getTargetClassNode(), this.targetMethod, this.info.getMixin()));
         method.instructions.add(new InsnNode(this.returnType.getOpcode(Opcodes.IRETURN)));
         return method;
     }

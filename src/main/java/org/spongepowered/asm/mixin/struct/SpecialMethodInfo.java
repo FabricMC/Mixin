@@ -93,4 +93,11 @@ public class SpecialMethodInfo extends AnnotatedMethodInfo {
         return this.methodName;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MixinTargetContext getMixin() {
+        return this.mixin;
+    }
 }
