@@ -129,17 +129,19 @@ class PluginHandle {
      */
     private static Method findLegacyApply(Class<?> pluginClass, String applyName) {
         Method legacyMethod = null;
-
-        // Check if the non-legacy signature is there
         try {
-            pluginClass.getMethod(applyName, String.class, org.objectweb.asm.tree.ClassNode.class, String.class, IMixinInfo.class);
-        } catch (NoSuchMethodException nonLegacyNotFoundEx) {
-            // No non-legacy, check legacy signature and return it instead of null if found.
-            try {
-                legacyMethod = pluginClass.getMethod(applyName, String.class, org.spongepowered.asm.lib.tree.ClassNode.class, String.class, IMixinInfo.class);
-            } catch (NoSuchMethodException legacyNotFoundEx) {
-                PluginHandle.logger.catching(legacyNotFoundEx);
+            Method nonLegacy = pluginClass.getMethod(applyName, String.class, org.objectweb.asm.tree.ClassNode.class, String.class, IMixinInfo.class);
+
+            // Check if we found the interface's default rather than an override, and look for a fallback in the former case.
+            if (nonLegacy.getDeclaringClass() == IMixinConfigPlugin.class) {
+                try {
+                    legacyMethod = pluginClass.getMethod(applyName, String.class, org.spongepowered.asm.lib.tree.ClassNode.class, String.class, IMixinInfo.class);
+                } catch (NoSuchMethodException e) {
+                    PluginHandle.logger.catching(e);
+                }
             }
+        } catch (Exception unexpectedEx) {
+            throw new CompanionPluginError("Encountered an unexpected error when trying to resolve method " + applyName + "or its legacy fallback.", unexpectedEx);
         }
 
         return legacyMethod;
