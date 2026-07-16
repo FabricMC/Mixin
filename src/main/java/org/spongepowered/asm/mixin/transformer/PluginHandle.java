@@ -120,9 +120,6 @@ class PluginHandle {
     /**
      * <p>Called during construction to populate {@link #mdPreApply} and {@link #mdPostApply} to handle legacy (pre 0.8) config plugins.</p>
      *
-     * <p>This replaces the previous approach of catching a {@link AbstractMethodError}, as that error is no longer possible with
-     * defaulted methods.</p>
-     *
      * @param pluginClass The implementing class of this {@link #plugin}
      * @param applyName Either {@code "preApply"} or {@code "postApply"} depending on which legacy method to check for.
      * @return {@code null} if no legacy method should be used or if none is found, otherwise the legacy method object to invoke.
