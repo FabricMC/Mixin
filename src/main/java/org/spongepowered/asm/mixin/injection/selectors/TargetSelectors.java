@@ -217,6 +217,10 @@ public class TargetSelectors implements Iterable<TargetSelectors.SelectedMethod>
                         this.checkTarget(target);
                         this.targets.add(new SelectedMethod(selector, target));
                     }
+
+                    if (matchCount >= maxCount) {
+                        break;
+                    }
                 }
             }
 
