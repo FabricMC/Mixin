@@ -229,7 +229,7 @@ public class CallbackInjector extends Injector {
                     break;
                 }
             }
-            Injector.logger.debug("{} does{} use it's CallbackInfo{}", info, seenCallbackInfoUse ? "" : "n't", Type.VOID_TYPE == target.returnType ? "" : "Returnable");
+            Injector.logger.debug("{} does{} use its CallbackInfo{}", info, seenCallbackInfoUse ? "" : "n't", Type.VOID_TYPE == target.returnType ? "" : "Returnable");
             if (!seenCallbackInfoUse && !Bytecode.isStatic(handler) && (handler.access & Opcodes.ACC_FINAL) == 0 && (target.classNode.access & Opcodes.ACC_FINAL) == 0) {
                 //Although the CallbackInfo appears unused, there is the possibility that the handler is overridden, so we'll have to check
                 String handlerName = handler instanceof MethodNodeEx ? ((MethodNodeEx) handler).getOriginalName() : handler.name;
