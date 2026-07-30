@@ -106,22 +106,23 @@ public @interface ModifyArg {
     public Desc[] target() default {};
     
     /**
-     * A {@link Slice} annotation which describes the method bisection used in
-     * the {@link #at} query for this injector.
+     * Array of {@link Slice} annotations which describe the method bisections
+     * used in the {@link #at} queries for this injector.
      * 
-     * @return slice
+     * @return slices
      */
-    public Slice slice() default @Slice;
+    public Slice[] slice() default {};
 
     /**
-     * An {@link At} annotation which describes the {@link InjectionPoint} in
-     * the target method. The specified {@link InjectionPoint} <i>must only</i>
-     * return {@link org.objectweb.asm.tree.MethodInsnNode} instances
-     * and an exception will be thrown if this is not the case.
+     * Array of {@link At} annotations which describe the
+     * {@link InjectionPoint}s in the target method. The specified
+     * {@link InjectionPoint}s <i>must only</i> return
+     * {@link org.objectweb.asm.tree.MethodInsnNode} instances and an exception
+     * will be thrown if this is not the case.
      * 
-     * @return {@link At} which identifies the target method invocation
+     * @return {@link At}s which identify the target method invocation
      */
-    public At at();
+    public At[] at();
     
     /**
      * <p>Gets the argument index on the target to set. It is not necessary to

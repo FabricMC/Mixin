@@ -121,21 +121,21 @@ public @interface ModifyVariable {
     public Desc[] target() default {};
     
     /**
-     * A {@link Slice} annotation which describes the method bisection used in
-     * the {@link #at} query for this injector.
+     * Array of {@link Slice} annotations which describe the method bisections
+     * used in the {@link #at} queries for this injector.
      * 
-     * @return slice
+     * @return slices
      */
-    public Slice slice() default @Slice;
+    public Slice[] slice() default {};
 
     /**
-     * An {@link At} annotation which describes the {@link InjectionPoint} in
-     * the target method.
+     * Array of {@link At} annotations which describe the {@link InjectionPoint}s
+     * in the target method.
      * 
-     * @return {@link At} which identifies the location to inject inside the
+     * @return {@link At}s which identify the locations to inject inside the
      *      target method.
      */
-    public At at();
+    public At[] at();
     
     /**
      * When creating a {@link ModifyVariable} callback, you may wish to first
