@@ -43,29 +43,6 @@ import com.google.common.base.Strings;
  */
 class PluginHandle {
     
-    /**
-     * Compatibility mode for companion plugins
-     */
-    enum CompatibilityMode {
-
-        /**
-         * Companion plugin is compatible or unknown
-         */
-        NORMAL,
-        
-        /**
-         * Companion plugin is outdated but running anyway, preApply and
-         * postApply will be called via reflection
-         */
-        COMPATIBLE,
-        
-        /**
-         * Companion plugin is disabled due to incompatibility
-         */
-        FAILED
-    
-    }
-    
     private static final ILogger logger = MixinService.getService().getLogger("mixin");
 
     /**
@@ -77,33 +54,81 @@ class PluginHandle {
      * Plugin instance, can be null
      */
     private final IMixinConfigPlugin plugin;
+
+    /**
+     * <p>Keeps track of whether an exception was encountered
+     * when trying to run {@link #applyLegacy(Method, String, ClassNode, String, IMixinInfo)} if legacy methods were
+     * found.</p>
+     *
+     * @see #mdPreApply
+     * @see #mdPostApply
+     * @see #findLegacyApply(Class, String)
+     * @see #applyLegacy(Method, String, ClassNode, String, IMixinInfo)
+     */
+    private boolean hasFailedLegacyApply = false;
     
     /**
-     * Compatibility mode for companion plugin
+     * <p>Reflection objects for calling legacy (pre 0.8) preApply and postApply. May be {@code null} when no legacy method
+     * should be called.</p>
+     *
+     * @see #findLegacyApply(Class, String)
      */
-    private CompatibilityMode mode = CompatibilityMode.NORMAL;
-    
-    /**
-     * Reflection objects for calling legacy (pre 0.8) preApply and postApply
-     */
-    private Method mdPreApply, mdPostApply;
+    private final Method mdPreApply, mdPostApply;
 
     PluginHandle(MixinConfig parent, IMixinService service, String pluginClassName) {
         IMixinConfigPlugin plugin = null;
+        Method mdPreApply = null;
+        Method mdPostApply = null;
         
         if (!Strings.isNullOrEmpty(pluginClassName)) {
             try {
                 Class<?> pluginClass = service.getClassProvider().findClass(pluginClassName, true);
                 plugin = (IMixinConfigPlugin)pluginClass.getDeclaredConstructor().newInstance();
+                mdPreApply = findLegacyApply(pluginClass, "preApply");
+                mdPostApply = findLegacyApply(pluginClass, "postApply");
             } catch (Throwable th) {
                 PluginHandle.logger.error("Error loading companion plugin class [{}] for mixin config [{}]. The plugin may be out of date: {}:{}",
                         pluginClassName, parent, th.getClass().getSimpleName(), th.getMessage(), th);
                 plugin = null;
+                mdPreApply = null;
+                mdPostApply = null;
             }
         }
         
         this.parent = parent;
         this.plugin = plugin;
+        this.mdPreApply = mdPreApply;
+        this.mdPostApply = mdPostApply;
+    }
+
+    /**
+     * <p>Called during construction to populate {@link #mdPreApply} and {@link #mdPostApply} to handle legacy (pre 0.8) config plugins.</p>
+     *
+     * @param pluginClass The implementing class of this {@link #plugin}
+     * @param applyName Either {@code "preApply"} or {@code "postApply"} depending on which legacy method to check for.
+     * @return {@code null} if no legacy method should be used or if none is found, otherwise the legacy method object to invoke.
+     *
+     * @see #mdPreApply
+     * @see #mdPostApply
+     */
+    private static Method findLegacyApply(Class<?> pluginClass, String applyName) {
+        Method legacyMethod = null;
+        try {
+            Method nonLegacy = pluginClass.getMethod(applyName, String.class, org.objectweb.asm.tree.ClassNode.class, String.class, IMixinInfo.class);
+
+            // Check if we found the interface's default rather than an override, and look for a fallback in the former case.
+            if (nonLegacy.getDeclaringClass() == IMixinConfigPlugin.class) {
+                try {
+                    legacyMethod = pluginClass.getMethod(applyName, String.class, org.spongepowered.asm.lib.tree.ClassNode.class, String.class, IMixinInfo.class);
+                } catch (NoSuchMethodException e) {
+                    PluginHandle.logger.catching(e);
+                }
+            }
+        } catch (Exception unexpectedEx) {
+            throw new CompanionPluginError("Encountered an unexpected error when trying to resolve method " + applyName + "or its legacy fallback.", unexpectedEx);
+        }
+
+        return legacyMethod;
     }
 
     IMixinConfigPlugin get() {
@@ -140,27 +165,21 @@ class PluginHandle {
             return;
         }
         
-        if (this.mode == CompatibilityMode.FAILED) {
+        if (this.hasFailedLegacyApply) {
             throw new IllegalStateException("Companion plugin failure for [" + this.parent + "] plugin [" + this.plugin.getClass() + "]");
         }
         
-        if (this.mode == CompatibilityMode.COMPATIBLE) {
+        if (this.mdPreApply != null) {
             try {
                 this.applyLegacy(this.mdPreApply, targetClassName, targetClass, mixinClassName, mixinInfo);
             } catch (Exception ex) {
-                this.mode = CompatibilityMode.FAILED;
+                this.hasFailedLegacyApply = true;
                 throw ex;
             }
             return;
         } 
 
-        try {
-            this.plugin.preApply(targetClassName, targetClass, mixinClassName, mixinInfo);
-        } catch (AbstractMethodError ex) {
-            this.mode = CompatibilityMode.COMPATIBLE;
-            this.initReflection();
-            this.preApply(targetClassName, targetClass, mixinClassName, mixinInfo);
-        }
+        this.plugin.preApply(targetClassName, targetClass, mixinClassName, mixinInfo);
     }
 
     /**
@@ -171,43 +190,21 @@ class PluginHandle {
             return;
         }
         
-        if (this.mode == CompatibilityMode.FAILED) {
+        if (this.hasFailedLegacyApply) {
             throw new IllegalStateException("Companion plugin failure for [" + this.parent + "] plugin [" + this.plugin.getClass() + "]");
         }
         
-        if (this.mode == CompatibilityMode.COMPATIBLE) {
+        if (this.mdPostApply != null) {
             try {
                 this.applyLegacy(this.mdPostApply, targetClassName, targetClass, mixinClassName, mixinInfo);
             } catch (Exception ex) {
-                this.mode = CompatibilityMode.FAILED;
+                this.hasFailedLegacyApply = true;
                 throw ex;
             }
             return;
         } 
 
-        try {
-            this.plugin.postApply(targetClassName, targetClass, mixinClassName, mixinInfo);
-        } catch (AbstractMethodError ex) {
-            this.mode = CompatibilityMode.COMPATIBLE;
-            this.initReflection();
-            this.postApply(targetClassName, targetClass, mixinClassName, mixinInfo);
-        }
-    }
-
-    private void initReflection() {
-        if (this.mdPreApply != null) {
-            return;
-        }
-        
-        try {
-            Class<?> pluginClass = this.plugin.getClass();
-            this.mdPreApply = pluginClass.getMethod("preApply", String.class, org.spongepowered.asm.lib.tree.ClassNode.class, String.class,
-                    IMixinInfo.class);
-            this.mdPostApply = pluginClass.getMethod("postApply", String.class, org.spongepowered.asm.lib.tree.ClassNode.class, String.class,
-                    IMixinInfo.class);
-        } catch (Throwable th) {
-            PluginHandle.logger.catching(th);
-        }
+        this.plugin.postApply(targetClassName, targetClass, mixinClassName, mixinInfo);
     }
 
     private void applyLegacy(Method method, String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
