@@ -565,7 +565,7 @@ remoteSign {
 task checkVersion {
     doFirst {
         def xml = new URL("https://maven.fabricmc.net/net/fabricmc/sponge-mixin/maven-metadata.xml").text
-        def metadata = new XmlSlurper().parseText(xml)
+        def metadata = new groovy.xml.XmlSlurper().parseText(xml)
         def versions = metadata.versioning.versions.version*.text();
         if (versions.contains(version)) {
             throw new RuntimeException("${version} has already been released!")
