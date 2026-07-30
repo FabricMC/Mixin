@@ -61,6 +61,7 @@ class PluginHandle {
      * found.</p>
      *
      * @see #mdPreApply
+     * @see #mdPostApply
      * @see #findLegacyApply(Class, String)
      * @see #applyLegacy(Method, String, ClassNode, String, IMixinInfo)
      */
