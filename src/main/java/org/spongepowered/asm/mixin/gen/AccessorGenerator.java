@@ -78,7 +78,7 @@ public abstract class AccessorGenerator {
      */
     protected final MethodNode createMethod(int maxLocals, int maxStack) {
         MethodNode method = this.info.getMethod();
-        MethodNode accessor = new MethodNode(ASM.API_VERSION, (method.access & ~Opcodes.ACC_ABSTRACT) | Opcodes.ACC_SYNTHETIC, method.name,
+        MethodNode accessor = new MethodNode(ASM.API_VERSION, method.access & ~Opcodes.ACC_ABSTRACT, method.name,
                 method.desc, null, null);
         accessor.visibleAnnotations = new ArrayList<AnnotationNode>();
         accessor.visibleAnnotations.add(this.info.getAnnotationNode());
