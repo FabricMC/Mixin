@@ -43,29 +43,6 @@ import com.google.common.base.Strings;
  */
 class PluginHandle {
     
-    /**
-     * Compatibility mode for companion plugins
-     */
-    enum CompatibilityMode {
-
-        /**
-         * Companion plugin is compatible or unknown
-         */
-        NORMAL,
-        
-        /**
-         * Companion plugin is outdated but running anyway, preApply and
-         * postApply will be called via reflection
-         */
-        COMPATIBLE,
-        
-        /**
-         * Companion plugin is disabled due to incompatibility
-         */
-        FAILED
-    
-    }
-    
     private static final ILogger logger = MixinService.getService().getLogger("mixin");
 
     /**
@@ -77,11 +54,17 @@ class PluginHandle {
      * Plugin instance, can be null
      */
     private final IMixinConfigPlugin plugin;
-    
+
     /**
-     * Compatibility mode for companion plugin
+     * <p>Keeps track of whether an exception was encountered
+     * when trying to run {@link #applyLegacy(Method, String, ClassNode, String, IMixinInfo)} if legacy methods were
+     * found.</p>
+     *
+     * @see #mdPreApply
+     * @see #findLegacyApply(Class, String)
+     * @see #applyLegacy(Method, String, ClassNode, String, IMixinInfo)
      */
-    private CompatibilityMode mode = CompatibilityMode.NORMAL;
+    private boolean hasFailedLegacyApply = false;
     
     /**
      * <p>Reflection objects for calling legacy (pre 0.8) preApply and postApply. May be {@code null} when no legacy method
@@ -181,7 +164,7 @@ class PluginHandle {
             return;
         }
         
-        if (this.mode == CompatibilityMode.FAILED) {
+        if (this.hasFailedLegacyApply) {
             throw new IllegalStateException("Companion plugin failure for [" + this.parent + "] plugin [" + this.plugin.getClass() + "]");
         }
         
@@ -189,7 +172,7 @@ class PluginHandle {
             try {
                 this.applyLegacy(this.mdPreApply, targetClassName, targetClass, mixinClassName, mixinInfo);
             } catch (Exception ex) {
-                this.mode = CompatibilityMode.FAILED;
+                this.hasFailedLegacyApply = true;
                 throw ex;
             }
             return;
@@ -206,7 +189,7 @@ class PluginHandle {
             return;
         }
         
-        if (this.mode == CompatibilityMode.FAILED) {
+        if (this.hasFailedLegacyApply) {
             throw new IllegalStateException("Companion plugin failure for [" + this.parent + "] plugin [" + this.plugin.getClass() + "]");
         }
         
@@ -214,7 +197,7 @@ class PluginHandle {
             try {
                 this.applyLegacy(this.mdPostApply, targetClassName, targetClass, mixinClassName, mixinInfo);
             } catch (Exception ex) {
-                this.mode = CompatibilityMode.FAILED;
+                this.hasFailedLegacyApply = true;
                 throw ex;
             }
             return;
