@@ -80,7 +80,9 @@ public class BeforeInvoke extends InjectionPoint {
     /**
      * Member search type, the <tt>PERMISSIVE</tt> search is only used when
      * refmap remapping is enabled.
+     * @deprecated Permissive search is no longer possible
      */
+    @Deprecated
     public enum SearchType {
         
         STRICT,
@@ -94,8 +96,10 @@ public class BeforeInvoke extends InjectionPoint {
      * This option enables a fallback "permissive" search to occur if initial
      * search fails <b>if and only if the {@link Option#REFMAP_REMAP} option is
      * enabled and the context mixin's parent config has a valid refmap</b>.
+     * @deprecated Permissive matching is now always disabled
      */
-    protected final boolean allowPermissive;
+    @Deprecated
+    protected final boolean allowPermissive = false;
 
     /**
      * This strategy can be used to identify a particular invocation if the same
@@ -138,8 +142,6 @@ public class BeforeInvoke extends InjectionPoint {
         this.className = this.getClassName();
         this.context = data.getContext();
         this.mixin = data.getMixin();
-        this.allowPermissive = this.mixin.getOption(Option.REFMAP_REMAP) && this.mixin.getOption(Option.REFMAP_REMAP_ALLOW_PERMISSIVE)
-                && !this.mixin.getReferenceMapper().isDefault();
     }
 
     private String getClassName() {
@@ -166,17 +168,7 @@ public class BeforeInvoke extends InjectionPoint {
     @Override
     public boolean find(String desc, InsnList insns, Collection<AbstractInsnNode> nodes) {
         this.log("{}->{} is searching for an injection point in method with descriptor {}", this.context, this.className, desc);
-        
-        boolean hasDescriptor = this.target instanceof ITargetSelectorByName && ((ITargetSelectorByName)this.target).getDesc() == null;
-        boolean found = this.find(desc, insns, nodes, this.target, SearchType.STRICT);
-
-        if (!found && hasDescriptor && this.allowPermissive) {
-            this.logger.warn("STRICT match for {} using \"{}\" in {} returned 0 results, attempting permissive search. "
-                    + "To inhibit permissive search set mixin.env.allowPermissiveMatch=false", this.className, this.target, this.mixin);
-            found = this.find(desc, insns, nodes, this.target, SearchType.PERMISSIVE);
-        }
-
-        return found;
+        return this.find(desc, insns, nodes, this.target, SearchType.STRICT);
     }
 
     protected boolean find(String desc, InsnList insns, Collection<AbstractInsnNode> nodes, ITargetSelector selector, SearchType searchType) {
@@ -184,8 +176,7 @@ public class BeforeInvoke extends InjectionPoint {
             return false;
         }
         
-        ITargetSelector target = (searchType == SearchType.PERMISSIVE ? selector.configure(Configure.PERMISSIVE) : selector)
-                .configure(Configure.SELECT_INSTRUCTION);
+        ITargetSelector target = selector.configure(Configure.SELECT_INSTRUCTION);
         
         int ordinal = 0, found = 0, matchCount = 0;
         
@@ -217,11 +208,7 @@ public class BeforeInvoke extends InjectionPoint {
 
             this.inspectInsn(desc, insns, insn);
         }
-        
-        if (searchType == SearchType.PERMISSIVE && found > 1) {
-            this.logger.warn("A permissive match for {} using \"{}\" in {} matched {} instructions, this may cause unexpected behaviour. "
-                    + "To inhibit permissive search set mixin.env.allowPermissiveMatch=false", this.className, selector, this.mixin, found);
-        }
+
         
         if (matchCount < target.getMinMatchCount()) {
             throw new SelectorConstraintException(target, String.format("%s did not match the required number of targets (required=%d, matched=%d)",

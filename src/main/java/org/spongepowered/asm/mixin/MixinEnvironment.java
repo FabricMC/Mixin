@@ -377,6 +377,7 @@ public final class MixinEnvironment implements ITokenProvider {
          * in the refmap. To disable this behaviour, set this property to
          * <tt>false</tt>.
          */
+        @Deprecated
         REFMAP_REMAP_ALLOW_PERMISSIVE(Option.ENVIRONMENT, Inherit.INDEPENDENT, "allowPermissiveMatch", true, "true"),
         
         /**
