@@ -24,37 +24,33 @@
  */
 package org.spongepowered.asm.mixin.injection.selectors;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.tools.Diagnostic.Kind;
-
+import com.google.common.base.Strings;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
+import org.spongepowered.asm.mixin.FabricUtil;
 import org.spongepowered.asm.mixin.injection.selectors.ITargetSelectorDynamic.SelectorAnnotation;
 import org.spongepowered.asm.mixin.injection.selectors.ITargetSelectorDynamic.SelectorId;
 import org.spongepowered.asm.mixin.injection.selectors.dynamic.DynamicSelectorDesc;
 import org.spongepowered.asm.mixin.injection.selectors.throwables.SelectorConstraintException;
 import org.spongepowered.asm.mixin.injection.struct.MemberInfo;
+import org.spongepowered.asm.mixin.refmap.IMixinContext;
 import org.spongepowered.asm.mixin.throwables.MixinError;
 import org.spongepowered.asm.mixin.throwables.MixinException;
 import org.spongepowered.asm.util.Annotations;
 import org.spongepowered.asm.util.asm.IAnnotationHandle;
 import org.spongepowered.asm.util.logging.MessageRouter;
 
-import com.google.common.base.Strings;
+import javax.tools.Diagnostic.Kind;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Utility class for parsing selectors
@@ -450,32 +446,34 @@ public final class TargetSelector {
     
     /**
      * Run query on supplied target nodes
-     * 
+     *
+     * @param mixin context
      * @param selector Target selector
      * @param nodes Node collection to enumerate
      * @param <TNode> Node type
      * @return query result
      */
-    public static <TNode> Result<TNode> run(ITargetSelector selector, Iterable<ElementNode<TNode>> nodes) {
+    public static <TNode> Result<TNode> run(IMixinContext mixin, ITargetSelector selector, Iterable<ElementNode<TNode>> nodes) {
         List<ElementNode<TNode>> candidates = new ArrayList<ElementNode<TNode>>();
-        ElementNode<TNode> exactMatch = TargetSelector.runSelector(selector, nodes, candidates);
+        ElementNode<TNode> exactMatch = TargetSelector.runSelector(mixin, selector, nodes, candidates);
         return new Result<TNode>(exactMatch, candidates);
     }
     
     /**
      * Run query on supplied target nodes
-     * 
+     *
+     * @param mixin context
      * @param selector Target selector
      * @param nodes Node collection to enumerate
      * @param <TNode> Node type
      * @return query result
      */
-    public static <TNode> Result<TNode> run(Iterable<ITargetSelector> selector, Iterable<ElementNode<TNode>> nodes) {
+    public static <TNode> Result<TNode> run(IMixinContext mixin, Iterable<ITargetSelector> selector, Iterable<ElementNode<TNode>> nodes) {
         ElementNode<TNode> exactMatch = null;
         List<ElementNode<TNode>> candidates = new ArrayList<ElementNode<TNode>>();
         
         for (ITargetSelector target : selector) {
-            ElementNode<TNode> selectorExactMatch = TargetSelector.runSelector(target, nodes, candidates);
+            ElementNode<TNode> selectorExactMatch = TargetSelector.runSelector(mixin, target, nodes, candidates);
             if (exactMatch == null) {
                 exactMatch = selectorExactMatch;
             }
@@ -484,33 +482,30 @@ public final class TargetSelector {
         return new Result<TNode>(exactMatch, candidates);
     }
 
-    private static <TNode> ElementNode<TNode> runSelector(ITargetSelector selector, Iterable<ElementNode<TNode>> nodes,
+    private static <TNode> ElementNode<TNode> runSelector(IMixinContext mixin, ITargetSelector selector, Iterable<ElementNode<TNode>> nodes,
             List<ElementNode<TNode>> candidates) {
-        int matchCount = 0;
-        ElementNode<TNode> exactMatch = null;
-        for (Iterator<ElementNode<TNode>> iterator = nodes.iterator(); iterator.hasNext();) {
-            ElementNode<TNode> element = iterator.next();
-            MatchResult match = selector.match(element);
-            if (match.isMatch()) {
-                matchCount++;
-                if (matchCount > selector.getMaxMatchCount()) {
-                    break;
-                }
-                if (!candidates.contains(element)) {
-                    candidates.add(element);
-                }
-                if (exactMatch == null && match.isExactMatch()) {
-                    exactMatch = element;
-                }
-            }
-        }
-        
-        if (matchCount < selector.getMinMatchCount()) {
-            throw new SelectorConstraintException(selector, String.format("%s did not match the required number of targets (required=%d, matched=%d)",
-                    selector, selector.getMinMatchCount(), matchCount));
+        Stream<AbstractMap.SimpleImmutableEntry<ElementNode<TNode>, MatchResult>> stream = StreamSupport.stream(nodes.spliterator(), false)
+                .map(element -> new AbstractMap.SimpleImmutableEntry<>(element, selector.match(element)))
+                .filter(entry -> entry.getValue().isMatch());
+
+        if (FabricUtil.getCompatibility(mixin) >= FabricUtil.COMPATIBILITY_0_17_4) {
+            stream = stream.sorted(Comparator.<Map.Entry<ElementNode<TNode>, MatchResult>, Boolean>comparing(entry -> entry.getValue().isExactMatch()).reversed());
         }
 
-        return exactMatch;
+        List<Map.Entry<ElementNode<TNode>, MatchResult>> matches = stream
+                .limit(selector.getMaxMatchCount())
+                .collect(Collectors.toList());
+
+        for (Map.Entry<ElementNode<TNode>, MatchResult> match : matches) {
+            candidates.add(match.getKey());
+        }
+
+        if (matches.size() < selector.getMinMatchCount()) {
+            throw new SelectorConstraintException(selector, String.format("%s did not match the required number of targets (required=%d, matched=%d)",
+                    selector, selector.getMinMatchCount(), matches.size()));
+        }
+
+        return matches.stream().filter(entry -> entry.getValue().isExactMatch()).findFirst().map(Map.Entry::getKey).orElse(null);
     }
 
 }

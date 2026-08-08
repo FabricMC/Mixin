@@ -67,9 +67,14 @@ public final class FabricUtil {
     public static final int COMPATIBILITY_0_17_1 = 17001; // 0.17.1+mixin.0.8.7
 
     /**
+     * Fabric compatibility version 0.17.4
+     */
+    public static final int COMPATIBILITY_0_17_4 = 17004; // 0.17.4+mixin.0.8.7
+
+    /**
      * Latest compatibility version
      */
-    public static final int COMPATIBILITY_LATEST = COMPATIBILITY_0_17_1;
+    public static final int COMPATIBILITY_LATEST = COMPATIBILITY_0_17_4;
 
     public static String getModId(IMixinConfig config) {
         return getModId(config, "(unknown)");
