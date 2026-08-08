@@ -93,4 +93,13 @@ public @interface Overwrite {
      */
     public boolean remap() default true;
 
+    /**
+     * By default, if the target for an overwrite cannot be found in the target class an
+     * exception will be thrown, however in cases where you do not want that behaviour
+     * you can mark it as optional, and it will silently not apply rather than throwing an exception.
+     * 
+     * @return True to not throw an exception if the target cannot be found
+     */
+    public boolean optional() default false;
+
 }
