@@ -1054,8 +1054,7 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
     }
 
     private void handleTargetError(String message, boolean verboseOnly) {
-        boolean shouldThrow = FabricUtil.getCompatibility(this.parent) >= FabricUtil.COMPATIBILITY_0_17_4 ? this.parent.isRequired() : this.strict; 
-        if (shouldThrow) {
+        if (this.strict || (FabricUtil.getCompatibility(this.parent) >= FabricUtil.COMPATIBILITY_0_17_4 && this.parent.isRequired())) {
             this.logger.error(message);
             throw new InvalidMixinException(this, message);
         }
