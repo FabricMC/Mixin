@@ -121,6 +121,7 @@ class PluginHandle {
                 try {
                     legacyMethod = pluginClass.getMethod(applyName, String.class, org.spongepowered.asm.lib.tree.ClassNode.class, String.class, IMixinInfo.class);
                 } catch (NoSuchMethodException ignored) {
+                    // No legacy method found, nothing to do
                 }
             }
         } catch (Exception unexpectedEx) {
