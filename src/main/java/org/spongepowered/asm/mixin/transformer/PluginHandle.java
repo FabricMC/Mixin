@@ -120,8 +120,7 @@ class PluginHandle {
             if (nonLegacy.getDeclaringClass() == IMixinConfigPlugin.class) {
                 try {
                     legacyMethod = pluginClass.getMethod(applyName, String.class, org.spongepowered.asm.lib.tree.ClassNode.class, String.class, IMixinInfo.class);
-                } catch (NoSuchMethodException e) {
-                    PluginHandle.logger.catching(e);
+                } catch (NoSuchMethodException ignored) {
                 }
             }
         } catch (Exception unexpectedEx) {
