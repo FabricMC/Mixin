@@ -288,7 +288,7 @@ class AnnotatedMixin implements IMixinContext, IAnnotatedElement {
     private void addSoftTarget(TypeHandle type, String reference) {
         ObfuscationData<String> obfClassData = this.obf.getDataProvider().getObfClass(type);
         if (!obfClassData.isEmpty()) {
-            this.obf.getReferenceManager().addClassMapping(this.classRef, reference, obfClassData);
+            this.obf.getReferenceManager().addMapping(this.classRef, reference, obfClassData);
         }
 
         this.addTarget(type);

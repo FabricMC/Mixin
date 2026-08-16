@@ -326,7 +326,7 @@ class AnnotatedMixinElementHandlerAccessor extends AnnotatedMixinElementHandler 
         }
 
         ObfuscationData<String> obfData = this.obf.getDataProvider().getObfClass(elem.getAnnotationValue().replace('.', '/'));
-        this.obf.getReferenceManager().addClassMapping(this.mixin.getClassRef(), elem.getAnnotationValue(), obfData);
+        this.obf.getReferenceManager().addMapping(this.mixin.getClassRef(), elem.getAnnotationValue(), obfData);
     }
 
     private String getAccessorTargetName(AnnotatedElementAccessor elem) {

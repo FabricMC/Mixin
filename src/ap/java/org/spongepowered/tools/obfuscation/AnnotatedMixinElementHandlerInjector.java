@@ -25,7 +25,10 @@
 package org.spongepowered.tools.obfuscation;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -44,6 +47,7 @@ import org.spongepowered.asm.mixin.injection.struct.InjectionPointData;
 import org.spongepowered.asm.mixin.refmap.IMixinContext;
 import org.spongepowered.asm.obfuscation.mapping.common.MappingField;
 import org.spongepowered.asm.obfuscation.mapping.common.MappingMethod;
+import org.spongepowered.asm.util.NameAndDesc;
 import org.spongepowered.asm.util.asm.IAnnotationHandle;
 import org.spongepowered.tools.obfuscation.ReferenceManager.ReferenceConflictException;
 import org.spongepowered.tools.obfuscation.ext.SpecialPackages;
@@ -211,81 +215,110 @@ class AnnotatedMixinElementHandlerInjector extends AnnotatedMixinElementHandler 
         if (targetMember.getDesc() != null) {
             this.validateReferencedTarget(elem, reference, targetMember, subject);
         }
-        
+
         if (targetSelector instanceof ITargetSelectorRemappable && elem.shouldRemap()) {
-            for (TypeHandle target : this.mixin.getTargets()) {
-                if (!this.registerInjector(elem, reference, (ITargetSelectorRemappable)targetMember, target)) {
-                    break;
-                }
-            }
+            this.registerInjector(elem, reference, (ITargetSelectorRemappable) targetMember);
         }
     }
 
-    private boolean registerInjector(AnnotatedElementInjector elem, String reference, ITargetSelectorRemappable targetMember, TypeHandle target) {
-        String desc = target.findDescriptor(targetMember);
-        if (desc == null) {
-            MessageType messageType = this.mixin.isMultiTarget() ? MessageType.MISSING_INJECTOR_DESC_MULTITARGET
-                    : MessageType.MISSING_INJECTOR_DESC_SINGLETARGET;
-            if (target.isSimulated()) {
-                elem.printMessage(this.ap, MessageType.MISSING_INJECTOR_DESC_SIMULATED, elem + " target '" + reference
-                        + "' in @Pseudo mixin will not be obfuscated");
-            } else if (target.isImaginary()) {
-                elem.printMessage(this.ap, messageType, elem + " target requires method signature because enclosing type information for "
-                        + target + " is unavailable");
-            } else if (!targetMember.isInitialiser()) {
-                elem.printMessage(this.ap, messageType, "Unable to determine descriptor for " + elem + " target method");
-            }
-            return true;
-        }
-        
+    private void registerInjector(AnnotatedElementInjector elem, String reference, ITargetSelectorRemappable targetMember) {
         String targetName = elem + " target " + targetMember.getName();
-        MappingMethod targetMethod = target.getMappingMethod(targetMember.getName(), desc);
-        ObfuscationData<MappingMethod> obfData = this.obf.getDataProvider().getObfMethod(targetMethod);
-        if (obfData.isEmpty()) {
-            if (target.isSimulated()) {
-                obfData = this.obf.getDataProvider().getRemappedMethod(targetMethod);
-            } else if (targetMember.isClassInitialiser()) {
-                return true;
-            } else {
-                elem.addMessage(targetMember.isConstructor() ? MessageType.NO_OBFDATA_FOR_CTOR : MessageType.NO_OBFDATA_FOR_TARGET,
-                        "Unable to locate obfuscation mapping for " + targetName, elem.getElement(), elem.getAnnotation());
-                return false;
-            }
+        ObfuscationData<String> remapped = this.remapTarget(elem, reference, targetMember, targetName);
+        if (remapped == null) {
+            return;
         }
-        
+
         IReferenceManager refMaps = this.obf.getReferenceManager();
         try {
-            // If the original owner is unspecified, and the mixin is multi-target, we strip the owner from the obf mappings
-            if ((targetMember.getOwner() == null && this.mixin.isMultiTarget()) || target.isSimulated()) {
-                obfData = AnnotatedMixinElementHandler.<MappingMethod>stripOwnerData(obfData);
-            }
-            refMaps.addMethodMapping(this.classRef, reference, obfData);
+            refMaps.addMapping(this.classRef, reference, remapped);
         } catch (ReferenceConflictException ex) {
             String conflictType = this.mixin.isMultiTarget() ? "Multi-target" : "Target";
-            
-            if (elem.hasCoerceArgument() && targetMember.getOwner() == null && targetMember.getDesc() == null) {
-                ITargetSelector oldMember = TargetSelector.parse(ex.getOld(), elem);
-                ITargetSelector newMember = TargetSelector.parse(ex.getNew(), elem);
-                String oldName = oldMember instanceof ITargetSelectorByName ? ((ITargetSelectorByName)oldMember).getName() : oldMember.toString();
-                String newName = newMember instanceof ITargetSelectorByName ? ((ITargetSelectorByName)newMember).getName() : newMember.toString();
-                if (oldName != null && oldName.equals(newName)) {
-                    obfData = AnnotatedMixinElementHandler.<MappingMethod>stripDescriptors(obfData);
-                    refMaps.setAllowConflicts(true);
-                    refMaps.addMethodMapping(this.classRef, reference, obfData);
-                    refMaps.setAllowConflicts(false);
 
-                    // This is bad because in notch mappings, using the bare target name might cause everything to explode
-                    elem.printMessage(this.ap, MessageType.BARE_REFERENCE, "Coerced " + conflictType + " reference has conflicting descriptors for "
-                            + targetName + ": Storing bare references " + obfData.values() + " in refMap");
-                    return true;
-                }
-            }
-            
             elem.printMessage(this.ap, MessageType.INJECTOR_MAPPING_CONFLICT, conflictType + " reference conflict for " + targetName + ": "
                     + reference + " -> " + ex.getNew() + " previously defined as " + ex.getOld());
         }
-        
-        return true;
+    }
+
+    private ObfuscationData<String> remapTarget(AnnotatedElementInjector elem, String reference, ITargetSelectorRemappable targetMember, String targetName) {
+        ObfuscationData<Set<NameAndDesc>> remapped = new ObfuscationData<>();
+        for (ObfuscationEnvironment env : this.obf.getEnvironments()) {
+            remapped.put(env.getType(), new HashSet<>());
+        }
+
+        for (TypeHandle target : this.mixin.getTargets()) {
+            String desc = target.findDescriptor(targetMember);
+            if (desc == null) {
+                MessageType messageType = this.mixin.isMultiTarget() ? MessageType.MISSING_INJECTOR_DESC_MULTITARGET
+                        : MessageType.MISSING_INJECTOR_DESC_SINGLETARGET;
+                if (target.isSimulated()) {
+                    elem.printMessage(this.ap, MessageType.MISSING_INJECTOR_DESC_SIMULATED, elem + " target '" + reference
+                            + "' in @Pseudo mixin will not be obfuscated");
+                } else if (target.isImaginary()) {
+                    elem.printMessage(this.ap, messageType, elem + " target requires method signature because enclosing type information for "
+                            + target + " is unavailable");
+                } else if (!targetMember.isInitialiser()) {
+                    elem.printMessage(this.ap, messageType, "Unable to determine descriptor for " + elem + " target method");
+                }
+                continue;
+            }
+
+            MappingMethod targetMethod = target.getMappingMethod(targetMember.getName(), desc);
+            ObfuscationData<MappingMethod> obfData = this.obf.getDataProvider().getObfMethod(targetMethod);
+            if (obfData.isEmpty()) {
+                if (target.isSimulated()) {
+                    obfData = this.obf.getDataProvider().getRemappedMethod(targetMethod);
+                } else if (targetMember.isClassInitialiser()) {
+                    continue;
+                } else {
+                    elem.addMessage(targetMember.isConstructor() ? MessageType.NO_OBFDATA_FOR_CTOR : MessageType.NO_OBFDATA_FOR_TARGET,
+                            "Unable to locate obfuscation mapping for " + targetName, elem.getElement(), elem.getAnnotation());
+                    return null;
+                }
+            }
+
+            if ((targetMember.getOwner() == null && this.mixin.isMultiTarget()) || target.isSimulated()) {
+                obfData = AnnotatedMixinElementHandler.stripOwnerData(obfData);
+            }
+
+            for (ObfuscationEnvironment env : this.obf.getEnvironments()) {
+                MappingMethod mapping = obfData.get(env.getType());
+                String name = mapping.getSimpleName();
+                if (mapping.getOwner() != null) {
+                    name = 'L' + mapping.getOwner() + ';' + name;
+                }
+                remapped.get(env.getType()).add(new NameAndDesc(name, mapping.getDesc()));
+            }
+        }
+
+        ObfuscationData<String> result = new ObfuscationData<>();
+        for (ObfuscationEnvironment env : this.obf.getEnvironments()) {
+            Set<NameAndDesc> members = remapped.get(env.getType());
+            if (members.size() == 1) {
+                NameAndDesc member = members.iterator().next();
+                result.put(env.getType(), member.name + member.desc);
+                continue;
+            }
+
+            if (elem.hasCoerceArgument() && targetMember.getOwner() == null && targetMember.getDesc() == null) {
+                Set<String> names = members.stream().map(it -> it.name).collect(Collectors.toSet());
+                if (names.size() == 1) {
+                    String name = names.iterator().next();
+                    result.put(env.getType(), name);
+
+                    // This is bad because in notch mappings, using the bare target name might cause everything to explode
+                    elem.printMessage(this.ap, MessageType.BARE_REFERENCE, "Coerced Multi-target reference has conflicting descriptors for "
+                            + targetName + ": Storing bare reference " + name + " in refMap");
+                }
+                continue;
+            }
+
+            elem.printMessage(
+                    this.ap, MessageType.INJECTOR_MAPPING_CONFLICT,
+                    "Multi-target reference conflict for " + targetName + ": " + members
+            );
+        }
+
+        return result;
     }
 
     /**
@@ -357,7 +390,7 @@ class AnnotatedMixinElementHandlerInjector extends AnnotatedMixinElementHandler 
                 }
             }
             
-            this.obf.getReferenceManager().addClassMapping(this.classRef, reference, mappings);
+            this.obf.getReferenceManager().addMapping(this.classRef, reference, mappings);
         }
         
         elem.notifyRemapped();
