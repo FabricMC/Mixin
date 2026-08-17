@@ -44,6 +44,7 @@ import org.spongepowered.asm.mixin.injection.selectors.ITargetSelectorRemappable
 import org.spongepowered.asm.mixin.injection.selectors.InvalidSelectorException;
 import org.spongepowered.asm.mixin.injection.selectors.TargetSelector;
 import org.spongepowered.asm.mixin.injection.struct.InjectionPointData;
+import org.spongepowered.asm.mixin.injection.struct.MemberInfo;
 import org.spongepowered.asm.mixin.refmap.IMixinContext;
 import org.spongepowered.asm.obfuscation.mapping.common.MappingField;
 import org.spongepowered.asm.obfuscation.mapping.common.MappingMethod;
@@ -199,6 +200,7 @@ class AnnotatedMixinElementHandlerInjector extends AnnotatedMixinElementHandler 
     private void registerInjectorTarget(AnnotatedElementInjector elem, String reference, ITargetSelector targetSelector, String subject) {
         try {
             targetSelector.validate();
+            targetSelector.validateNext();
         } catch (InvalidSelectorException ex) {
             elem.printMessage(this.ap, MessageType.TARGET_SELECTOR_VALIDATION, ex.getMessage());
         }
@@ -208,23 +210,32 @@ class AnnotatedMixinElementHandlerInjector extends AnnotatedMixinElementHandler 
         }
         
         ITargetSelectorByName targetMember = (ITargetSelectorByName)targetSelector;
-        if (targetMember.getName() == null) {
-            return;
-        }
-        
-        if (targetMember.getDesc() != null) {
+
+        if (targetMember.getName() != null && targetMember.getDesc() != null) {
             this.validateReferencedTarget(elem, reference, targetMember, subject);
         }
 
-        if (targetSelector instanceof ITargetSelectorRemappable && elem.shouldRemap()) {
+        if (targetSelector instanceof ITargetSelectorRemappable) {
             this.registerInjector(elem, reference, (ITargetSelectorRemappable) targetMember);
         }
     }
 
     private void registerInjector(AnnotatedElementInjector elem, String reference, ITargetSelectorRemappable targetMember) {
         String targetName = elem + " target " + targetMember.getName();
-        ObfuscationData<String> remapped = this.remapTarget(elem, reference, targetMember, targetName);
-        if (remapped == null) {
+        ObfuscationData<String> remapped;
+        if (elem.shouldRemap() && targetMember.getName() != null) {
+            remapped = this.remapTarget(elem, reference, targetMember, targetName);
+            if (remapped == null) {
+                return;
+            }
+        } else {
+            remapped = new ObfuscationData<>();
+        }
+
+        if (targetMember instanceof MemberInfo) {
+            // Need to try remapping the nested selectors, even if remap is false
+            remapped = this.remapMemberInfo((MemberInfo) targetMember, remapped);
+        } else if (!elem.shouldRemap()) {
             return;
         }
 
@@ -316,6 +327,39 @@ class AnnotatedMixinElementHandlerInjector extends AnnotatedMixinElementHandler 
                     this.ap, MessageType.INJECTOR_MAPPING_CONFLICT,
                     "Multi-target reference conflict for " + targetName + ": " + members
             );
+        }
+
+        return result;
+    }
+
+    private ObfuscationData<String> remapMemberInfo(MemberInfo targetMember, ObfuscationData<String> rootNames) {
+        MemberInfo next = (MemberInfo) targetMember.next();
+        if (next == null) {
+            return rootNames;
+        }
+
+        ObfuscationData<String> result = new ObfuscationData<>();
+        for (ObfuscationEnvironment env : this.obf.getEnvironments()) {
+            boolean needsMapping = false;
+            String rootName = rootNames.get(env.getType());
+            if (rootName == null) {
+                rootName = targetMember.headToString();
+            } else {
+                needsMapping = true;
+            }
+
+            MemberInfo remappedNext = next.remapNestedUsing(new ObfuscationEnvironmentRemapper(env, this.obf.getDataProvider()));
+            if (remappedNext == null) {
+                // No change
+                remappedNext = next;
+            } else {
+                needsMapping = true;
+            }
+
+            if (needsMapping) {
+                String remapped = rootName + " ->" + targetMember.recurseDepthToString() + ' ' + remappedNext;
+                result.put(env.getType(), remapped);
+            }
         }
 
         return result;

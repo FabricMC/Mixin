@@ -32,6 +32,7 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.spongepowered.asm.mixin.FabricUtil;
+import org.spongepowered.asm.mixin.extensibility.IRemapper;
 import org.spongepowered.asm.mixin.injection.selectors.*;
 import org.spongepowered.asm.mixin.throwables.MixinException;
 import org.spongepowered.asm.obfuscation.mapping.IMapping;
@@ -331,7 +332,7 @@ public final class MemberInfo implements ITargetSelectorRemappable, ITargetSelec
         this.forceField = false;
         this.input = null;
         this.next = null;
-        
+
         if (insn instanceof MethodInsnNode) {
             MethodInsnNode methodNode = (MethodInsnNode) insn;
             this.owner = methodNode.owner;
@@ -887,7 +888,95 @@ public final class MemberInfo implements ITargetSelectorRemappable, ITargetSelec
     public ITargetSelectorRemappable remapUsing(MappingMethod srgMethod, boolean setOwner) {
         return new MemberInfo(this, srgMethod, setOwner);
     }
-    
+
+    /**
+     * Remaps this selector using the given remapper, assuming that this is a
+     * <b>top-level</b> selector.
+     * @param remapper the remapper to use
+     * @return the remapped selector, or {@code null} if no change.
+     */
+    public MemberInfo remapUsing(IRemapper remapper) {
+        boolean changed = false;
+
+        String name = this.name;
+        if (name != null) {
+            if (this.isField()) {
+                name = remapper.mapFieldName(this.owner, name, this.desc);
+            } else {
+                name = remapper.mapMethodName(this.owner, name, this.desc);
+            }
+            changed = changed || !this.name.equals(name);
+        }
+
+        String owner = this.owner;
+        if (owner != null) {
+            owner = remapper.map(owner);
+            changed = changed || !this.owner.equals(owner);
+        }
+
+        String desc = this.desc;
+        if (desc != null) {
+            desc = remapper.mapDesc(desc);
+            changed = changed || !this.desc.equals(desc);
+        }
+
+        MemberInfo next = this.next;
+        if (next != null) {
+            MemberInfo remappedNext = next.remapNestedUsing(remapper);
+            if (remappedNext != null) {
+                changed = true;
+                next = remappedNext;
+            }
+        }
+
+        if (!changed) {
+            return null;
+        }
+
+        return new MemberInfo(name, owner, desc, this.matches, next, this.nextDepth, null);
+    }
+
+    /**
+     * Remaps this selector using the given remapper, assuming that this is a
+     * <b>nested</b> selector.
+     * @param remapper the remapper to use
+     * @return the remapped selector, or {@code null} if no change.
+     */
+    public MemberInfo remapNestedUsing(IRemapper remapper) {
+        boolean changed = false;
+
+        String desc = this.desc;
+        if (desc != null) {
+            desc = remapper.mapDesc(desc);
+            changed = changed || !this.desc.equals(desc);
+        }
+
+        String owner = this.owner;
+        String name = null;
+        if (owner != null) {
+            // The owner is enough to uniquely identify the SAM, strip the name
+            owner = remapper.map(owner);
+            changed = changed || this.name != null || !this.owner.equals(owner);
+        } else {
+            name = this.name;
+        }
+
+        MemberInfo next = this.next;
+        if (next != null) {
+            MemberInfo remappedNext = next.remapNestedUsing(remapper);
+            if (remappedNext != null) {
+                changed = true;
+                next = remappedNext;
+            }
+        }
+
+        if (!changed) {
+            return null;
+        }
+
+        return new MemberInfo(name, owner, desc, this.matches, next, this.nextDepth, null);
+    }
+
     /**
      * Parse a MemberInfo from a string
      * 
@@ -905,6 +994,9 @@ public final class MemberInfo implements ITargetSelectorRemappable, ITargetSelec
         Quantifier nextDepth = MemberInfo.DEFAULT_DEPTH;
 
         if (isModern) {
+            if (context != null) {
+                name = context.remap(name);
+            }
             name = name.trim();
 
             Matcher nestedMatcher = MemberInfo.PARSER.matcher(name);
@@ -924,10 +1016,8 @@ public final class MemberInfo implements ITargetSelectorRemappable, ITargetSelec
                 next = MemberInfo.parse(name.substring(arrowPos + 2), context);
                 name = name.substring(0, arrowPos);
             }
-        }
 
-        if (context != null) {
-            name = context.remap(name).trim();
+            name = context.remap(name);
         }
 
         int parenPos = name.indexOf('(');
