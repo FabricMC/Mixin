@@ -257,6 +257,10 @@ public abstract class ObfuscationEnvironment implements IObfuscationEnvironment 
      */
     @Override
     public ITargetSelectorRemappable remapDescriptor(ITargetSelectorRemappable method) {
+        if (!this.initMappings()) {
+            return null;
+        }
+
         boolean transformed = false;
         
         String owner = method.getOwner();
@@ -289,6 +293,10 @@ public abstract class ObfuscationEnvironment implements IObfuscationEnvironment 
      */
     @Override
     public String remapDescriptor(String desc) {
+        if (!this.initMappings()) {
+            return desc;
+        }
+
         String newDesc = ObfuscationUtil.mapDescriptor(desc, this.remapper);
         return newDesc != null ? newDesc : desc;
     }
