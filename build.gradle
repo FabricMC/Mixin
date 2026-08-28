@@ -403,8 +403,20 @@ task stagingProguardJar(type: proguard.gradle.ProGuardTask, dependsOn: stagingJa
 }
 build.dependsOn stagingProguardJar
 
-// Clear artifacts because jar will be there by default and we want to use staging jar instead
-configurations.archives.artifacts.clear()
+configurations {
+    // Clear artifacts because jar will be there by default and we want to use staging jar instead
+    archives.artifacts.clear()
+
+    for (configName in ["apiElements", "runtimeElements"]) {
+        named(configName) {
+            outgoing.artifacts.clear()
+
+            outgoing.artifact(proguardFile) {
+                builtBy(stagingProguardJar)
+            }
+        }
+    }
+}
 
 // generate shadow jar so we can use the AP standalone
 shadowJar  {
