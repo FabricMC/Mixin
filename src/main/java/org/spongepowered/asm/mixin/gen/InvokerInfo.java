@@ -105,7 +105,7 @@ class InvokerInfo extends AccessorInfo {
     }
 
     private MethodNode findTargetMethod() {
-        Result<MethodNode> result = TargetSelector.<MethodNode>run(this.target.configure(Configure.ORPHAN),
+        Result<MethodNode> result = TargetSelector.<MethodNode>run(this.mixin, this.target.configure(Configure.ORPHAN),
                 ElementNode.methodList(this.classNode));
 
         try {
