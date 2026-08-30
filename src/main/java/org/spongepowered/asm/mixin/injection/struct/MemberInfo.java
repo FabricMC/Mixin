@@ -28,14 +28,8 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
-import org.spongepowered.asm.mixin.injection.selectors.ElementNode;
-import org.spongepowered.asm.mixin.injection.selectors.ISelectorContext;
-import org.spongepowered.asm.mixin.injection.selectors.ITargetSelector;
-import org.spongepowered.asm.mixin.injection.selectors.ITargetSelectorByName;
-import org.spongepowered.asm.mixin.injection.selectors.ITargetSelectorConstructor;
-import org.spongepowered.asm.mixin.injection.selectors.ITargetSelectorRemappable;
-import org.spongepowered.asm.mixin.injection.selectors.InvalidSelectorException;
-import org.spongepowered.asm.mixin.injection.selectors.MatchResult;
+import org.spongepowered.asm.mixin.FabricUtil;
+import org.spongepowered.asm.mixin.injection.selectors.*;
 import org.spongepowered.asm.mixin.throwables.MixinException;
 import org.spongepowered.asm.obfuscation.mapping.IMapping;
 import org.spongepowered.asm.obfuscation.mapping.common.MappingField;
@@ -869,39 +863,44 @@ public final class MemberInfo implements ITargetSelectorRemappable, ITargetSelec
      * @return parsed MemberInfo
      */
     public static MemberInfo parse(final String input, final ISelectorContext context) {
+        boolean isModern = context == null || FabricUtil.getCompatibility(context) >= FabricUtil.COMPATIBILITY_0_17_5;
+
         String desc = null;
         String owner = null;
-        String name = Strings.nullToEmpty(input).replaceAll("\\s", "");
-        String tail = null;
-        
-        int arrowPos = name.indexOf(MemberInfo.ARROW);
-        if (arrowPos > -1) {
-            tail = name.substring(arrowPos + 2);
-            name = name.substring(0, arrowPos);
+        String name = Strings.nullToEmpty(input);
+
+        if (!isModern) {
+            name = name.replaceAll("\\s", "");
+
+            int arrowPos = name.indexOf(MemberInfo.ARROW);
+            if (arrowPos > -1) {
+                name = name.substring(0, arrowPos);
+            }
         }
 
         if (context != null) {
             name = context.remap(name);
         }
+        name = name.trim();
 
         int parenPos = name.indexOf('(');
         int colonPos = name.indexOf(':');
         if (parenPos > -1) {
-            desc = name.substring(parenPos);
-            name = name.substring(0, parenPos);
+            desc = name.substring(parenPos).trim();
+            name = name.substring(0, parenPos).trim();
         } else if (colonPos > -1) {
-            desc = name.substring(colonPos + 1);
-            name = name.substring(0, colonPos);
+            desc = name.substring(colonPos + 1).trim();
+            name = name.substring(0, colonPos).trim();
         }
         
         int lastDotPos = name.lastIndexOf('.');
         int semiColonPos = name.indexOf(';');
         if (lastDotPos > -1) {
-            owner = name.substring(0, lastDotPos).replace('.', '/');
-            name = name.substring(lastDotPos + 1);
+            owner = name.substring(0, lastDotPos).replace('.', '/').trim();
+            name = name.substring(lastDotPos + 1).trim();
         } else if (semiColonPos > -1 && name.startsWith("L")) {
-            owner = name.substring(1, semiColonPos).replace('.', '/');
-            name = name.substring(semiColonPos + 1);
+            owner = name.substring(1, semiColonPos).replace('.', '/').trim();
+            name = name.substring(semiColonPos + 1).trim();
         }
         
         if ((name.indexOf('/') > -1 || name.indexOf('.') > -1) && owner == null) {
@@ -919,22 +918,22 @@ public final class MemberInfo implements ITargetSelectorRemappable, ITargetSelec
         Quantifier quantifier = Quantifier.DEFAULT;
         if (name.endsWith("*")) {
             quantifier = Quantifier.ANY;
-            name = name.substring(0, name.length() - 1);
+            name = name.substring(0, name.length() - 1).trim();
         } else if (name.endsWith("+")) {
             quantifier = Quantifier.PLUS;
-            name = name.substring(0, name.length() - 1);
+            name = name.substring(0, name.length() - 1).trim();
         } else if (name.endsWith("}")) {
             quantifier = Quantifier.NONE; // Assume invalid until quantifier is parsed
             int bracePos = name.indexOf("{");
             if (bracePos >= 0) {
                 try {
                     quantifier = Quantifier.parse(name.substring(bracePos, name.length()));
-                    name = name.substring(0, bracePos);
+                    name = name.substring(0, bracePos).trim();
                 } catch (Exception ex) {
                     // Handled later in validate since matchCount will be 0
                 }
             }
-        } else if (name.indexOf("{") >= 0) {
+        } else if (name.contains("{")) {
             quantifier = Quantifier.NONE; // Probably incomplete quantifier
         }
         
@@ -942,7 +941,7 @@ public final class MemberInfo implements ITargetSelectorRemappable, ITargetSelec
             name = null;
         }
         
-        return new MemberInfo(name, owner, desc, quantifier, tail, input);
+        return new MemberInfo(name, owner, desc, quantifier, null, input);
     }
 
     /**

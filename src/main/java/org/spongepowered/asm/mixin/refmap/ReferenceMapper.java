@@ -220,7 +220,6 @@ public final class ReferenceMapper implements IReferenceMapper, Serializable {
         if (this.readOnly || reference == null || newReference == null) {
             return null;
         }
-        String conformedReference = reference.replaceAll("\\s", "");
         Map<String, Map<String, String>> mappings = this.mappings;
         if (context != null) {
             mappings = this.data.get(context);
@@ -234,7 +233,7 @@ public final class ReferenceMapper implements IReferenceMapper, Serializable {
             classMappings = new TreeMap<String, String>();
             mappings.put(className, classMappings);
         }
-        return classMappings.put(conformedReference, newReference);
+        return classMappings.put(reference, newReference);
     }
     
     /**
