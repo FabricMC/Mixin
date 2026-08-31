@@ -38,7 +38,7 @@ public final class Quantifier {
     /**
      * Invalid (matches none) 
      */
-    public static Quantifier NONE = new Quantifier(0, 0);
+    public static Quantifier NONE = new Quantifier(0, -2);
     
     /**
      * Single (matches zero or 1)
@@ -74,7 +74,11 @@ public final class Quantifier {
      * Check whether this is a defaulted qualifier
      */
     public boolean isDefault() {
-        return this.min == 0 && this.max < 0;
+        return this.min == 0 && this.max == -1;
+    }
+
+    public boolean isInvalid() {
+        return this.max == -2;
     }
     
     /**
@@ -102,7 +106,7 @@ public final class Quantifier {
      * Get the clamped max value
      */
     public int getClampedMax() {
-        return this.max < 0 ? 1 : Math.max(this.min, this.max);
+        return this.max == -1 ? 1 : Math.max(this.min, this.max);
     }
     
     /* (non-Javadoc)
@@ -116,12 +120,8 @@ public final class Quantifier {
         } else if (this.max < this.min) {
             return "";
         } else {
-            if (this.min == 0) {
-                if (this.max == 1) {
-                    return "";
-                } else if (this.max == Integer.MAX_VALUE) {
-                    return "*";
-                }
+            if (this.min == 0 && this.max == Integer.MAX_VALUE) {
+                return "*";
             }
             if (this.min == 1 && this.max == Integer.MAX_VALUE) {
                 return "+";

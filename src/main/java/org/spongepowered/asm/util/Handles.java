@@ -24,6 +24,11 @@
  */
 package org.spongepowered.asm.util;
 
+import java.lang.invoke.CallSite;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 
@@ -31,6 +36,22 @@ import org.objectweb.asm.Opcodes;
  * Utility class for working with method and field handles
  */
 public final class Handles {
+
+    public static final Handle LMF_HANDLE = new Handle(
+            Opcodes.H_INVOKESTATIC,
+            "java/lang/invoke/LambdaMetafactory",
+            "metafactory",
+            Bytecode.generateDescriptor(CallSite.class, MethodHandles.Lookup.class, String.class, MethodType.class, MethodType.class, MethodHandle.class, MethodType.class),
+            false
+    );
+
+    public static final Handle ALT_LMF_HANDLE = new Handle(
+            Opcodes.H_INVOKESTATIC,
+            "java/lang/invoke/LambdaMetafactory",
+            "altMetafactory",
+            Bytecode.generateDescriptor(CallSite.class, MethodHandles.Lookup.class, String.class, MethodType.class, Object[].class),
+            false
+    );
     
     private static final int[] H_OPCODES = {
         0,                          // invalid
