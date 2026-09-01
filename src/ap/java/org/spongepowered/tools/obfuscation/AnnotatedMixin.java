@@ -499,6 +499,11 @@ class AnnotatedMixin implements IMixinContext, IAnnotatedElement {
     }
 
     @Override
+    public boolean isCompileTime() {
+        return true;
+    }
+
+    @Override
     public IAnnotationHandle getAnnotation(Class<? extends Annotation> annotationClass) {
         return AnnotationHandle.of(this.mixin, annotationClass);
     }

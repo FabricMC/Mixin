@@ -94,10 +94,13 @@ public final class FabricUtil {
     }
 
     public static int getCompatibility(ISelectorContext context) {
-        return getCompatibility(getConfig(context));
+        return getCompatibility(context.getMixin());
     }
 
     public static int getCompatibility(IMixinContext context) {
+        if (context.isCompileTime()) {
+            return COMPATIBILITY_LATEST;
+        }
         return getCompatibility(context.getMixin().getConfig());
     }
 
