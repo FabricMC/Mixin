@@ -246,9 +246,9 @@ public class ReferenceManager implements IReferenceManager {
      *      org.spongepowered.tools.obfuscation.ObfuscationData)
      */
     @Override
-    public void addClassMapping(String className, String reference, ObfuscationData<String> obfClassData) {
+    public void addMapping(String className, String reference, ObfuscationData<String> obfData) {
         for (ObfuscationEnvironment env : this.environments) {
-            String remapped = obfClassData.get(env.getType());
+            String remapped = obfData.get(env.getType());
             if (remapped != null) {
                 this.addMapping(env.getType(), className, reference, remapped);
             }
