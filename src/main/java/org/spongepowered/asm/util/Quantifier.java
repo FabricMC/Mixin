@@ -184,31 +184,5 @@ public final class Quantifier {
             return Quantifier.NONE;
         }
     }
-    
-    /* (non-Javadoc)
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof Quantifier) {
-            Quantifier other = (Quantifier)obj;
-            return other.min == this.min && other.max == this.max;
-        }
-        
-        if (obj instanceof Number) {
-            int intValue = ((Number)obj).intValue();
-            return (intValue == this.min) && (intValue == this.max);
-        }
-        
-        return false;
-    }
-    
-    /* (non-Javadoc)
-     * @see java.lang.Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        return 31 * this.min * this.max;
-    }
 
 }

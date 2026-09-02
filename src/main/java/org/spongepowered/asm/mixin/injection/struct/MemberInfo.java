@@ -763,43 +763,6 @@ public final class MemberInfo implements ITargetSelectorRemappable, ITargetSelec
         }
         return MatchResult.EXACT_MATCH;
     }
-
-    /* (non-Javadoc)
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null || !(obj instanceof ITargetSelectorByName)) {
-            return false;
-        }
-        
-        ITargetSelectorByName other = (ITargetSelectorByName)obj;
-        boolean otherForceField = other instanceof MemberInfo ? ((MemberInfo)other).forceField
-                : other instanceof ITargetSelectorRemappable ? ((ITargetSelectorRemappable)other).isField() : false;
-        
-        return this.compareMatches(other) && this.forceField == otherForceField
-                && Objects.equal(this.owner, other.getOwner())
-                && Objects.equal(this.name, other.getName())
-                && Objects.equal(this.desc, other.getDesc());
-    }
-    
-    /**
-     * Compare local match count with match count of other selector
-     */
-    private boolean compareMatches(ITargetSelectorByName other) {
-        if (other instanceof MemberInfo) {
-            return ((MemberInfo)other).matches.equals(this.matches);
-        }
-        return this.getMinMatchCount() == other.getMinMatchCount() && this.getMaxMatchCount() == other.getMaxMatchCount();
-    }
-
-    /* (non-Javadoc)
-     * @see java.lang.Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(this.matches, this.owner, this.name, this.desc);
-    }
     
     /* (non-Javadoc)
      * @see org.spongepowered.asm.mixin.injection.selectors.ITargetSelector
