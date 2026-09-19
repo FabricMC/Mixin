@@ -24,8 +24,11 @@
  */
 package org.spongepowered.asm.bridge;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 import org.spongepowered.asm.mixin.extensibility.IRemapper;
 
@@ -38,21 +41,66 @@ public final class RemapperAdapterFML extends RemapperAdapter {
     private static final String DEOBFUSCATING_REMAPPER_CLASS_FORGE = "net.minecraftforge." + RemapperAdapterFML.DEOBFUSCATING_REMAPPER_CLASS;
     private static final String DEOBFUSCATING_REMAPPER_CLASS_LEGACY = "cpw.mods." + RemapperAdapterFML.DEOBFUSCATING_REMAPPER_CLASS;
     private static final String INSTANCE_FIELD = "INSTANCE";
+    private static final String MAP_METHOD_NAME_METHOD = "mapMethodName";
+    private static final String MAP_FIELD_NAME_METHOD = "mapFieldName";
+    private static final String MAP_METHOD = "map";
+    private static final String MAP_DESC_METHOD = "mapDesc";
     private static final String UNMAP_METHOD = "unmap";
+    private static final MethodType MAP_METHOD_NAME_METHOD_TYPE = MethodType.methodType(String.class, String.class, String.class, String.class);
+    private static final MethodType MAP_FIELD_NAME_METHOD_TYPE = MethodType.methodType(String.class, String.class, String.class, String.class);
+    private static final MethodType MAP_METHOD_TYPE = MethodType.methodType(String.class, String.class);
+    private static final MethodType MAP_DESC_METHOD_TYPE = MethodType.methodType(String.class, String.class);
+    private static final MethodType UNMAP_METHOD_TYPE = MethodType.methodType(String.class, String.class);
     
-    private final Method mdUnmap;
+    private final MethodHandle mhUnmap;
     
-    private RemapperAdapterFML(org.objectweb.asm.commons.Remapper remapper, Method mdUnmap) {
-        super(remapper);
+    private RemapperAdapterFML(MethodHandle mhMapMethodName, MethodHandle mhMapFieldName, MethodHandle mhMap, MethodHandle mhMapDesc, MethodHandle mhUnmap) {
+        super(new org.objectweb.asm.commons.Remapper() {
+            @Override
+            public String mapMethodName(String owner, String name, String descriptor) {
+                try {
+                    return (String) mhMapMethodName.invokeExact(owner, name, descriptor);
+                } catch (Throwable t) {
+                    return name;
+                }
+            }
+            
+            @Override
+            public String mapFieldName(String owner, String name, String descriptor) {
+                try {
+                    return (String) mhMapFieldName.invokeExact(owner, name, descriptor);
+                } catch (Throwable t) {
+                    return name;
+                }
+            }
+            
+            @Override
+            public String map(String internalName) {
+                try {
+                    return (String) mhMap.invokeExact(internalName);
+                } catch (Throwable t) {
+                    return internalName;
+                }
+            }
+            
+            @Override
+            public String mapDesc(String descriptor) {
+                try {
+                    return (String) mhMapDesc.invokeExact(descriptor);
+                } catch (Throwable t) {
+                    return descriptor;
+                }
+            }
+        });
         this.logger.info("Initialised Mixin FML Remapper Adapter with {}", remapper);
-        this.mdUnmap = mdUnmap;
+        this.mhUnmap = mhUnmap;
     }
 
     @Override
     public String unmap(String typeName) {
         try {
-            return this.mdUnmap.invoke(this.remapper, typeName).toString();
-        } catch (Exception ex) {
+            return (String) this.mhUnmap.invokeExact(typeName);
+        } catch (Throwable t) {
             return typeName;
         }
     }
@@ -62,11 +110,16 @@ public final class RemapperAdapterFML extends RemapperAdapter {
      */
     public static IRemapper create() {
         try {
+            Lookup lookup = MethodHandles.publicLookup();
             Class<?> clDeobfRemapper = RemapperAdapterFML.getFMLDeobfuscatingRemapper();
             Field singletonField = clDeobfRemapper.getDeclaredField(RemapperAdapterFML.INSTANCE_FIELD);
-            Method mdUnmap = clDeobfRemapper.getDeclaredMethod(RemapperAdapterFML.UNMAP_METHOD, String.class);
-            org.objectweb.asm.commons.Remapper remapper = (org.objectweb.asm.commons.Remapper)singletonField.get(null);
-            return new RemapperAdapterFML(remapper, mdUnmap);
+            Object fmlRemapper = singletonField.get(null);
+            MethodHandle mhMapMethodName = lookup.bind(fmlRemapper, MAP_METHOD_NAME_METHOD, MAP_METHOD_NAME_METHOD_TYPE);
+            MethodHandle mhMapFieldName = lookup.bind(fmlRemapper, MAP_FIELD_NAME_METHOD, MAP_FIELD_NAME_METHOD_TYPE);
+            MethodHandle mhMap = lookup.bind(fmlRemapper, MAP_METHOD, MAP_METHOD_TYPE);
+            MethodHandle mhMapDesc = lookup.bind(fmlRemapper, MAP_DESC_METHOD, MAP_DESC_METHOD_TYPE);
+            MethodHandle mhUnmap = lookup.bind(fmlRemapper, UNMAP_METHOD, UNMAP_METHOD_TYPE);
+            return new RemapperAdapterFML(mhMapMethodName, mhMapFieldName, mhMap, mhMapDesc, mhUnmap);
         } catch (Exception ex) {
             ex.printStackTrace();
             return null;
