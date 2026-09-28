@@ -26,7 +26,7 @@
 /**
  * Mixin module declaration
  */
-module org.spongepowered.mixin {
+open module org.spongepowered.mixin {
 
     //
     // Actual modules we depend on
@@ -93,6 +93,7 @@ module org.spongepowered.mixin {
     exports org.spongepowered.asm.mixin.injection.throwables;
     exports org.spongepowered.asm.mixin.refmap;
     exports org.spongepowered.asm.mixin.throwables;
+    exports org.spongepowered.asm.mixin.transformer;
     exports org.spongepowered.asm.mixin.transformer.ext;
     exports org.spongepowered.asm.mixin.transformer.throwables;
     exports org.spongepowered.asm.obfuscation;
@@ -116,10 +117,7 @@ module org.spongepowered.mixin {
     exports org.spongepowered.tools.obfuscation.mcp;
     exports org.spongepowered.tools.obfuscation.mirror;
     exports org.spongepowered.tools.obfuscation.service;
-    
-    opens org.spongepowered.asm.mixin.transformer
-        to com.google.gson, gson;
-    
+
     //
     // Service wiring
     //
@@ -142,7 +140,7 @@ module org.spongepowered.mixin {
     uses cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
     provides cpw.mods.modlauncher.serviceapi.ILaunchPluginService
         with org.spongepowered.asm.launch.MixinLaunchPlugin;
-    
+
     uses javax.annotation.processing.Processor;
     provides javax.annotation.processing.Processor
         with org.spongepowered.tools.obfuscation.MixinObfuscationProcessorInjection,
