@@ -867,15 +867,11 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
             case UNKNOWN:
                 //$FALL-THROUGH$
             default:
-                if (MixinConfig.hasMixins(this.mixinClassesClient) || MixinConfig.hasMixins(this.mixinClassesServer)) {
+                if (MixinConfig.isNonEmpty(this.mixinClassesClient) || MixinConfig.isNonEmpty(this.mixinClassesServer)) {
                     this.logger.warn("Mixin environment was unable to detect the current side, sided mixins will not be applied");
                 }
                 break;
         }
-    }
-
-    private static boolean hasMixins(List<String> mixinClasses) {
-        return mixinClasses != null && !mixinClasses.isEmpty();
     }
     
     void postInitialise(Extensions extensions) {
@@ -1422,6 +1418,10 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
             }
         }
         return total;
+    }
+
+    private static boolean isNonEmpty(List<?> list) {
+        return list != null && !list.isEmpty();
     }
 
 }
