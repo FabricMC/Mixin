@@ -249,7 +249,7 @@ public class TargetSelectors implements Iterable<TargetSelectors.SelectedMethod>
                 }
                 
                 recursed = true;
-                Result<AbstractInsnNode> result = TargetSelector.run(next, ElementNode.dynamicInsnList(target.getMethod().instructions));
+                Result<AbstractInsnNode> result = TargetSelector.run(this.mixin, next, ElementNode.dynamicInsnList(target.getMethod().instructions));
                 iter.remove();
                 for (ElementNode<AbstractInsnNode> candidate : result.candidates) {
                     if (candidate.getInsn().getOpcode() != Opcodes.INVOKEDYNAMIC) {
