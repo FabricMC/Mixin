@@ -434,7 +434,7 @@ public class DynamicSelectorDesc implements ITargetSelectorDynamic, ITargetSelec
 
     @Override
     public ITargetSelector next() {
-        return this.next(0);
+        return null;
     }
     
     protected ITargetSelector next(int index) {
