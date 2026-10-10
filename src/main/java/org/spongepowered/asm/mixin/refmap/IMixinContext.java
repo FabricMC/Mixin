@@ -92,4 +92,9 @@ public interface IMixinContext {
      */
     public abstract int getPriority();
 
+    /**
+     * Gets whether this is a compile-time context.
+     */
+    public abstract boolean isCompileTime();
+
 }

@@ -1203,6 +1203,11 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
         return this.mixin.getPriority();
     }
 
+    @Override
+    public boolean isCompileTime() {
+        return false;
+    }
+
     /**
      * Get all interfaces for this mixin
      * 

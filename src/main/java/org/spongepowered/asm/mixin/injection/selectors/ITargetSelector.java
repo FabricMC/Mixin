@@ -113,6 +113,12 @@ public interface ITargetSelector {
          * to set defaults for match limits based on role. 
          */
         SELECT_MEMBER(0),
+
+        /**
+         * Configure this selector for matching lambdas in a method. Usually used
+         * to set defaults for match limits based on role.
+         */
+        SELECT_LAMBDA(0),
         
         /**
          * Configure this selector for matching field and method instructions in
@@ -172,6 +178,22 @@ public interface ITargetSelector {
      * <p>Can return null</p>
      */
     public abstract ITargetSelector next();
+
+    /**
+     * Minimum relative nesting level at which to search for the {@link next}
+     * selector.
+     */
+    public default int getMinRecurseDepth() {
+        return 1;
+    }
+
+    /**
+     * Maximum relative nesting level at which to search for the {@link next}
+     * selector.
+     */
+    public default int getMaxRecurseDepth() {
+        return 1;
+    }
     
     /**
      * Configure and return a modified version of this selector by consuming the
@@ -204,6 +226,18 @@ public interface ITargetSelector {
      * @throws InvalidSelectorException if any sanity check fails
      */
     public abstract ITargetSelector validate() throws InvalidSelectorException;
+
+    /**
+     * Validates the {@link next} selector recursively.
+     *
+     * @throws InvalidSelectorException if any checks fail
+     */
+    public default void validateNext() throws InvalidSelectorException {
+        ITargetSelector next = this.next();
+        if (next != null) {
+            next.validate().validateNext();
+        }
+    }
 
     /**
      * Attach this selector to the specified context. Should return this

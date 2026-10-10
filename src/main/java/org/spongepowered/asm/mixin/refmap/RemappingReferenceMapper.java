@@ -148,26 +148,8 @@ public final class RemappingReferenceMapper implements IClassReferenceMapper, IR
         if (remappedCached != null) {
             return remappedCached;
         } else {
-            String remapped = origInfoString;
-
-            // To handle propagation, find super/itf-class (for IRemapper)
-            // but pass the requested class in the MemberInfo
-            MemberInfo info = MemberInfo.parse(remapped, null);
-            if (info.getName() == null && info.getDesc() == null) {
-                return info.getOwner() != null ? new MemberInfo(remapper.map(info.getOwner()), Quantifier.DEFAULT).toString() : info.toString();
-            } else if (info.isField()) {
-                remapped = new MemberInfo(
-                        remapper.mapFieldName(info.getOwner(), info.getName(), info.getDesc()),
-                        info.getOwner() == null ? null : remapper.map(info.getOwner()),
-                        info.getDesc() == null ? null : remapper.mapDesc(info.getDesc())
-                ).toString();
-            } else {
-                remapped = new MemberInfo(
-                        remapper.mapMethodName(info.getOwner(), info.getName(), info.getDesc()),
-                        info.getOwner() == null ? null : remapper.map(info.getOwner()),
-                        info.getDesc() == null ? null : remapMethodDescriptor(remapper, info.getDesc())
-                ).toString();
-            }
+            MemberInfo info = MemberInfo.parse(origInfoString, null).remapUsing(this.remapper);
+            String remapped = info != null ? info.toString() : origInfoString;
 
             mappedReferenceCache.put(origInfoString, remapped);
             return remapped;

@@ -179,7 +179,7 @@ public final class MemberMatcher implements ITargetSelector {
      */
     @Override
     public ITargetSelector next() {
-        return this; // Regex matcher flows into targets
+        return null;
     }
 
     /* (non-Javadoc)

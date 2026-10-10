@@ -100,12 +100,12 @@ public interface IReferenceManager {
             ObfuscationData<MappingField> obfFieldData);
 
     /**
-     * Adds a class mapping to the internal refmap
+     * Adds an arbitrary mapping to the internal refmap
      * 
      * @param className Mixin class name which owns the refmap entry
      * @param reference Original reference, as it appears in the annotation
-     * @param obfClassData Class obf names
+     * @param obfData Obf strings
      */
-    public abstract void addClassMapping(String className, String reference, ObfuscationData<String> obfClassData);
+    public abstract void addMapping(String className, String reference, ObfuscationData<String> obfData);
 
 }

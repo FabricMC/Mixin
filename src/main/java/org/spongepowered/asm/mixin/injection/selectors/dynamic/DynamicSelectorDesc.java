@@ -434,7 +434,7 @@ public class DynamicSelectorDesc implements ITargetSelectorDynamic, ITargetSelec
 
     @Override
     public ITargetSelector next() {
-        return this.next(0);
+        return null;
     }
     
     protected ITargetSelector next(int index) {
@@ -456,6 +456,7 @@ public class DynamicSelectorDesc implements ITargetSelectorDynamic, ITargetSelec
                     return new DynamicSelectorDesc(this, Quantifier.SINGLE);
                 }
                 break;
+            case SELECT_LAMBDA:
             case SELECT_INSTRUCTION:
                 if (this.matches.isDefault()) {
                     return new DynamicSelectorDesc(this, Quantifier.ANY);

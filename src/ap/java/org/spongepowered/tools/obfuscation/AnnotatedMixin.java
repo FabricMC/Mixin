@@ -288,7 +288,7 @@ class AnnotatedMixin implements IMixinContext, IAnnotatedElement {
     private void addSoftTarget(TypeHandle type, String reference) {
         ObfuscationData<String> obfClassData = this.obf.getDataProvider().getObfClass(type);
         if (!obfClassData.isEmpty()) {
-            this.obf.getReferenceManager().addClassMapping(this.classRef, reference, obfClassData);
+            this.obf.getReferenceManager().addMapping(this.classRef, reference, obfClassData);
         }
 
         this.addTarget(type);
@@ -496,6 +496,11 @@ class AnnotatedMixin implements IMixinContext, IAnnotatedElement {
     @Override
     public int getPriority() {
         throw new UnsupportedOperationException("Priority not available at compile time");
+    }
+
+    @Override
+    public boolean isCompileTime() {
+        return true;
     }
 
     @Override
