@@ -839,6 +839,10 @@ class MixinApplicatorStandard {
      */
     protected void applyAccessors(MixinTargetContext mixin) {
         List<MethodNode> accessorMethods = mixin.generateAccessors();
+
+        // Apply greatest visibility first
+        accessorMethods.sort(Comparator.<MethodNode>comparingInt(m -> Bytecode.getVisibility(m).ordinal()).reversed());
+
         for (MethodNode method : accessorMethods) {
             if (!method.name.startsWith("<")) {
                 this.mergeMethod(mixin, method);
