@@ -28,13 +28,14 @@ import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.Map.Entry;
 
-import org.spongepowered.asm.logging.Level;
-import org.spongepowered.asm.logging.ILogger;
 import org.objectweb.asm.ConstantDynamic;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
+import org.spongepowered.asm.logging.ILogger;
+import org.spongepowered.asm.logging.Level;
+import org.spongepowered.asm.mixin.FabricUtil;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel;
 import org.spongepowered.asm.mixin.MixinEnvironment.Option;
@@ -54,7 +55,6 @@ import org.spongepowered.asm.mixin.refmap.IMixinContext;
 import org.spongepowered.asm.mixin.refmap.IReferenceMapper;
 import org.spongepowered.asm.mixin.struct.MemberRef;
 import org.spongepowered.asm.mixin.struct.SourceMap.File;
-import org.spongepowered.asm.mixin.throwables.ClassMetadataNotFoundException;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Field;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.Method;
 import org.spongepowered.asm.mixin.transformer.ClassInfo.SearchType;
@@ -67,12 +67,8 @@ import org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException;
 import org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerError;
 import org.spongepowered.asm.obfuscation.RemapperChain;
 import org.spongepowered.asm.service.MixinService;
-import org.spongepowered.asm.util.Annotations;
-import org.spongepowered.asm.util.Bytecode;
+import org.spongepowered.asm.util.*;
 import org.spongepowered.asm.util.Bytecode.Visibility;
-import org.spongepowered.asm.util.ClassSignature;
-import org.spongepowered.asm.util.Constants;
-import org.spongepowered.asm.util.LanguageFeatures;
 import org.spongepowered.asm.util.asm.ASM;
 import org.spongepowered.asm.util.asm.ClassNodeAdapter;
 
@@ -201,6 +197,9 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
         this.detachedSuper = !this.classNode.superName.equals(this.getTarget().getClassNode().superName);
         this.sessionId = context.getSessionId();
         this.requireVersion(classNode.version);
+        if (FabricUtil.getCompatibility(this) >= FabricUtil.COMPATIBILITY_0_17_6) {
+            this.requireVersion(mixin.getClassVersion());
+        }
         
         InnerClassGenerator icg = context.getExtensions().<InnerClassGenerator>getGenerator(InnerClassGenerator.class);
         this.innerClasses = icg.getInnerClasses(this.mixin, this.getTargetClassRef());
@@ -1149,18 +1148,25 @@ public class MixinTargetContext extends ClassContext implements IMixinContext {
         if (majorVersion <= (this.minRequiredClassVersion & 0xFFFF)) {
             return;
         }
-        
-        this.minRequiredClassVersion = version;
-        
-        // This validation is done on the mixin beforehand, however it's still
-        // possible that an upstream transformer can inject unsupported
-        // instructions without updating the class version.
-        if (majorVersion > ASM.getMaxSupportedClassVersionMajor()) {
-            throw new InvalidMixinException(this, String.format("Unsupported mixin class version %d.%d. ASM supports %s",
-                    majorVersion, minorVersion, ASM.getClassVersionString()));
+
+        if (FabricUtil.getCompatibility(this) >= FabricUtil.COMPATIBILITY_0_17_6) {
+            if (majorVersion > MixinEnvironment.getCompatibilityLevel().getClassMajorVersion()) {
+                throw new InvalidMixinException(
+                        this,
+                        String.format(
+                                "Unsupported class version %d.%d. This version of Mixin supports %s",
+                                majorVersion, minorVersion, MixinEnvironment.getClassVersionString()
+                        )
+                );
+            }
+        } else {
+            if (majorVersion > ASM.getMaxSupportedClassVersionMajor()) {
+                throw new InvalidMixinException(this, String.format("Unsupported mixin class version %d.%d. ASM supports %s",
+                        majorVersion, minorVersion, ASM.getClassVersionString()));
+            }
         }
-        
-        this.mixin.getParent().checkCompatibilityLevel(this.mixin, majorVersion, minorVersion);
+
+        this.minRequiredClassVersion = version;
     }
     
     /* (non-Javadoc)

@@ -254,12 +254,6 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
      */
     @SerializedName("requiredFeatures")
     private List<String> requiredFeatures;
-
-    /**
-     * Minimum compatibility level required for mixins in this set 
-     */
-    @SerializedName("compatibilityLevel")
-    private String compatibility;
     
     /**
      * Determines whether failures in this mixin config are considered terminal
@@ -420,17 +414,6 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
      * Track whether this mixin has been evaluated for selection yet 
      */
     private transient boolean visited = false;
-    
-    /**
-     * Compatibility level read from the config (or default if none specified)
-     */
-    private transient CompatibilityLevel compatibilityLevel = CompatibilityLevel.DEFAULT;
-    
-    /**
-     * Only emit the compatibility level warning for any increase in the class
-     * version, track warned level here 
-     */
-    private transient int warnedClassVersion = 0;
 
     /**
      * Service decorations on this config
@@ -548,87 +531,8 @@ final class MixinConfig implements Comparable<MixinConfig>, IMixinConfig {
         }
         
         this.initialised = true;
-        this.initCompatibilityLevel();
         this.initExtensions();
         return this.checkVersion() && this.checkFeatures();
-    }
-    
-    @SuppressWarnings("deprecation")
-    private void initCompatibilityLevel() {
-        this.compatibilityLevel = MixinEnvironment.getCompatibilityLevel();
-        
-        if (this.compatibility == null) {
-            return;
-        }
-        
-        String strCompatibility = this.compatibility.trim().toUpperCase(Locale.ROOT);
-        try {
-            this.compatibilityLevel = CompatibilityLevel.valueOf(strCompatibility);
-        } catch (IllegalArgumentException ex) {
-            throw new MixinInitialisationError(String.format("Mixin config %s specifies compatibility level %s which is not recognised",
-                    this.name, strCompatibility));
-        }
-        
-        CompatibilityLevel currentLevel = MixinEnvironment.getCompatibilityLevel();
-        if (this.compatibilityLevel == currentLevel) {
-            return;
-        }
-        
-        // Current level is higher than required but too new to support it
-        if (currentLevel.isAtLeast(this.compatibilityLevel) && !currentLevel.canSupport(this.compatibilityLevel)) {
-            throw new MixinInitialisationError(String.format("Mixin config %s requires compatibility level %s which is too old",
-                    this.name, this.compatibilityLevel));
-        }
-        
-        // Current level is lower than required but current level prohibits elevation
-        if (!currentLevel.canElevateTo(this.compatibilityLevel)) {
-            throw new MixinInitialisationError(String.format("Mixin config %s requires compatibility level %s which is prohibited by %s",
-                    this.name, this.compatibilityLevel, currentLevel));
-        }
-
-        CompatibilityLevel minCompatibilityLevel = MixinEnvironment.getMinCompatibilityLevel();
-        if (this.compatibilityLevel.isLessThan(minCompatibilityLevel)) {
-            this.logger.log(this.verboseLogging ? Level.INFO : Level.DEBUG,
-                    "Compatibility level {} specified by {} is lower than the default level supported by the current mixin service ({}).",
-                    this.compatibilityLevel, this, minCompatibilityLevel);
-        }
-
-        // Required level is higher than highest version we support, this possibly
-        // means that a shaded mixin dependency has been usurped by an old version,
-        // or the mixin author is trying to elevate the compatibility level beyond
-        // the versions currently supported
-        if (CompatibilityLevel.MAX_SUPPORTED.isLessThan(this.compatibilityLevel)) {
-            this.logger.log(this.verboseLogging ? Level.WARN : Level.DEBUG,
-                    "Compatibility level {} specified by {} is higher than the maximum level supported by this version of mixin ({}).",
-                    this.compatibilityLevel, this, CompatibilityLevel.MAX_SUPPORTED);
-        }
-        
-        MixinEnvironment.setCompatibilityLevel(this.compatibilityLevel);
-    }
-
-    /**
-     * Called by MixinTargetContext when class version is elevated, allows us to
-     * warn devs (or end-users with verbose turned on, for whatever reason) that
-     * the current compatibility level is too low for the classes being
-     * processed. The warning is only emitted at WARN for each new class version
-     * and at DEBUG thereafter.
-     * 
-     * <p>The logic here is that we only really care about supported class
-     * features, but a version of mixin which doesn't actually support newer
-     * features may well be able to operate with classes *compiled* with a newer
-     * JDK, but we don't actually know that for sure).
-     */
-    void checkCompatibilityLevel(MixinInfo mixin, int majorVersion, int minorVersion) {
-        if (majorVersion <= this.compatibilityLevel.getClassMajorVersion()) {
-            return;
-        }
-        
-        Level logLevel = this.verboseLogging && majorVersion > this.warnedClassVersion ? Level.WARN : Level.DEBUG;
-        String message = majorVersion > CompatibilityLevel.MAX_SUPPORTED.getClassMajorVersion()
-                ? "the current version of Mixin" : "the declared compatibility level";
-        this.warnedClassVersion = majorVersion;
-        this.logger.log(logLevel, "{}: Class version {} required is higher than the class version supported by {} ({} supports class version {})",
-                mixin, majorVersion, message, this.compatibilityLevel, this.compatibilityLevel.getClassMajorVersion());
     }
 
     // AMS - temp

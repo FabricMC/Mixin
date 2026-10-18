@@ -339,6 +339,11 @@ class MixinInfo implements Comparable<MixinInfo>, IMixinInfo {
         }
 
         private void validateClassFeatures() {
+            if (FabricUtil.getCompatibility(MixinInfo.this.getConfig()) >= FabricUtil.COMPATIBILITY_0_17_6) {
+                // Since this compatibility level we are stricter with the class version so this is superseded by the
+                // check in MixinTargetContext.
+                return;
+            }
             CompatibilityLevel compatibilityLevel = MixinEnvironment.getCompatibilityLevel();
             int requiredLanguageFeatures = LanguageFeatures.scan(this.validationClassNode);
             if (requiredLanguageFeatures == 0 || compatibilityLevel.supports(requiredLanguageFeatures)) {

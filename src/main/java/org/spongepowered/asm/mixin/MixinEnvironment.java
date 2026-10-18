@@ -931,7 +931,7 @@ public final class MixinEnvironment implements ITokenProvider {
          * PR #500 which demonstrates that the nature of compatibility levels
          * in mixin are not understood that well.</p>
          */
-        public static final CompatibilityLevel MAX_SUPPORTED = CompatibilityLevel.JAVA_13;
+        public static final CompatibilityLevel MAX_SUPPORTED = CompatibilityLevel.JAVA_25;
         
         private final int ver;
         
@@ -1305,11 +1305,6 @@ public final class MixinEnvironment implements ITokenProvider {
      * phases have been populated
      */
     private static Phase currentPhase = Phase.NOT_INITIALISED;
-    
-    /**
-     * Current compatibility level
-     */
-    private static CompatibilityLevel compatibility;
     
     /**
      * Show debug header info on first environment construction
@@ -1827,12 +1822,7 @@ public final class MixinEnvironment implements ITokenProvider {
      * Get the current compatibility level
      */
     public static CompatibilityLevel getCompatibilityLevel() {
-        if (MixinEnvironment.compatibility == null) {
-            CompatibilityLevel minLevel = MixinEnvironment.getMinCompatibilityLevel();
-            CompatibilityLevel optionLevel = Option.DEFAULT_COMPATIBILITY_LEVEL.<CompatibilityLevel>getEnumValue(minLevel);
-            MixinEnvironment.compatibility = optionLevel.isAtLeast(minLevel) ? optionLevel : minLevel;
-        }
-        return MixinEnvironment.compatibility;
+        return CompatibilityLevel.getMaxEffective();
     }
     
     /**
@@ -1853,29 +1843,12 @@ public final class MixinEnvironment implements ITokenProvider {
      */
     @Deprecated
     public static void setCompatibilityLevel(CompatibilityLevel level) throws IllegalArgumentException {
-        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        if (!"org.spongepowered.asm.mixin.transformer.MixinConfig".equals(stackTrace[2].getClassName())) {
-            MixinEnvironment.logger.warn("MixinEnvironment::setCompatibilityLevel is deprecated and will be removed. Set level via config instead!");
-        }
-        
         CompatibilityLevel currentLevel = MixinEnvironment.getCompatibilityLevel();
         if (level != currentLevel && level.isAtLeast(currentLevel)) {
-            if (!level.isSupported()) {
-                throw new IllegalArgumentException(String.format(
-                    "The requested compatibility level %s could not be set. Level is not supported by the active JRE or ASM version (Java %s, %s)",
-                    level, JavaVersion.current(), ASM.getVersionString()
-                ));
-            }
-
-            IMixinService service = MixinService.getService();
-            CompatibilityLevel maxLevel = service.getMaxCompatibilityLevel();
-            if (maxLevel != null && maxLevel.isLessThan(level)) {
-                MixinEnvironment.logger.warn("The requested compatibility level {} is higher than the level supported by the active subsystem '{}'"
-                        + " which supports {}. This is not a supported configuration and instability may occur.", level, service.getName(), maxLevel);
-            }
-            
-            MixinEnvironment.compatibility = level;
-            MixinEnvironment.logger.debug("Compatibility level set to {}", level);
+            throw new IllegalArgumentException(String.format(
+                "The requested compatibility level %s could not be set. Level is not supported by the active JRE or ASM version (Java %s, %s)",
+                level, JavaVersion.current(), ASM.getVersionString()
+            ));
         }
     }
     
@@ -1888,6 +1861,16 @@ public final class MixinEnvironment implements ITokenProvider {
     @Deprecated
     public static Profiler getProfiler() {
         return Profiler.getProfiler("mixin");
+    }
+
+    /**
+     * Get the supported java version as a string
+     *
+     * @return Java class supported version as string
+     */
+    public static String getClassVersionString() {
+        CompatibilityLevel compat = MixinEnvironment.getCompatibilityLevel();
+        return String.format("Up to Java %s (class file version %d)", compat.ver, compat.getClassMajorVersion());
     }
     
     /**
