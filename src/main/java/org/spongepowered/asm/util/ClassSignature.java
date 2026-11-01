@@ -209,12 +209,12 @@ public class ClassSignature {
         /**
          * Class bounds on this token, null if no bounds have been set
          */
-        private List<Token> classBound;
+        private List<IToken> classBound;
         
         /**
          * Interface bounds on this token, null if no bounds have been set
          */
-        private List<Token> ifaceBound;
+        private List<IToken> ifaceBound;
         
         /**
          * Generic signature components on this token, null if this is a raw
@@ -292,16 +292,16 @@ public class ClassSignature {
             return this.setSymbol(wildcard);
         }
         
-        private List<Token> getClassBound() {
+        private List<IToken> getClassBound() {
             if (this.classBound == null) {
-                this.classBound = new ArrayList<Token>();
+                this.classBound = new ArrayList<IToken>();
             }
             return this.classBound;
         }
         
-        private List<Token> getIfaceBound() {
+        private List<IToken> getIfaceBound() {
             if (this.ifaceBound == null) {
-                this.ifaceBound = new ArrayList<Token>();
+                this.ifaceBound = new ArrayList<IToken>();
             }
             return this.ifaceBound;
         }
@@ -423,6 +423,24 @@ public class ClassSignature {
             return token;
         }
 
+        Token addBound(TokenHandle token, boolean classBound) {
+            if (classBound) {
+                return this.addClassBound(token);
+            }
+            
+            return this.addInterfaceBound(token);
+        }
+
+        Token addClassBound(TokenHandle token) {
+            this.getClassBound().add(token);
+            return token.asToken();
+        }
+
+        Token addInterfaceBound(TokenHandle token) {
+            this.getIfaceBound().add(token);
+            return token.asToken();
+        }
+
         /**
          * Add an inner class suffix to this symbol
          * 
@@ -455,13 +473,13 @@ public class ClassSignature {
             }
             
             if (this.classBound != null) {
-                for (Token token : this.classBound) {
+                for (IToken token : this.classBound) {
                     sb.append(token.asType());
                 }
             }
             
             if (this.ifaceBound != null) {
-                for (Token token : this.ifaceBound) {
+                for (IToken token : this.ifaceBound) {
                     sb.append(':').append(token.asType());
                 }
             }
@@ -765,7 +783,7 @@ public class ClassSignature {
             private final TokenHandle handle;
             
             FormalParamElement(String param) {
-                this.handle = ClassSignature.this.getType(param);
+                this.handle = ClassSignature.this.getType(param, true);
                 this.token = this.handle.asToken();
             }
             
@@ -804,7 +822,7 @@ public class ClassSignature {
             
             @Override
             public void visitTypeVariable(String name) {
-                TokenHandle token = ClassSignature.this.getType(name);
+                TokenHandle token = ClassSignature.this.getType(name, false);
                 this.token = this.type.addTypeArgument(token).setWildcard(this.wildcard).asToken();
             }
             
@@ -849,6 +867,12 @@ public class ClassSignature {
                 this.classBound = classBound;
             }
             
+            @Override
+            public void visitTypeVariable(String name) {
+                TokenHandle token = ClassSignature.this.getType(name, false);
+                this.token = this.type.token.addBound(token, this.classBound);
+            }
+
             @Override
             public void visitClassType(String name) {
                 this.token = this.type.token.addBound(name, this.classBound);
@@ -1016,12 +1040,20 @@ public class ClassSignature {
      * Get the token for the specified type var name, creating it if necessary
      * 
      * @param varName type var to lookup
+     * @param forDeclaration if the token is declared rather than just used
      * @return type token for the supplied type var name
      */
-    protected TokenHandle getType(String varName) {
+    protected TokenHandle getType(String varName, boolean forDeclaration) {
         for (TypeVar typeVar : this.types.keySet()) {
             if (typeVar.matches(varName)) {
-                return this.types.get(typeVar);
+                TokenHandle handle;
+                if (forDeclaration) {
+                    handle = this.types.remove(typeVar);
+                    this.types.put(typeVar, handle); //Move to the end
+                } else {
+                    handle = this.types.get(typeVar);
+                }
+                return handle;
             }
         }
         
