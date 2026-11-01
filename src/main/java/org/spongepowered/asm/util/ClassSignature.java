@@ -159,7 +159,7 @@ public class ClassSignature {
          * @param array arrayness flag
          * @return this token
          */
-        public abstract IToken setArray(boolean array);
+        public abstract IToken setArray(int array);
         
         /**
          * Set the wildcard on this token, only accepted if one of the valid
@@ -192,9 +192,9 @@ public class ClassSignature {
         private final boolean inner;
         
         /**
-         * True if this token represents an array type
+         * Array depth of this token
          */
-        private boolean array;
+        private int array;
         
         /**
          * Symbol (wildcard, unbound or base type)
@@ -279,8 +279,8 @@ public class ClassSignature {
         }
         
         @Override
-        public IToken setArray(boolean array) {
-            this.array |= array;
+        public IToken setArray(int array) {
+            this.array = array;
             return this;
         }
         
@@ -505,7 +505,7 @@ public class ClassSignature {
         public String asType(boolean raw) {
             StringBuilder sb = new StringBuilder();
             
-            if (this.array) {
+            for (int i = this.array; i > 0; i--) {
                 sb.append('[');
             }
             
@@ -575,9 +575,9 @@ public class ClassSignature {
         final Token token;
         
         /**
-         * True if this handle is an array type
+         * Array depth of this handle
          */
-        boolean array;
+        int array;
         
         /**
          * Wildcard for this handle
@@ -594,11 +594,11 @@ public class ClassSignature {
         
         /* (non-Javadoc)
          * @see org.spongepowered.asm.util.ClassSignature.IToken
-         *      #setArray(boolean)
+         *      #setArray(int)
          */
         @Override
-        public IToken setArray(boolean array) {
-            this.array |= array;
+        public IToken setArray(int array) {
+            this.array = array;
             return this;
         }
 
@@ -633,7 +633,7 @@ public class ClassSignature {
                 sb.append(this.wildcard);
             }
             
-            if (this.array) {
+            for (int i = this.array; i > 0; i--) {
                 sb.append('[');
             }
             
@@ -696,9 +696,9 @@ public class ClassSignature {
             protected Token token;
             
             /**
-             * True if the next element to be appended is an array element
+             * Array depth of the next element to be appended
              */
-            private boolean array;
+            private int array;
     
             public Token getToken() {
                 if (this.token == null) {
@@ -708,12 +708,12 @@ public class ClassSignature {
             }
             
             protected void setArray() {
-                this.array = true;
+                this.array++;
             }
     
-            private boolean getArray() {
-                boolean array = this.array;
-                this.array = false;
+            private int getArray() {
+                int array = this.array;
+                this.array = 0;
                 return array;
             }
             
