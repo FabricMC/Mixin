@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -201,7 +202,7 @@ public class MixinPlatformAgentFMLLegacy extends MixinPlatformAgentAbstract impl
     }
 
     private boolean isIgnoredReparseable() {
-        return this.handle.toString().contains("deobfedDeps");
+        return Stream.of("deobfedDeps", "deobf_dependencies").anyMatch(this.handle.toString()::contains);
     }
 
     /**
